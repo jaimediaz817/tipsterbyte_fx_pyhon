@@ -1,0 +1,14 @@
+# Ignorar entorno virtual (venv y/o env)
+.venv/
+venv/
+env/
+
+# __pycache__, logs, outputs
+__pycache__/
+*.pyc
+*.log
+
+# .env o claves locales
+*.env
+.env*
+.fernet.key

@@ -1,0 +1,51 @@
+# version: "3.9"
+networks:
+  tipsterbyte_net:
+    driver: bridge
+
+services:
+  # postgres_tipsterbyte:
+  #   image: postgres:14
+  #   restart: always
+  #   container_name: db_postgres
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: tipsterbyte_fx_db
+  #   ports:
+  #     - "5431:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  # ====================
+  # Database - PostgreSQL
+  # ====================
+  postgres_tipsterbyte:
+    image: postgres:17
+    container_name: database
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    env_file:
+      - ./backend/.env
+    networks:
+      - tipsterbyte_net
+    restart: always      
+
+  mongo_tipsterbyte:
+    image: mongo:4.4
+    restart: always
+    container_name: db_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  database_data:
+  mongodata:

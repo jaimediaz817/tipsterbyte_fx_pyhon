@@ -1,0 +1,70 @@
+# -------------------------------
+# --- API / Web ---
+# -------------------------------
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+starlette>=0.37.0
+
+# -------------------------------
+# Core backend stack
+# -------------------------------
+sqlalchemy>=1.4           # ORM principal
+alembic>=1.8              # Migraciones de base de datos
+apscheduler               # Tareas programadas
+
+# -------------------------------
+# Seguridad y cifrado
+# -------------------------------
+cryptography>=42.0        # Encriptación de credenciales sensibles
+
+# -------------------------------
+# Procesamiento de archivos
+# -------------------------------
+pandas                    # Manipulación de datos y cruce de archivos
+openpyxl                  # Lectura/escritura de archivos Excel (.xlsx)
+xlrd             # para .xls (si trabajas con archivos antiguos)
+
+# -------------------------------
+# Comunicación con APIs
+# -------------------------------
+httpx                     # Cliente HTTP moderno para llamadas a APIs REST
+requests                 # Cliente HTTP para llamadas a APIs REST (opcional, si no se usa httpx)
+
+# -------------------------------
+# Scraping y automatización web
+# -------------------------------
+selenium                  # Automatización de navegador para pruebas y scraping
+
+# -------------------------------
+# Utilidades y resiliencia
+# -------------------------------
+loguru                    # Logging estructurado
+tenacity                  # Reintentos automáticos con backoff
+prometheus-fastapi-instrumentator # Instrumentación de métricas para FastAPI
+psutil                   # Información del sistema y procesos
+
+# -------------------------------
+# Configuración y entorno
+# -------------------------------
+pydantic>=2.0             # Validación y modelos de datos
+pydantic-settings>=2.0    # Configuración vía .env y entorno
+python-dotenv             # Carga de variables desde archivos .env
+
+# -------------------------------
+# Drivers de base de datos (opcional)
+# -------------------------------
+ psycopg2-binary         # PostgreSQL (descomentar si se usa en producción)
+
+# -------------------------------
+# Herramientas de desarrollo (opcional)
+# -------------------------------
+pytest                    # Para pruebas unitarias
+mocker                    # Mocking para pruebas unitarias    
+pytest-mock               # Integración de pytest y mocker
+# black                   # Formateo de código
+# mypy                    # Tipado estático
+# isort                   # Organización de imports
+
+
+beautifulsoup4
+flake8
