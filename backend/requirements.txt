@@ -51,6 +51,12 @@ pydantic-settings>=2.0    # Configuración vía .env y entorno
 python-dotenv             # Carga de variables desde archivos .env
 
 # -------------------------------
+# Configuración MongoDB
+# -------------------------------
+beanie
+motor
+
+# -------------------------------
 # Drivers de base de datos (opcional)
 # -------------------------------
  psycopg2-binary         # PostgreSQL (descomentar si se usa en producción)
@@ -68,3 +74,7 @@ pytest-mock               # Integración de pytest y mocker
 
 beautifulsoup4
 flake8
+
+
+"typer[all]" psycopg2-binary
+

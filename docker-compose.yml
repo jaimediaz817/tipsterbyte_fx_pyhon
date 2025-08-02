@@ -21,13 +21,17 @@ services:
   # ====================
   postgres_tipsterbyte:
     image: postgres:17
-    container_name: database
+    container_name: db_pg_tipsterbyte_fx
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - database_data:/var/lib/postgresql/data
+      # --- CAMBIO CLAVE: V1: Añadimos este volumen ---
+      # Mapea la carpeta 'backups' del host a una carpeta '/backups' dentro del contenedor.
+      # --- NOTE: CAMBIO CLAVE: V2: Apuntamos a la nueva subcarpeta de backups de SQL ---
+      - ./backend/backups/postgresql_backups:/backups    
     ports:
       - "5433:5432"
     env_file:
@@ -39,11 +43,19 @@ services:
   mongo_tipsterbyte:
     image: mongo:4.4
     restart: always
-    container_name: db_mongo
+    container_name: db_mongo_tipsterbyte_fx
+    # --- CAMBIO CLAVE: Añadimos esta sección de entorno ---
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}    
     ports:
       - "27017:27017"
     volumes:
       - mongodata:/data/db
+      # --- CAMBIO CLAVE: Apuntamos a la nueva subcarpeta de backups de Mongo ---
+      - ./backend/backups/mongo_backups:/backups     
+    networks:
+      - tipsterbyte_net
 
 volumes:
   pgdata:

@@ -5,15 +5,75 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "🔍 Debug TypsterByte app: main",
+            "name": "🔍 Debug Rastreo de datos desde Fuentes deportivas para extracción de datos - Sports_ingestion",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/backend/main.py",
+            "program": "${workspaceFolder}/backend/main_init_scripts.py",
             "console": "integratedTerminal",
             "args": [
                 "--process",
-                "cruce_cartera_sura"
+                "proceso_rastreo_data_fuentes_deportivas"
             ]
-        }
+        },
+        {
+            "name": "🔍 Debug TipsterByte FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main_init_web_server:app",
+                "--host", "127.0.0.1",
+                "--port", "8010",
+                "--reload"
+            ],
+            "cwd": "${workspaceFolder}/backend",
+            "console": "integratedTerminal",
+            "jinja": true
+        },        
     ]
 }
+
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "🔍 Debug TipsterByte FastAPI",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "module": "uvicorn",
+//             "args": [
+//                 "main:app",
+//                 "--reload",
+//                 "--host",
+//                 "0.0.0.0",
+//                 "--port",
+//                 "8000",
+//                 "--log-level",
+//                 "debug"
+//             ],
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}/backend",
+//             "python": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+//             "env": {
+//                 "PYTHONPATH": "${workspaceFolder}/backend"
+//             },
+//             "justMyCode": false
+//         },
+//         {
+//             "name": "🔍 Debug TypsterByte app: main (script directo)",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/backend/main.py",
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}/backend",
+//             "python": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+//             "env": {
+//                 "PYTHONPATH": "${workspaceFolder}/backend"
+//             },
+//             "args": [
+//                 "--process",
+//                 "rastrear_ligas_equipos_temporada"
+//             ]
+//         }
+//     ]
+// }

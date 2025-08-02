@@ -7,6 +7,8 @@ env/
 __pycache__/
 *.pyc
 *.log
+# --- CAMBIO CLAVE: Ignoramos la carpeta de backups centralizada ---
+backups/
 
 # .env o claves locales
 *.env

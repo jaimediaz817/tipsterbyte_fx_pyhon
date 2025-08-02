@@ -126,7 +126,7 @@ pytest backend/apps/cartera_sura/domain/tests/test_cruce_cartera.py
 ## 🧭 Ejecutar manualmente un proceso
 
 ```bash
-python backend/main.py --process cruce_cartera_sura
+python backend/main_init_scripts.py --process cruce_cartera_sura
 ```
 
 ---

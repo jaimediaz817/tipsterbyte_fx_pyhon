@@ -7,14 +7,14 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.db.init_db import Base
+from core.db.base_class import Base
 
 # TODO: modificar para el caso de uso de un ORM diferente o cambios en la estructura de la base de datos
-from app.db.models.sql import *
+from core.db.init_sql_all_models import *
 
 
 # Importar settings para acceder a DATABASE_URL
-from app.core.config import settings  # Ajusta la ruta según tu estructura de proyecto
+from core.config import settings  # Ajusta la ruta según tu estructura de proyecto
 
 # Asegurar que la ruta raíz del backend esté disponible
 sys.path.append(str(Path(__file__).resolve().parent.parent))
