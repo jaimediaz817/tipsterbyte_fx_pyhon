@@ -318,6 +318,10 @@ Para ver todas las opciones de estado, ejecuta `python manage.py nosql state --h
     ```bash
     python manage.py nosql state reset
     ```
+-   **Aplicar migraciones de MongoDB:** Ejecuta las migraciones pendientes en la base de datos NoSQL.
+    ```bash
+    python manage.py nosql-migrate run      
+    ```
 
 ---
 
