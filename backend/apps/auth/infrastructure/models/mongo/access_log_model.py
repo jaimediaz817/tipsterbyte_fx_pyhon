@@ -13,6 +13,7 @@ class AccessLog(Document):
     user_id: UUID = Field(index=True)  # Clave foránea al ID del usuario en PostgreSQL. Indexado para búsquedas rápidas.
     ip_address: str
     user_agent: str
+    process_name: str = Field(description="Nombre descriptivo del proceso o acción que se intenta guardar")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:

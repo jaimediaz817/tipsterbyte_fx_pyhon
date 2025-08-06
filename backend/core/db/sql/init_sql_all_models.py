@@ -37,7 +37,7 @@ def load_all_models():
     logger.info("🤖 Iniciando escaneo dinámico de modelos SQL...")
     
     # Ruta a la carpeta 'apps' que contiene todos los subsistemas
-    backend_root = Path(__file__).resolve().parent.parent.parent
+    backend_root = Path(__file__).resolve().parent.parent.parent.parent
     apps_dir = backend_root / "apps" # Path(__file__).resolve().parent.parent / "apps"
     
     # Contador de modelos cargados

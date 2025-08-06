@@ -7,10 +7,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from core.db.base_class import Base
+from core.db.sql.base_class import Base
 
 # TODO: modificar para el caso de uso de un ORM diferente o cambios en la estructura de la base de datos
-from core.db.init_sql_all_models import *
+from core.db.sql.init_sql_all_models import *
 
 
 # Importar settings para acceder a DATABASE_URL

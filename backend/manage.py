@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import subprocess
 import typer
 from loguru import logger
@@ -19,6 +20,8 @@ from scripts.db.mongo_state_manager import app as mongo_state_app
 # Scripts para poblar las bases de datos (Seeders)
 from scripts.db.seeders.sql.seed_database_sql import seed_sql_data_auth_module
 from scripts.db.seeders.no_sql.seed_database_no_sql import seed_nosql_data_auth_module # Asumiendo que el seeder de mongo se llama así para consistencia
+from scripts.db.migrations.nosql.migration_add_process_name_to_access_logs import run_migration as run_mongo_migration_001
+
 
 # --- 2. APLICACIÓN PRINCIPAL DE TYPER ---
 # Este es el punto de entrada para todos los comandos.
@@ -40,10 +43,16 @@ db_app = typer.Typer(name="sql", help="Gestiona la base de datos SQL (PostgreSQL
 app.add_typer(db_app)
 
 @db_app.command("create-migration")
-def db_create_migration(message: str = typer.Argument(..., help="Mensaje descriptivo para la migración.")):
+def db_create_migration(message: str | None = typer.Argument(None, help="Mensaje descriptivo. Si se omite, se genera uno automático.")):
     """Genera un nuevo archivo de migración de Alembic."""
-    # --- CAMBIO CLAVE: Configuramos el logging al inicio ---
-    configure_logging()    
+    configure_logging()
+    
+    # --- CAMBIO CLAVE: Añadimos la lógica para el mensaje automático ---
+    if not message:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        message = f"auto_migration_{timestamp}"
+        logger.info("No se proporcionó mensaje. Usando mensaje autogenerado.")
+
     logger.info(f"Generando migración con mensaje: '{message}'")
     try:
         subprocess.run(["alembic", "revision", "--autogenerate", "-m", message], check=True)
@@ -90,6 +99,19 @@ def mongo_seed():
 # Anidamos los comandos de backup/restore/reset para MongoDB
 mongo_app.add_typer(mongo_state_app, name="state", help="Gestiona el estado de la BD NoSQL (backup/restore/reset).")
     
+  
+# --- CAMBIO CLAVE: Añadimos la nueva sección para migraciones de datos de MongoDB ---
+mongo_migrations_app = typer.Typer(name="nosql-migrate", help="Ejecuta migraciones de datos para MongoDB.")
+app.add_typer(mongo_migrations_app)
+
+@mongo_migrations_app.command("run")
+def run_mongo_migrations():
+    """Añade campos faltantes a documentos existentes según los nuevos modelos."""
+    configure_logging()
+    logger.info("Iniciando proceso de migración de datos de MongoDB...")
+    # Aquí podrías tener una lógica para ejecutar varias migraciones en orden
+    asyncio.run(run_mongo_migration_001())
+    logger.info("Proceso de migración de MongoDB finalizado.")  
     
 # --- 5. SECCIÓN DE COMANDOS PARA EL SERVIDOR WEB ---
 # Comandos para iniciar y gestionar el servidor de desarrollo.

@@ -8,7 +8,7 @@ project_root = Path(__file__).resolve().parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
 
-from core.db.database_sql import get_db_context
+from core.db.sql.database_sql import get_db_context
 from core.logger import configure_logging
 # --- CORRECCIÓN CLAVE ---
 # Importamos cada modelo desde su propio archivo dedicado.

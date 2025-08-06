@@ -1,4 +1,4 @@
-from core.db.database_sql import create_db_and_tables
+from core.db.sql.database_sql import create_db_and_tables
 from core.middleware import TraceIDMiddleware
 from core.logger import configure_logging
 from core.secrets import load_key

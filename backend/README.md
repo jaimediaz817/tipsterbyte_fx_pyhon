@@ -168,7 +168,6 @@ python manage.py nosql --help
 python manage.py nosql state --help
 ```
 
-
 ## Servidor Web
 
 - Para iniciar el servidor de desarrollo con recarga automática:
@@ -191,44 +190,139 @@ python manage.py server run
   python manage.py db migrate
   ```
 
-## Estado de la Base de Datos (Backups, Restore, Reset)
+## COMANDOS CLI PERSONALIZADOS: Estado de la Base de Datos (Backups, Restore, Reset)
 
-- **Crear un backup de la base de datos:**
+# ... (cualquier contenido anterior que desees conservar) ...
 
-  ```bash
-  python manage.py db state backup
-  ```
+## 🚀 Gestión del Proyecto (`manage.py`)
 
-- **Restaurar desde el último backup:**
+Este proyecto utiliza un script de gestión centralizado, `manage.py`, para todas las tareas de desarrollo y mantenimiento. Asegúrate de tener tu entorno virtual activado (`source venv/Scripts/activate`) antes de ejecutar cualquier comando.
 
-  ```bash
-  python manage.py db state restore
-  ```
+### 💡 Ayuda General
 
-- **Restaurar desde un archivo específico:**
-
-  ```bash
-  python manage.py db state restore --file backups/nombre_del_archivo.sql
-  ```
-
-- **Resetear la BD (MODO PELIGROSO - Borra y recrea la BD vacía):**
-
-  ```bash
-  python manage.py db state reset --hard
-  ```
-
-- **Resetear la BD (MODO SEGURO - Preserva los datos mediante backup/restore):**
-
-  ```bash
-  python manage.py db state reset --with-backup
-  ```
-
-
-## mongo
-
-## Para inicializar la base de datos NoSQL (MongoDB) y cargar los modelos
-
-- Con tu entorno virtual activo, ejecuta:
+Para obtener una lista completa de los grupos de comandos y sus descripciones, ejecuta:
 
 ```bash
-python backend/scripts/db/seeders/seed_access_log.py
+python manage.py --help
+```
+
+Esto te mostrará los grupos principales: `sql`, `nosql`, y `server`.
+
+---
+
+### 🏁 Flujo de Trabajo para Configuración Inicial
+
+Sigue estos pasos en orden para levantar el proyecto desde cero:
+
+1.  **Levantar Contenedores de Docker:** Inicia las bases de datos.
+    ```bash
+    # Desde la raíz del proyecto (fuera de 'backend/')
+    docker-compose up -d
+    ```
+
+2.  **Aplicar Migraciones SQL:** Crea la estructura de tablas en PostgreSQL.
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py sql migrate
+    ```
+
+3.  **Poblar Base de Datos SQL (Seed):** Inserta los datos iniciales (roles, usuario admin, etc.).
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py sql seed
+    ```
+
+4.  **Poblar Base de Datos NoSQL (Seed):** Inserta datos de ejemplo en MongoDB.
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py nosql seed
+    ```
+
+5.  **Iniciar el Servidor Web:** Con las bases de datos listas, ya puedes correr la API.
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py server run
+    ```
+
+---
+
+### 🗃️ Gestión de PostgreSQL (`sql`)
+
+Comandos para administrar la base de datos relacional. Para ver todas las opciones, ejecuta `python manage.py sql --help`.
+
+#### Migraciones (Alembic)
+
+-   **Crear un nuevo archivo de migración** (después de cambiar un modelo de SQLAlchemy):
+    ```bash
+    python manage.py sql create-migration "Tu mensaje descriptivo aquí"
+    ```
+-   **Creqar un archivo de migración sin mensaje** (se generará uno automático):
+    ```bash
+    python manage.py sql create-migration
+    ```
+-   **Aplicar todas las migraciones pendientes** a la base de datos:
+    ```bash
+    python manage.py sql migrate
+    ```
+
+#### Gestión de Estado (`sql state`)
+
+Para ver todas las opciones de estado, ejecuta `python manage.py sql state --help`.
+
+-   **Crear un backup:**
+    *Se guardará en `backend/backups/postgresql_backups/`*
+    ```bash
+    python manage.py sql state backup
+    ```
+-   **Restaurar desde el último backup disponible:**
+    ```bash
+    python manage.py sql state restore
+    ```
+-   **Restaurar desde un archivo específico:**
+    ```bash
+    python manage.py sql state restore --file backups/postgresql_backups/nombre_del_archivo.sql
+    ```
+-   **Resetear la BD (MODO SEGURO):** Preserva los datos haciendo un backup y restaurándolo después de recrear la BD.
+    ```bash
+    python manage.py sql state reset --with-backup
+    ```
+-   **Resetear la BD (MODO DESTRUCTIVO):** Borra la BD, la recrea y aplica migraciones. **TODOS LOS DATOS SE PIERDEN.**
+    ```bash
+    python manage.py sql state reset --hard
+    ```
+
+---
+
+### 🍃 Gestión de MongoDB (`nosql`)
+
+Comandos para administrar la base de datos NoSQL. Para ver todas las opciones, ejecuta `python manage.py nosql --help`.
+
+#### Gestión de Estado (`nosql state`)
+
+Para ver todas las opciones de estado, ejecuta `python manage.py nosql state --help`.
+
+-   **Crear un backup:**
+    *Se guardará en `backend/backups/mongo_backups/`*
+    ```bash
+    python manage.py nosql state backup
+    ```
+-   **Restaurar desde el último backup disponible:**
+    ```bash
+    python manage.py nosql state restore
+    ```
+-   **Restaurar desde un archivo específico:**
+    ```bash
+    python manage.py nosql state restore --file backups/mongo_backups/nombre_del_archivo.gz
+    ```
+-   **Resetear la BD (MODO DESTRUCTIVO):** Borra (drop) la base de datos completa. **TODOS LOS DATOS SE PIERDEN.**
+    ```bash
+    python manage.py nosql state reset
+    ```
+
+---
+
+### 🌐 Gestión del Servidor Web (`server`)
+
+-   **Iniciar el servidor de desarrollo** con recarga automática:
+    ```bash
+    python manage.py server

@@ -6,10 +6,10 @@ from typing import Generator
  
 from core.config import settings
 # Importa la Base fundamental
-from core.db.base_class import Base
+from core.db.sql.base_class import Base
 # IMPORTANTE: Importa el archivo que registra todos los modelos.
 # Aunque no se use directamente aquí, esta línea asegura que SQLAlchemy los conozca.
-import core.db.init_sql_all_models
+import core.db.sql.init_sql_all_models
 
 engine = create_engine(
     settings.DATABASE_URL,

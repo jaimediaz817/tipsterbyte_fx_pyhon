@@ -88,7 +88,7 @@ def restore_mongo_database(
         logger.error(f"❌ No se encontró el archivo de backup: {file}")
         raise typer.Exit(code=1)
 
-    typer.secho("¡ADVERTENCIA! ESTA OPERACIÓN ES DESTRUCTIVA - CONSTRUCTIVAS.", fg=typer.colors.RED, bold=True)
+    typer.secho("¡ADVERTENCIA! ESTA OPERACIÓN ES REGENERATIVA - CONSTRUCTIVAS.", fg=typer.colors.RED, bold=True)
     logger.warning(f"Se borrarán los datos actuales de la base de datos '{settings.MONGO_DB}' antes de restaurar.")
     confirmation = typer.prompt(f"Para confirmar, escribe el nombre de la base de datos MongoDB: '{settings.MONGO_DB}'")
     if confirmation != settings.MONGO_DB:
