@@ -1,8 +1,7 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-
-from backend.core.config import Settings
+from core.config import Settings
 # from core.config import settings
 # Importa aquí tus futuros modelos de Beanie. Ejemplo:
 # from app.db.models.mongo.user_log import UserActivityLog
