@@ -62,6 +62,9 @@ deactivate
 
 ## DOCKER
 
+- NOTE: Procedimiento urgente: determinar status de servicio de mongo: PASOS:
+[Detener servicio de MongoDB (Windows)](/procedimientos_base/proc-docker-general.md#detener-servicio-mongodb-windows)
+
 docker-compose up -d
 Esto te levanta:
 
@@ -220,25 +223,29 @@ Sigue estos pasos en orden para levantar el proyecto desde cero:
     docker-compose up -d
     ```
 
-2.  **Aplicar Migraciones SQL:** Crea la estructura de tablas en PostgreSQL.
+════════════════════════════════ ✦ ════════════════════════════════
+
+## Comandos personalizados
+
+-  **Aplicar Migraciones SQL:** Crea la estructura de tablas en PostgreSQL.
     ```bash
     # Desde la carpeta 'backend/'
     python manage.py sql migrate
     ```
 
-3.  **Poblar Base de Datos SQL (Seed):** Inserta los datos iniciales (roles, usuario admin, etc.).
+-  **Poblar Base de Datos SQL (Seed):** Inserta los datos iniciales (roles, usuario admin, etc.).
     ```bash
     # Desde la carpeta 'backend/'
     python manage.py sql seed
     ```
 
-4.  **Poblar Base de Datos NoSQL (Seed):** Inserta datos de ejemplo en MongoDB.
+-  **Poblar Base de Datos NoSQL (Seed):** Inserta datos de ejemplo en MongoDB.
     ```bash
     # Desde la carpeta 'backend/'
     python manage.py nosql seed
     ```
 
-5.  **Iniciar el Servidor Web:** Con las bases de datos listas, ya puedes correr la API.
+-  **Iniciar el Servidor Web:** Con las bases de datos listas, ya puedes correr la API.
     ```bash
     # Desde la carpeta 'backend/'
     python manage.py server run
@@ -318,6 +325,15 @@ Para ver todas las opciones de estado, ejecuta `python manage.py nosql state --h
     ```bash
     python manage.py nosql state reset
     ```
+-   **Limpiar la BD (MODO NO DESTRUCTIVO):** Borra todos los documentos de todas las colecciones, pero mantiene la estructura de la base de datos (colecciones e índices).
+    ```bash
+    python manage.py nosql state clear
+    ```
+
+-   **Limpiar la BD (MODO NO DESTRUCTIVO):** Borra todas las tablas de la base de datos, pero mantiene la base de datos en sí. Ideal para limpiar antes de volver a migrar.
+    ```bash
+    python manage.py sql clear-all-tables
+    ```
 -   **Aplicar migraciones de MongoDB:** Ejecuta las migraciones pendientes en la base de datos NoSQL.
     ```bash
     python manage.py nosql-migrate run      
@@ -325,8 +341,46 @@ Para ver todas las opciones de estado, ejecuta `python manage.py nosql state --h
 
 ---
 
+---
+
+### 🔐 Gestión de Claves y Cifrado (`secrets`)
+
+Este grupo de comandos te permite gestionar la clave de cifrado Fernet del proyecto. Para ver todas las opciones, ejecuta `python manage.py secrets --help`.
+
+-   **Generar una nueva clave de cifrado:**
+    *Si la clave ya existe, no la sobrescribirá por seguridad.*
+    ```bash
+    python manage.py secrets generate
+    ```
+
+-   **Rotar la clave (forzar sobreescritura):**
+    *¡CUIDADO! Esto invalidará todos los datos cifrados con la clave anterior.*
+    ```bash
+    python manage.py secrets generate --force
+    ```
+
+-   **Verificar el estado de la clave:**
+    *No muestra la clave, solo confirma si existe y dónde.*
+    ```bash
+    python manage.py secrets show
+    ```
+
+-   **Cifrar un valor:**
+    ```bash
+    python manage.py secrets encrypt "mi_valor_secreto"
+    ```
+
+-   **Descifrar un token:**
+    ```bash
+    python manage.py secrets decrypt "gAAAAABomoCzdDjXZpN05XrYd7u-v3DvprLyEjX0zjIhXOtfZB9zfpVKa4IlixZ6VRiSCQRS-DFyErhvPIaC1Nsa8aYoMmIVGWIWyzeDTeqFsA1CfOr5jVE="
+    ```
+
+> **Nota:** El sistema priorizará la variable de entorno `FERNET_KEY` si está definida. De lo contrario, usará el archivo `.fernet.key` ubicado (por defecto) en la carpeta `core/`.
+
 ### 🌐 Gestión del Servidor Web (`server`)
 
 -   **Iniciar el servidor de desarrollo** con recarga automática:
     ```bash
     python manage.py server
+
+

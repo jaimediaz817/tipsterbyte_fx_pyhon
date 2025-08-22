@@ -3,6 +3,7 @@
 venv/
 env/
 
+
 # __pycache__, logs, outputs
 __pycache__/
 *.pyc

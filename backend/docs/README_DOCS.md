@@ -27,6 +27,7 @@ source venv/Scripts/activate  # Windows
 ```
 
 ### 2. Instalar dependencias
+
 acceder a: cd `backend/`
 ```bash
 pip install -r requirements.txt
