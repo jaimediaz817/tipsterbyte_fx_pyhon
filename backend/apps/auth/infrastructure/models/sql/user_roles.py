@@ -9,7 +9,7 @@ class UserRole(Base):
 
 
 # from sqlalchemy import Table, Column, Integer, ForeignKey
-# from backend.db.sql_init_db import Base
+# from db.sql_init_db import Base
 
 # user_roles = Table(
 #     "user_roles",
