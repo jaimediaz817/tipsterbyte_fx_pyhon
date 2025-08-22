@@ -14,6 +14,7 @@ async def init_db_nosql():
     """
     logger.info("🔌 Conectando a la base de datos NoSQL (MongoDB)...")
     try:
+        logger.info(f"MONGO_URI: {settings.MONGO_URI}")
         client = AsyncIOMotorClient(settings.MONGO_URI)
         
         # --- CAMBIO CLAVE: Añadimos el modelo a la lista de documentos ---

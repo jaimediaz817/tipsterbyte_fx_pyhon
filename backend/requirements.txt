@@ -1,9 +1,9 @@
 # -------------------------------
 # --- API / Web ---
 # -------------------------------
-fastapi>=0.110.0
-uvicorn[standard]>=0.27.0
-starlette>=0.37.0
+fastapi>=0.110.0           # Framework moderno para construir APIs web en Python
+uvicorn[standard]>=0.27.0  # Servidor ASGI rápido para aplicaciones web Python
+starlette>=0.37.0          # Toolkit ligero para construir aplicaciones web ASGI
 
 # -------------------------------
 # Core backend stack
@@ -53,8 +53,8 @@ python-dotenv             # Carga de variables desde archivos .env
 # -------------------------------
 # Configuración MongoDB
 # -------------------------------
-beanie
-motor
+beanie                   # ODM para MongoDB basado en Pydantic y motor
+motor                    # Driver asíncrono para MongoDB
 
 # -------------------------------
 # Drivers de base de datos (opcional)
@@ -71,10 +71,9 @@ pytest-mock               # Integración de pytest y mocker
 # mypy                    # Tipado estático
 # isort                   # Organización de imports
 
+beautifulsoup4           # Parseo y extracción de datos de HTML/XML (scraping)
+flake8                   # Linter para verificar estilo y errores en el código Python
 
-beautifulsoup4
-flake8
-
-
-"typer[all]" psycopg2-binary
+typer[all]                # CLI framework para crear aplicaciones de línea de comandos
+psycopg2-binary           # Driver para PostgreSQL (producción)
 

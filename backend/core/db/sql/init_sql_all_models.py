@@ -27,6 +27,10 @@ Su único propósito es registrar los modelos en los metadatos de la Base de SQL
 """
 import importlib
 from pathlib import Path
+
+# --- CAMBIO CLAVE: Importar la ruta directamente desde el módulo de rutas ---
+from core.paths import BACKEND_ROOT
+
 from loguru import logger
 
 def load_all_models():
@@ -36,10 +40,11 @@ def load_all_models():
     """
     logger.info("🤖 Iniciando escaneo dinámico de modelos SQL...")
     
-    # Ruta a la carpeta 'apps' que contiene todos los subsistemas
-    backend_root = Path(__file__).resolve().parent.parent.parent.parent
-    apps_dir = backend_root / "apps" # Path(__file__).resolve().parent.parent / "apps"
     
+    # Ruta a la carpeta 'apps' que contiene todos los subsistemas
+    backend_root = BACKEND_ROOT
+    apps_dir = backend_root / "apps"
+
     # Contador de modelos cargados
     models_loaded = 0
 
@@ -68,5 +73,6 @@ def load_all_models():
 
     logger.info(f"🤖 Escaneo completado. Se cargaron {models_loaded} modelos SQL.")
 
+# TODO: # --- CAMBIO CLAVE: Elimina o comenta esta línea ---
 # Llama a la función para que se ejecute cuando este archivo sea importado
-load_all_models()
+# load_all_models()

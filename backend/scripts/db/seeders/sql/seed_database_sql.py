@@ -3,10 +3,10 @@ import sys
 from pathlib import Path
 from loguru import logger
 
-# Añadir la raíz del proyecto al sys.path para que encuentre los módulos
-project_root = Path(__file__).resolve().parent.parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
+# # Añadir la raíz del proyecto al sys.path para que encuentre los módulos
+# project_root = Path(__file__).resolve().parent.parent.parent.parent
+# if str(project_root) not in sys.path:
+#     sys.path.append(str(project_root))
 
 from core.db.sql.database_sql import get_db_context
 from core.logger import configure_logging
