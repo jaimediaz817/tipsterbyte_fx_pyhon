@@ -1,17 +1,24 @@
+import sys
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, ValidationError
 from pathlib import Path
 
 # --- CAMBIO CLAVE: Importar la ruta desde el módulo centralizado ---
-from core.paths import BACKEND_ROOT
+from core.paths import BACKEND_ROOT, PROJECT_ROOT
 
 import os
 from dotenv import load_dotenv
 
 # Cargar archivo .env si existe
-env_path = Path(__file__).resolve().parent.parent / ".env"
+# env_path = Path(__file__).resolve().parent.parent / ".env"
+env_path = BACKEND_ROOT / ".env"
+
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
+
+print(f"DEBUG: >>>>>>>> Cargando configuración desde {env_path}")
+print(f"DEBUG: >>>>>>>>BACKEND_ROOT = {BACKEND_ROOT}")
+print(f"DEBUG: >>>>>>>> PROJECT_ROOT = {PROJECT_ROOT}")
 
 # --- CAMBIO CLAVE: Definir la raíz del backend para construir rutas ---
 # BACKEND_ROOT = Path(__file__).resolve().parent.parent
@@ -51,6 +58,9 @@ class Settings(BaseSettings):
     EXECUTION_BASE_DIR: str = Field(description="Directorio base de las ejecuciones de las tareas")
     SELENIUM_HUB_URL: str   = Field(description="Endpoint del hub de Selenium")
     
+    MAX_CONCURRENT_CLIENTS: int = Field(description="Número máximo de clientes a procesar concurrentemente")
+    SUPPORT_EMAIL: str          = Field(description="Email de soporte")
+
     # class Config:
     #     env_file = ".env"
     #     case_sensitive = True
@@ -60,5 +70,13 @@ class Settings(BaseSettings):
         case_sensitive=True
     )    
 
-
-settings = Settings()
+try:
+    settings = Settings()
+except ValidationError as e:
+    print("\n" + "="*80)
+    print("❌ ERROR CRÍTICO DE CONFIGURACIÓN ❌")
+    print("Faltan variables requeridas en el archivo .env o en las variables de entorno.\n")
+    print(str(e))
+    print("\nPor favor revisa el archivo .env y asegúrate de que todas las variables requeridas estén definidas.")
+    print("="*80 + "\n")
+    sys.exit(1)

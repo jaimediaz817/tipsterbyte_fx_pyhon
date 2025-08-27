@@ -1,0 +1,2 @@
+PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS = "extraccion_data_fuentes_deportivas"
+OTRO_PROCESO_CUALQUIERA = "otro_proceso_cualquiera"

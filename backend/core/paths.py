@@ -28,6 +28,8 @@ try:
     # BACKEND_ROOT es la carpeta 'backend' dentro del proyecto.
     # Se construye a partir de PROJECT_ROOT para evitar cualquier duplicación.
     BACKEND_ROOT = PROJECT_ROOT / "backend"
+    CORE_ROOT    = BACKEND_ROOT / "core"
+    ALEMBIC_ROOT = BACKEND_ROOT / "alembic"
     
     # --- AÑADIR ESTAS LÍNEAS PARA DEPURAR ---
     print("\n" + "-" * 80)

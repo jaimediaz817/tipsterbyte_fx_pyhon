@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "🔍 Debug Rastreo de datos desde Fuentes deportivas para extracción de datos - Sports_ingestion",
+            "name": "⚽ Leagues_manager: Debug Rastreo de datos desde Fuentes deportivas para extracción de datos",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/backend/main_init_scripts.py",
@@ -16,7 +16,7 @@
             ]
         },
         {
-            "name": "🔍 Debug TipsterByte FastAPI",
+            "name": "⚽ Debug TipsterByte FastAPI",
             "type": "debugpy",
             "request": "launch",
             "module": "uvicorn",

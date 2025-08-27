@@ -9,6 +9,8 @@ LOG_DIR.mkdir(exist_ok=True)
 
 def configure_logging():
     logger.remove()
+    
+    print(f"DEBUG:LOGGER >>>>>>>> Configurando logging. LOG_DIR: {Path(__file__).resolve().parent.parent}")
 
     # Consola
     logger.add(

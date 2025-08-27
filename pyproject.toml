@@ -1,0 +1,12 @@
+# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\pyproject.toml
+[project]
+name = "tipsterbyte_fx"
+version = "0.1.0"
+description = "Backend service for the TipsterByte FX project."
+authors = [
+    { name = "Tu Nombre", email = "tu@email.com" },
+]
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 88

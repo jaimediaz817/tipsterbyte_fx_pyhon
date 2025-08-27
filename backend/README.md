@@ -30,15 +30,9 @@ source venv/Scripts/activate
 source .venv/Scripts/activate
 ```
 
-source venv/Scripts/activate
-source ./venv/Scripts/activate
-source .venv/Scripts/activate
-backend
-
 ## Desactivar el entorno virtual
 
-Para desactivar el entorno virtual en la terminal actual, ejecuta:
-
+- Para desactivar el entorno virtual en la terminal actual, ejecuta:
 ```bash
 deactivate
 ```
@@ -56,9 +50,26 @@ where python
 
 python -c "from pathlib import Path; print('✅' if Path('.env').exists() else '❌', Path('.env').resolve())"
 
-## desactivar el entorno virtual
+## Verificar servicios/puertos inciados en el sistema operativo en cuestión
 
-deactivate
+## Ejecutar manualmente procesos - tareas - tasks
+
+- Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
+
+```bash
+python main_init_scripts.py --process proceso_rastreo_data_fuentes_deportivas
+```
+
+
+
+
+
+
+
+
+
+
+
 
 ## DOCKER
 
@@ -381,6 +392,6 @@ Este grupo de comandos te permite gestionar la clave de cifrado Fernet del proye
 
 -   **Iniciar el servidor de desarrollo** con recarga automática:
     ```bash
-    python manage.py server
+    python manage.py server run
 
 
