@@ -20,9 +20,16 @@ import sys
 try:
     # Intenta una ruta relativa que funcione desde la mayoría de los contextos de ejecución
     backend_root = Path(__file__).resolve().parents[1]
+    print("FROM ENV.PY:  Path(__file__).resolve()) >>> ", Path(__file__).resolve())
+    print("FROM ENV.PY .parents[1] >>>>>>>>>>>>>>>>>> ", backend_root)
+    
+    
+    print("FROM ENV.PY >>>>>>>>>>>>>>>>>> Path(__file__).resolve().parents[2]: ", Path(__file__).resolve().parents[2])
+    
     if not (backend_root / "core").is_dir():
         # Si la primera no funciona, prueba una estructura diferente
         backend_root = Path(__file__).resolve().parents[2]
+        print("FROM ENV.PY >>>>>>>>>>>>>>>>>> Path(__file__).resolve().parents[2]: ", backend_root)
     
     if str(backend_root) not in sys.path:
         sys.path.insert(0, str(backend_root))

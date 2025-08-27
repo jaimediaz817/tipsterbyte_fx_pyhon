@@ -15,3 +15,6 @@ backups/
 *.env
 .env*
 .fernet.key
+
+# MIGRATIONS
+alembic/versions/
