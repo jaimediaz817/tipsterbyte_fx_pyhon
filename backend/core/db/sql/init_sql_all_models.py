@@ -1,3 +1,10 @@
+import importlib
+from pathlib import Path
+# --- CAMBIO CLAVE: Importar la ruta directamente desde el módulo de rutas ---
+from core.paths import BACKEND_ROOT
+from loguru import logger
+
+
 # Crear el archivo "Índice de Modelos" también en core.
 # Necesitamos un archivo que importe todos los modelos para que Alembic y SQLAlchemy los conozcan.
 # Como esta es una función central para la base de datos, también pertenece a core.
@@ -16,8 +23,8 @@ como la creación de tablas o las migraciones con Alembic.
 # from backend.apps.auth.infrastructure.models.sql.role_model import Role
 # from backend.apps.auth.infrastructure.models.sql.user_roles_model import user_roles
 
-# Cuando crees el subsistema de 'sports_ingestion' con modelos, los importarás aquí:
-# from backend.apps.sports_ingestion.infrastructure.models.sql.some_model import SomeModel
+# Cuando crees el subsistema de 'leagues_manager' con modelos, los importarás aquí:
+# from backend.apps.leagues_manager.infrastructure.models.sql.some_model import SomeModel
 
 # ... y así sucesivamente para cada subsistema con modelos SQL.
 #----------------------------------------------------------------------------------------------------------------
@@ -25,13 +32,7 @@ como la creación de tablas o las migraciones con Alembic.
 Este archivo importa DINÁMICAMENTE todos los modelos SQL de todos los subsistemas.
 Su único propósito es registrar los modelos en los metadatos de la Base de SQLAlchemy.
 """
-import importlib
-from pathlib import Path
 
-# --- CAMBIO CLAVE: Importar la ruta directamente desde el módulo de rutas ---
-from core.paths import BACKEND_ROOT
-
-from loguru import logger
 
 def load_all_models():
     """

@@ -27,6 +27,8 @@ En Git Bash (o WSL):
 
 ```bash
 source venv/Scripts/activate
+
+[COMANDO:windows]:
 source .venv/Scripts/activate
 ```
 

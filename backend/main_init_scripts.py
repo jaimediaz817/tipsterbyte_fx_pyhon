@@ -1,14 +1,13 @@
 import argparse
 import asyncio
-
 from loguru import logger
-# from apps.sports_ingestion.tasks import launch_proceso_rastreo_data_fuentes_deportivas_task
-from apps.sports_ingestion.tasks.proceso_rastreo_data_fuentes_deportivas_task import launch_proceso_rastreo_data_fuentes_deportivas_task
+from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task import (
+    launch_process_rastreo_data_fuentes_deportivas_task,
+)
 from core.logger import configure_logging
 
-
 AVAILABLE_PROCESSES = {
-    "proceso_rastreo_data_fuentes_deportivas": launch_proceso_rastreo_data_fuentes_deportivas_task,
+    "proceso_rastreo_data_fuentes_deportivas": launch_process_rastreo_data_fuentes_deportivas_task,
     # "proceso_otros_distintos...": proceso_otros_distintos_task,
 }
 

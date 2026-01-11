@@ -13,6 +13,7 @@ from loguru import logger
 # Se agrupan las importaciones por su origen para mayor claridad.
 
 # Core
+from core.paths import BACKEND_ROOT
 from core.db.no_sql.schema_initializer import (
     check_mongo_connection,
     initialize_mongo_schema,
@@ -152,7 +153,9 @@ def db_migrate():
 
     # --- CAMBIO CLAVE: Validar si existen archivos de migración ---
     # versions_dir = Settings.ALEMBIC_VERSIONS_DIR
-    versions_dir = Path(__file__).parent / "alembic" / "versions"
+    # versions_dir = Path(__file__).parent / "alembic" / "versions"
+    versions_dir =  BACKEND_ROOT / "alembic" / "versions"
+    
     print(f"Buscando archivos de migración en: {versions_dir}")
     migration_files = list(versions_dir.glob("*.py"))
 
@@ -172,7 +175,7 @@ def db_migrate():
         subprocess.run(
             ["alembic", "upgrade", "head"], 
             check=True,
-            capture_output=True,
+            # capture_output=True,
             text=True,
             encoding='utf-8',
             errors='replace'

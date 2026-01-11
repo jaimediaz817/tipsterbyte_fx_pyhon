@@ -9,6 +9,9 @@ import typer
 from sqlalchemy import create_engine, text
 from loguru import logger
 
+from core.config import settings
+from core.logger import configure_logging
+
 # --- CAMBIO CLAVE: Importar la ruta centralizada ---
 from core.paths import PROJECT_ROOT, BACKEND_ROOT
 
@@ -18,14 +21,13 @@ from core.db.sql.base_class import Base
 from core.db.sql.init_sql_all_models import load_all_models
 
 # Añadir la raíz del proyecto al sys.path para que encuentre 'core'
-project_root = Path(__file__).resolve().parents[4] # TODO: COMMENT: .parent.parent.parent
+# TODO: comment
+# project_root = Path(__file__).resolve().parents[4] # TODO: COMMENT: .parent.parent.parent
+project_root = BACKEND_ROOT
+
+print("project root Path(__file__).resolve().parents[4] >>>  ", project_root)
+
 sys.path.append(str(project_root))
-
-from core.config import settings
-from core.logger import configure_logging
-
-
-
 
 
 

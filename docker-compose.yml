@@ -41,7 +41,7 @@ services:
     restart: always      
 
   mongo_tipsterbyte:
-    image: mongo:4.4
+    image: mongo:5.0
     restart: always
     container_name: db_mongo_tipsterbyte_fx
     # --- CAMBIO CLAVE: Añadimos esta sección de entorno ---
