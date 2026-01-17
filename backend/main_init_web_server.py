@@ -1,14 +1,16 @@
 from fastapi.routing import APIRoute
 import typer
+from core.scheduler import start_scheduler
+from core.routes.scheduler_routes import router as scheduler_router
+from apps.leagues_manager.api.v1.routes.soccer_league_routes import router as leagues_router
+from apps.platform_config.api.v1.routes.platform_config_routes import router as platform_config_router
+# from core.scheduler import start_scheduler
 from core.db.sql.database_sql import create_db_and_tables
 from core.middleware import TraceIDMiddleware
 from core.logger import configure_logging
 from core.secrets import load_key
-configure_logging()
-
 from contextlib import asynccontextmanager
 import sys
-
 from fastapi import FastAPI
 from loguru import logger
 
@@ -17,7 +19,8 @@ from core.routes.system_routes import router as system_router
 
 # --- CAMBIO CLAVE: Importamos el router del controlador instanciado ---
 from apps.auth.api.v1.authenticator_controller import router as auth_router
-# from apps.auth.api.v1.routes.authenticator_routes import router as auth_router
+
+configure_logging()
 
 def _display_available_routes():
     """Muestra una tabla organizada de todas las rutas de la API en la consola."""
@@ -70,8 +73,10 @@ async def lifespan(app: FastAPI):
     # ✅ Iniciar el scheduler
     try:
         logger.info("🚀 Iniciando scheduler de procesos programados...")
+        
         # TODO: EVALUAR PARA CREAR Y HABILITAR
-        # start_scheduler()
+        # tb-hu-refactor-tasks-runner-flujo_y_databases-01: start_scheduler en el _init__.py del scheduler
+        start_scheduler()
     except Exception as e:
         logger.error(f"⚠️ Error al iniciar el scheduler: {e}")
 
@@ -100,42 +105,92 @@ async def lifespan(app: FastAPI):
 api_description = """
 ## Sistema de Automatización TipsterByte FX 🚀
 
-Esta es la API central para todos los procesos de automatización.
+API central para procesos programados, ingestión y administración del backend.
 
-### Herramientas de Gestión (manage.py)
+### 🛠️ CLI de Gestión (manage.py)
 
-Este proyecto incluye una potente interfaz de línea de comandos (`manage.py`) para facilitar el desarrollo y el mantenimiento.
-Para ver todos los comandos disponibles, ejecuta: `python manage.py --help`
+Para ver todos los comandos disponibles:
+```bash
+python manage.py --help
+```
 
-#### Migraciones de Base de Datos
-*   **Crear una nueva migración:**
-    ```bash
-    python manage.py db create-migration "Tu mensaje descriptivo"
-    ```
-*   **Aplicar migraciones:**
-    ```bash
-    python manage.py db migrate
-    ```
+#### ✅ SQL (PostgreSQL)
+Crear migración:
+```bash
+python manage.py sql create-migration -m "mi_migracion"
+```
 
-#### Gestión de Estado de la Base de Datos
-*   **Crear un backup:**
-    ```bash
-    python manage.py db state backup
-    ```
-*   **Restaurar desde el último backup:**
-    ```bash
-    python manage.py db state restore
-    ```
-*   **Resetear la BD (MODO PELIGROSO - PIERDE DATOS):**
-    ```bash
-    python manage.py db state reset --hard
-    ```
-*   **Resetear la BD (MODO SEGURO - PRESERVA DATOS):**
-    ```bash
-    python manage.py db state reset --with-backup
-    ```
+Aplicar migraciones:
+```bash
+python manage.py sql migrate
+```
+
+Gestión de estado (backup/restore/reset):
+```bash
+python manage.py sql state --help
+```
+
+Seeders SQL:
+```bash
+python manage.py seed-sql
+python manage.py seed-sql AuthSeeder --update
+python manage.py seed-sql PlatformConfigSeeder --update
+```
+
+Truncar tablas (peligroso):
+```bash
+python manage.py truncate-sql tabla1 tabla2
+```
+
+#### ✅ NoSQL (MongoDB)
+Validar conexión:
+```bash
+python manage.py nosql validate-connection
+```
+
+Inicializar esquema e índices:
+```bash
+python manage.py nosql init-schema
+```
+
+Seeders NoSQL:
+```bash
+python manage.py nosql seed
+```
+
+Gestión de estado (backup/restore/reset):
+```bash
+python manage.py nosql state --help
+```
+
+Migraciones de datos:
+```bash
+python manage.py nosql-migrate run
+```
+
+#### 🔐 Secretos (Fernet)
+Generar clave:
+```bash
+python manage.py secrets generate
+```
+
+Mostrar estado:
+```bash
+python manage.py secrets show
+```
+
+Cifrar/descifrar:
+```bash
+python manage.py secrets encrypt "texto"
+python manage.py secrets decrypt "token"
+```
+
+#### 🌐 Servidor
+Iniciar Uvicorn:
+```bash
+python manage.py server run --host 127.0.0.1 --port 8000
+```
 """
-
 # Aquí puedes definir metadatos para la documentación
 tags_metadata = [
     {
@@ -162,25 +217,36 @@ app = FastAPI(
 app.add_middleware(TraceIDMiddleware)
 
 # Registrar routers
-# app.include_router(
-#     system_router,
-#     prefix="/system",  # <-- ¡AQUÍ ESTÁ LA MAGIA!
-#     tags=["System - Estadisticas y Monitoreo"]    # Opcional: puedes definir el tag aquí para todas las rutas del router
-# )
-# NOTE: 
 app.include_router(
     system_router,
     prefix="/system",  # <-- ¡AQUÍ ESTÁ LA MAGIA!
-    tags=["System - Estadisticas y Monitoreo"]    # Opcional: puedes definir el tag aquí para todas las rutas del router
+    # tags=["System - Estadisticas y Monitoreo"]    # Opcional: puedes definir el tag aquí para todas las rutas del router
 )
 
-    # Registrar controladores (routers)
+# NOTE: Router del sistema - estadísticas y monitoreo
+app.include_router(
+    system_router,
+    prefix="/api/v1/system",  # <-- ¡AQUÍ ESTÁ LA MAGIA!
+    # tags=["System - Estadisticas y Monitoreo"]    # Opcional: puedes definir el tag aquí para todas las rutas del router
+)
+
+# NOTE: Router autenticación - usuarios y login
 app.include_router(
     auth_router,
     prefix="/api/v1/auth",
-    tags=["auth"]
+    # tags=["auth"]
 )
 
-@app.get("/")
-def root():
-    return {"status": "API is running"}
+app.include_router(
+    scheduler_router,
+    prefix="/api/v1",
+    # tags=["Gestión de Scheduler - tareas programadas"]
+)
+
+app.include_router(
+    leagues_router,
+)
+
+app.include_router(
+    platform_config_router,
+)

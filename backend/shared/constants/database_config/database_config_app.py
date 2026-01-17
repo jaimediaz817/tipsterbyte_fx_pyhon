@@ -1,0 +1,1 @@
+RELATIVE_PATH_MODELS_SQL = "infrastructure/models/sql/"

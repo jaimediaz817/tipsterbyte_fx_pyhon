@@ -59,9 +59,13 @@ python -c "from pathlib import Path; print('✅' if Path('.env').exists() else '
 - Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
 
 ```bash
-python main_init_scripts.py --process proceso_rastreo_data_fuentes_deportivas
+python main_init_scripts.py --process scheduler_proceso_rastreo_data_fuentes_deportivas
 ```
 
+## Instalar dependencias requirements
+```bash
+pip install -r requirements.txt
+```
 
 
 
@@ -168,6 +172,15 @@ backend/
 
 pip install "typer[all]" psycopg2-binary
 
+
+
+
+
+
+
+
+
+
 ## Gestión del Proyecto (manage.py)
 
 Este proyecto utiliza un script de gestión centralizado, `manage.py`, para todas las tareas de desarrollo y mantenimiento. Asegúrate de tener tu entorno virtual activado antes de ejecutar cualquier comando.
@@ -246,24 +259,31 @@ Sigue estos pasos en orden para levantar el proyecto desde cero:
     python manage.py sql migrate
     ```
 
--  **Poblar Base de Datos SQL (Seed):** Inserta los datos iniciales (roles, usuario admin, etc.).
+#### 💿 Poblado de Datos (Seeders)
+
+Para insertar los datos iniciales en las bases de datos (roles, usuarios administradores, configuraciones por defecto, etc.), utiliza los siguientes comandos.
+
+-   **Poblar la Base de Datos SQL:**
+    *Este comando ejecuta los "seeders" ubicados en `scripts/db/seeders/sql/`.*
+
     ```bash
-    # Desde la carpeta 'backend/'
-    python manage.py sql seed
+    # Ejecutar TODOS los seeders SQL en modo seguro (solo crea si no existe)
+    python manage.py seed-sql
+
+    # Ejecutar un seeder específico por su nombre de clase
+    python manage.py seed-sql AuthSeeder
+
+    # Ejecutar un seeder específico y FORZAR la actualización de registros existentes
+    python manage.py seed-sql AuthSeeder --update
     ```
 
--  **Poblar Base de Datos NoSQL (Seed):** Inserta datos de ejemplo en MongoDB.
-    ```bash
-    # Desde la carpeta 'backend/'
-    python manage.py nosql seed
-    ```
+-   **Poblar la Base de Datos NoSQL (MongoDB):**
+    *(Nota: La funcionalidad de actualización y especificidad aún no se ha implementado para NoSQL en este ejemplo, pero se podría seguir el mismo patrón).*
 
--  **Iniciar el Servidor Web:** Con las bases de datos listas, ya puedes correr la API.
     ```bash
-    # Desde la carpeta 'backend/'
-    python manage.py server run
+    # Ejecutar todos los seeders de MongoDB
+    python manage.py seed-nosql
     ```
-
 ---
 
 ### 🗃️ Gestión de PostgreSQL (`sql`)

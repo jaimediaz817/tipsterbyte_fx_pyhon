@@ -30,6 +30,7 @@ try:
     BACKEND_ROOT = PROJECT_ROOT / "backend"
     CORE_ROOT    = BACKEND_ROOT / "core"
     ALEMBIC_ROOT = BACKEND_ROOT / "alembic"
+    LOGS_ROOT    = BACKEND_ROOT / "logs"
     
     # --- AÑADIR ESTAS LÍNEAS PARA DEPURAR ---
     print("\n" + "-" * 80)

@@ -4,10 +4,11 @@ from loguru import logger
 from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task import (
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
+from shared.constants.process.process_codes import SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
 from core.logger import configure_logging
 
 AVAILABLE_PROCESSES = {
-    "proceso_rastreo_data_fuentes_deportivas": launch_process_rastreo_data_fuentes_deportivas_task,
+    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS: launch_process_rastreo_data_fuentes_deportivas_task,
     # "proceso_otros_distintos...": proceso_otros_distintos_task,
 }
 
@@ -27,3 +28,4 @@ if __name__ == "__main__":
     else:
         logger.info(f"▶️ Ejecutando proceso: {args.process}")
         asyncio.run(task())
+        

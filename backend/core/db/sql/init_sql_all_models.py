@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 # --- CAMBIO CLAVE: Importar la ruta directamente desde el módulo de rutas ---
+from shared.constants.database_config.database_config_app import RELATIVE_PATH_MODELS_SQL
 from core.paths import BACKEND_ROOT
 from loguru import logger
 
@@ -19,9 +20,6 @@ como la creación de tablas o las migraciones con Alembic.
 """
 
 # Importa los modelos del subsistema de autenticación
-# from backend.apps.auth.infrastructure.models.sql.user_model import User
-# from backend.apps.auth.infrastructure.models.sql.role_model import Role
-# from backend.apps.auth.infrastructure.models.sql.user_roles_model import user_roles
 
 # Cuando crees el subsistema de 'leagues_manager' con modelos, los importarás aquí:
 # from backend.apps.leagues_manager.infrastructure.models.sql.some_model import SomeModel
@@ -37,7 +35,7 @@ Su único propósito es registrar los modelos en los metadatos de la Base de SQL
 def load_all_models():
     """
     Encuentra e importa dinámicamente todos los archivos de modelos que siguen
-    la convención de estar en '.../infrastructure/models/sql/'.
+    la convención de estar en '.../infrastructure[otra ubicación dentro del subsistema o configuración global]/models/sql/'.
     """
     logger.info("🤖 Iniciando escaneo dinámico de modelos SQL...")
     
@@ -50,13 +48,13 @@ def load_all_models():
     models_loaded = 0
 
     # Busca recursivamente todos los archivos .py dentro de la estructura de modelos
-    for model_file in apps_dir.rglob("infrastructure/models/sql/*.py"):
+    for model_file in apps_dir.rglob(F"{RELATIVE_PATH_MODELS_SQL}*.py"):
         # Ignora los archivos __init__.py
         if model_file.name == "__init__.py":
             continue
 
         # Convierte la ruta del archivo a un formato de módulo de Python
-        # Ejemplo: backend/apps/auth/infrastructure/models/sql/user_model.py
+        # Ejemplo: backend/apps/auth/infrastructure[otra ubicación dentro del subsistema]/models/sql/user_model.py
         # se convierte en: backend.apps.auth.infrastructure.models.sql.user_model
         
         # Obtenemos la ruta relativa desde la raíz del proyecto 'backend'

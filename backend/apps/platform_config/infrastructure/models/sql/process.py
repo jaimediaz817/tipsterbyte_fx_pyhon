@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from core.db.sql.base_class import Base
 
 class Process(Base):
@@ -13,3 +14,9 @@ class Process(Base):
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # --- RELACIONES NUEVAS ---
+    # Un proceso tiene muchas ejecuciones (runs)
+    runs = relationship("ProcessRun", back_populates="process", cascade="all, delete-orphan")
+    # Un proceso está vinculado a muchos detalles de fuente a través de la tabla pivote
+    fuente_processes = relationship("DetalleFuenteExtraccionProcess", back_populates="process")

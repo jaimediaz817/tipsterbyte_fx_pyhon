@@ -13,6 +13,9 @@ from loguru import logger
 # Se agrupan las importaciones por su origen para mayor claridad.
 
 # Core
+from commands.db.admin.sql.db_utils import truncate_tables
+from core.db.sql.database_sql import get_db_context
+from scripts.db.seeders.sql_seeder_orchestrator import run_seeders as run_sql_seeders
 from core.paths import BACKEND_ROOT
 from core.db.no_sql.schema_initializer import (
     check_mongo_connection,
@@ -28,7 +31,7 @@ from commands.db.admin.no_sql.mongo_state_manager import app as mongo_state_app
 
 
 # Scripts para poblar las bases de datos (Seeders)
-from scripts.db.seeders.sql.seed_database_sql import seed_sql_data_auth_module
+# from scripts.db.seeders.sql.seed_database_sql import seed_sql_data_auth_module
 from scripts.db.seeders.no_sql.seed_database_no_sql import seed_nosql_data_auth_module # Asumiendo que el seeder de mongo se llama así para consistencia
 
 # --- Migraciones de datos MongoDB ---
@@ -45,6 +48,9 @@ from core.secrets import (
     decrypt as f_decrypt,
     FERNET_SECRET_FILE
 )
+
+# --- NUEVA IMPORTACIÓN: Orquestador de Seeders ---
+# from scripts.db.seeders.sql_seeder_orchestrator import run_seeders
 
 # --- 2. APLICACIÓN PRINCIPAL DE TYPER ---
 # Este es el punto de entrada para todos los comandos.
@@ -188,17 +194,69 @@ def db_migrate():
     except Exception as e:
         logger.error(f"❌ Falló la aplicación de las migraciones. Error: {e}")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # --- CAMBIO CLAVE: Añadimos el comando 'seed' ---
-@db_app.command("seed")
-def db_seed():
+# @db_app.command("seed")
+# def db_seed():
     
-    """
-    Puebla la base de datos con datos iniciales (roles, usuario admin, etc.).
-    """
+#     """
+#     Puebla la base de datos con datos iniciales (roles, usuario admin, etc.).
+#     """
+#     configure_logging()
+#     # --- CAMBIO CLAVE: Llama a la función aquí ---
+#     load_all_models()    
+#     seed_sql_data_auth_module()
+
+
+
+# --- 4. DEFINICIÓN DE COMANDOS DIRECTOS ---
+# Comandos que no pertenecen a un subgrupo.
+
+@app.command("seed-sql")
+def seed_sql_data(
+    seeder_name: str = typer.Argument(None, help="Nombre de la clase del seeder a ejecutar (ej. 'AuthSeeder'). Si no se especifica, se ejecutan todos."),
+    update: bool = typer.Option(False, "--update", help="Forzar la actualización de los registros existentes con los valores del seeder.")
+):
+    """Puebla la base de datos SQL con datos iniciales usando los seeders."""
+    print("Iniciando el proceso de seeding SQL... seeder name: " + str(seeder_name))
     configure_logging()
-    # --- CAMBIO CLAVE: Llama a la función aquí ---
-    load_all_models()    
-    seed_sql_data_auth_module()
+    load_all_models()
+    configure_logging()
+    run_sql_seeders(specific_seeder=seeder_name, update_existing=update)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Anidamos la app de backup/restore/reset dentro de los comandos de 'db'
 db_app.add_typer(sql_state_app, name="state", help="Gestiona el estado de la BD (backups/restauraciones/reseteos).")
@@ -369,5 +427,26 @@ def server_run(host: str = "127.0.0.1", port: int = 8000, reload: bool = True):
         command.append("--reload")
     subprocess.run(command)
 
+
+@app.command("truncate-sql")
+def truncate_sql_data(
+    tables: list[str] = typer.Argument(..., help="Lista de nombres de tablas a truncar (separadas por espacios).")
+):
+    """
+    Vacía por completo el contenido de una o más tablas SQL. ¡USAR CON PRECAUCIÓN!
+    """
+    configure_logging()
+    logger.warning("🔥 ¡ATENCIÓN! Esta operación eliminará TODOS los datos de las tablas especificadas.")
+    
+    # Pedimos confirmación para evitar desastres
+    if not typer.confirm("¿Estás seguro de que quieres continuar?"):
+        raise typer.Abort()
+
+    load_all_models()
+    
+    with get_db_context() as db:
+        truncate_tables(db, tables)
+
+    logger.info("🏁 Proceso de truncado finalizado.")
 if __name__ == "__main__":
     app()
