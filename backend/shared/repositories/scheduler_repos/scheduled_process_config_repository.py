@@ -4,12 +4,18 @@ from loguru import logger
 # from db.models.scheduled_process_config import ScheduledProcessConfig
 
 class ScheduledProcessConfigRepository:
+    """Repositorio para gestionar las configuraciones de procesos programados en la base de datos.
+    Proporciona métodos para interactuar con la tabla 'scheduled_process_config'.
+    Args:
+        db (Session): Sesión de la base de datos SQLAlchemy.
+    Returns:
+        ScheduledProcessConfigRepository: Instancia del repositorio.
+    """
     def __init__(self, db: Session):
         self.db = db
 
     def get_all_enabled(self) -> list[ScheduledProcessConfig]:
-        """Obtiene todas las configuraciones de procesos programados que están habilitadas.
-
+        """Obtiene todas las configuraciones de procesos programados que están habilitadas.            
         Returns:
             list[ScheduledProcessConfig]: Lista de configuraciones habilitadas.
         """
