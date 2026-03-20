@@ -1,7 +1,7 @@
 import asyncio
 
 from datetime import datetime
-from pathlib import Path
+# from pathlib import Path
 import subprocess
 import typer
 from loguru import logger
@@ -33,6 +33,10 @@ from commands.db.admin.no_sql.mongo_state_manager import app as mongo_state_app
 # Scripts para poblar las bases de datos (Seeders)
 # from scripts.db.seeders.sql.seed_database_sql import seed_sql_data_auth_module
 from scripts.db.seeders.no_sql.seed_database_no_sql import seed_nosql_data_auth_module # Asumiendo que el seeder de mongo se llama así para consistencia
+
+# --- IMPORTA EL NUEVO COMANDO ---
+from commands import project_cli
+
 
 # --- Migraciones de datos MongoDB ---
 # 001: Añade el campo process_name a access_logs
@@ -68,6 +72,11 @@ app = typer.Typer(
 # --- Sub-comando para la Base de Datos SQL (PostgreSQL) ---
 # db_app = typer.Typer()
 # app.add_typer(db_app, name="db", help="Comandos para la gestión de la base de datos SQL.")
+
+
+
+# --- REGISTRA EL NUEVO GRUPO DE COMANDOS ---
+app.add_typer(project_cli.app, name="project", help="Comandos de estado y guía del proyecto.")
 
 
 db_app = typer.Typer(name="sql", help="Gestiona la base de datos SQL (PostgreSQL).")

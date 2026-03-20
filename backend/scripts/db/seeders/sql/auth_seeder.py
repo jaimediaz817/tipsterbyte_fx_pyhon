@@ -11,10 +11,10 @@ from scripts.db.seeders.base_seeder import BaseSeeder
 
 # --- CONFIGURACIÓN DE DATOS INICIALES ---
 DEFAULT_ROLES = [
-    {"name": "admin", "description": "Administrador con todos los permisos. 817"},
-    {"name": "user", "description": "Usuario estándar de la plataforma. 817"},
-    {"name": "guest", "description": "Usuario con permisos de solo lectura. 817"},
-    {"name": "invitado", "description": "Usuario con permisos de solo lectura/invitado. 817"},
+    {"name": "admin", "description": "Administrador con todos los permisos."},
+    {"name": "user", "description": "Usuario estándar de la plataforma."},
+    {"name": "guest", "description": "Usuario con permisos de solo lectura."},
+    {"name": "invitado", "description": "Usuario con permisos de solo lectura/invitado."},
 ]
 
 ADMIN_USER = {

@@ -4,60 +4,49 @@ networks:
     driver: bridge
 
 services:
-  # postgres_tipsterbyte:
-  #   image: postgres:14
-  #   restart: always
-  #   container_name: db_postgres
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: tipsterbyte_fx_db
-  #   ports:
-  #     - "5431:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
   # ====================
   # Database - PostgreSQL
   # ====================
   postgres_tipsterbyte:
-    image: postgres:17
+    image: postgres:17 # O la versión que prefieras, como postgres:13-alpine
     container_name: db_pg_tipsterbyte_fx
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - database_data:/var/lib/postgresql/data
-      # --- CAMBIO CLAVE: V1: Añadimos este volumen ---
-      # Mapea la carpeta 'backups' del host a una carpeta '/backups' dentro del contenedor.
-      # --- NOTE: CAMBIO CLAVE: V2: Apuntamos a la nueva subcarpeta de backups de SQL ---
-      - ./backend/backups/postgresql_backups:/backups    
-    ports:
-      - "5433:5432"
+    # La sección 'environment' se elimina. 'env_file' se encarga de todo.
+    # Las variables POSTGRES_USER, POSTGRES_PASSWORD y POSTGRES_DB se leerán del .env
     env_file:
       - ./backend/.env
+    volumes:
+      - database_data:/var/lib/postgresql/data
+      - ./backend/backups/postgresql_backups:/backups
+    ports:
+      - "5433:5432"
     networks:
       - tipsterbyte_net
-    restart: always      
+    restart: always
 
+  # ====================
+  # Database - MongoDB
+  # ====================
   mongo_tipsterbyte:
-    image: mongo:5.0
+    image: mongo:5.0 # O la versión que prefieras, como mongo:4.4
     restart: always
     container_name: db_mongo_tipsterbyte_fx
-    # --- CAMBIO CLAVE: Añadimos esta sección de entorno ---
+    # Aquí sí es necesario 'environment' porque los nombres de las variables
+    # que espera la imagen de Mongo (MONGO_INITDB_ROOT_...) son diferentes
+    # a los que tienes en tu .env (MONGO_...).
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}    
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    # 'env_file' provee los valores para las variables de arriba (${MONGO_USER}, etc.)
+    env_file:
+      - ./backend/.env
     ports:
       - "27017:27017"
     volumes:
       - mongodata:/data/db
-      # --- CAMBIO CLAVE: Apuntamos a la nueva subcarpeta de backups de Mongo ---
-      - ./backend/backups/mongo_backups:/backups     
+      - ./backend/backups/mongo_backups:/backups
     networks:
       - tipsterbyte_net
 
 volumes:
-  pgdata:
   database_data:
   mongodata:

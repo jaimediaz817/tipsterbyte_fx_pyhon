@@ -1,8 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class ProcessCreateDTO(BaseModel):
-    code: str
-    name: str
+    code: str = Field(..., max_length=100)
+    name: str = Field(..., max_length=150)
     is_active: bool = True
-    description: Optional[str] = None
+    description: str | None = Field(None, max_length=255)

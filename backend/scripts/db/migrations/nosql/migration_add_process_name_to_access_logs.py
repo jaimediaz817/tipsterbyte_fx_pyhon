@@ -1,4 +1,3 @@
-import asyncio
 from loguru import logger
 from apps.auth.infrastructure.models.mongo.access_log_model import AccessLog
 # --- CAMBIO CLAVE: Importamos el inicializador de la BD NoSQL ---

@@ -1,12 +1,28 @@
-from apps.leagues_manager.application.dto.continente_create_dto import ContinenteCreateDTO
+from apps.leagues_manager.application.dto.DetalleFuenteExtraccionDTO import (
+    DetalleFuenteExtraccionDTO,
+)
+from apps.leagues_manager.application.dto.continente_create_dto import (
+    ContinenteCreateDTO,
+)
 from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
+from apps.leagues_manager.application.dto.detalle_fuente_extraccion_create_dto import (
+    DetalleFuenteExtraccionCreateDTO,
+)
+from apps.leagues_manager.application.dto.fuente_extraccion_create_dto import (
+    FuenteExtraccionCreateDTO,
+)
+from apps.leagues_manager.application.dto.fuente_extraccion_dto import (
+    FuenteExtraccionDTO,
+)
 from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
 from apps.leagues_manager.application.dto.liga_dto import LigaDTO
 from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
 from apps.leagues_manager.application.dto.pais_dto import PaisDTO
 from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
 from apps.leagues_manager.application.dto.torneo_dto import TorneoDTO
-from apps.leagues_manager.domain.repositories.i_leagues_repository import ILeaguesRepository
+from apps.leagues_manager.domain.repositories.i_leagues_repository import (
+    ILeaguesRepository,
+)
 from apps.leagues_manager.domain.services.i_leagues_service import ILeaguesService
 
 
@@ -25,7 +41,9 @@ class LeaguesService(ILeaguesService):
                 return ContinenteDTO(**c.__dict__)
         return None
 
-    def registrar_continente(self, dto: ContinenteCreateDTO, update: bool = False) -> ContinenteDTO:
+    def registrar_continente(
+        self, dto: ContinenteCreateDTO, update: bool = False
+    ) -> ContinenteDTO:
         existing = self.repo.get_continente_by_nombre(dto.nombre)
         if existing:
             if update:
@@ -36,7 +54,9 @@ class LeaguesService(ILeaguesService):
         return ContinenteDTO(**created.__dict__)
 
     def registrar_pais(self, dto: PaisCreateDTO, update: bool = False) -> PaisDTO:
-        existing = self.repo.get_pais_by_nombre_and_continente(dto.nombre, dto.continente_id)
+        existing = self.repo.get_pais_by_nombre_and_continente(
+            dto.nombre, dto.continente_id
+        )
         if existing:
             if update:
                 updated = self.repo.update_pais(existing.id, dto.model_dump())
@@ -62,8 +82,54 @@ class LeaguesService(ILeaguesService):
                 updated = self.repo.update_torneo(existing.id, dto.model_dump())
                 return TorneoDTO(**updated.__dict__)
             return TorneoDTO(**existing.__dict__)
-        created = self.repo.create_torneo(dto.nombre, dto.liga_id, dto.fecha_inicio, dto.fecha_fin)
+        created = self.repo.create_torneo(
+            dto.nombre, dto.liga_id, dto.fecha_inicio, dto.fecha_fin
+        )
         return TorneoDTO(**created.__dict__)
+
+    # --- Fuentes de Extracción (¡NUEVO!) ---
+    def registrar_fuente_extraccion(
+        self, dto: FuenteExtraccionCreateDTO, update: bool = False
+    ) -> FuenteExtraccionDTO:
+        existing = self.repo.get_fuente_extraccion_by_name(dto.name)
+        if existing:
+            if update:
+                # Convierte el Enum a su valor de string para la actualización si es necesario
+                data_to_update = dto.model_dump()
+                data_to_update["type"] = data_to_update["type"].value
+                updated = self.repo.update_fuente_extraccion(
+                    existing.id.scalar(), data_to_update
+                )
+                return FuenteExtraccionDTO(**updated.__dict__)
+            return FuenteExtraccionDTO(**existing.__dict__)
+
+        # Convierte el Enum a su valor de string para la creación
+        created = self.repo.create_fuente_extraccion(
+            dto.name, dto.type.value, dto.descripcion, dto.is_active
+        )
+        return FuenteExtraccionDTO(**created.__dict__)
+
+    # --- Detalles de Fuente de Extracción (¡NUEVO!) ---
+    def registrar_detalle_fuente_extraccion(
+        self, dto: DetalleFuenteExtraccionCreateDTO, update: bool = False
+    ) -> DetalleFuenteExtraccionDTO:
+        existing = self.repo.get_detalle_fuente_extraccion_by_torneo_and_fuente(
+            dto.torneo_id, dto.fuente_id
+        )
+        if existing:
+            if update:
+                # .model_dump() de Pydantic 2.x ya maneja HttpUrl a string por defecto
+                updated = self.repo.update_detalle_fuente_extraccion(
+                    existing.id.scalar(), dto.model_dump()
+                )
+                return DetalleFuenteExtraccionDTO(**updated.__dict__)
+            return DetalleFuenteExtraccionDTO(**existing.__dict__)
+
+        # .model_dump() de Pydantic 2.x ya maneja HttpUrl a string por defecto
+        created = self.repo.create_detalle_fuente_extraccion(
+            dto.torneo_id, dto.fuente_id, str(dto.url), dto.is_active
+        )
+        return DetalleFuenteExtraccionDTO(**created.__dict__)
 
     # def registrar_continente(self, dto: ContinenteCreateDTO) -> ContinenteDTO:
     #     existing = self.repo.get_continente_by_nombre(dto.nombre)

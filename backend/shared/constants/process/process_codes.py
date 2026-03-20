@@ -1,4 +1,5 @@
 SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS = "scheduler_proceso_rastreo_data_fuentes_deportivas"
+# TODO: refactorizar!
 PROCESS_CUOTAS_WPLAY = "process_cuotas_wplay"
 
 # TODO: tb-hu-refactors-block-01:;  pendiente quitar:

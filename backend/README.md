@@ -1,43 +1,111 @@
 # START
 
-## Configuración inicial
+## Configuración Inicial del Entorno
 
-Crear entorno virtual:
-python -m venv venv
+Sigue estos pasos **desde la carpeta `backend`**.
 
-## Eliminar carpeta y contenido
+1.  **Crear el entorno virtual:**
+    *   Asegúrate de estar en la carpeta `backend`. El siguiente comando creará una carpeta `.venv` dentro de `backend`.
 
-rm -rf .venv
+    ```bash
+    # Reemplaza la ruta si tu instalación de Python está en otro lugar
+    "C:\Users\jdiaz\AppData\Local\Python\Python311\python.exe" -m venv .venv
+    ```
 
-## Activar entorno virtual
+2.  **Activar el entorno virtual:**
 
-En PowerShell o CMD:
+    *   **En PowerShell o CMD de Windows:**
+        ```powershell
+        .\.venv\Scripts\activate
+        ```
 
-**En PowerShell o CMD de Windows:**
+    *   **En Git Bash o WSL (terminales tipo Linux):**
+        ```bash
+        source .venv/Scripts/activate
+        ```
+    *Una vez activo, tu terminal debería mostrar `(.venv)` al principio de la línea.*
 
-```powershell
-.\venv\Scripts\activate
-```
+3.  **Instalar las dependencias del proyecto:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-bash linux:
-.\venv\Scripts\activate
-En Git Bash (o WSL):
+---
 
-**En Git Bash o WSL (terminales tipo Linux en Windows):**
+
+
+### (n). Verificar Estado y Seguir Instrucciones
+
+Este proyecto incluye un comando inteligente que te guía en cada paso. **Úsalo después de completar cada acción para saber qué hacer a continuación.**
 
 ```bash
-source venv/Scripts/activate
-
-[COMANDO:windows]:
-source .venv/Scripts/activate
+python manage.py project status
 ```
+
+### Flujo de Comandos Guiado
+
+El comando `project status` te pedirá que ejecutes lo siguiente, en este orden:
+
+1.  **Levantar las Bases de Datos (si no están activas):**
+    *   *El comando te lo indicará si es necesario.*
+    ```bash
+    # Desde la raíz del proyecto (fuera de 'backend/')
+    docker-compose up -d
+    ```
+
+2.  **Crear las Tablas en PostgreSQL (si no existen):**
+    *   *El comando te lo indicará si es necesario.*
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py sql migrate
+    ```
+
+3.  **Poblar la Base de Datos SQL con datos iniciales:**
+    *   *El comando te lo indicará si es necesario.*
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py seed-sql
+    ```
+
+4.  **Inicializar el Esquema de MongoDB:**
+    *   *El comando te lo indicará si es necesario.*
+    ```bash
+    # Desde la carpeta 'backend/'
+    python manage.py nosql init-schema
+    ```
+
+### 3. Iniciar el Servidor
+
+Una vez que `python manage.py project status` te confirme que todo está listo, puedes iniciar el servidor de desarrollo:
+
+```bash
+python manage.py server run
+```
+
+## Ejecutar migraciones mediante el asistente:
+```bash
+python manage.py project status
+```
+- seleccionar opción #1, luego ejecutar los seeders sql
+
 
 ## Desactivar el entorno virtual
 
-- Para desactivar el entorno virtual en la terminal actual, ejecuta:
+Para salir del entorno virtual en la terminal actual, simplemente ejecuta:
 ```bash
 deactivate
 ```
+
+## Eliminar el entorno virtual (si es necesario)
+
+Si necesitas empezar de cero, puedes eliminar la carpeta del entorno. **Asegúrate de que el entorno esté desactivado primero.**
+```bash
+# Desde la carpeta 'backend'
+rm -rf .venv
+```
+
+
+
 
 Esto solo desactiva el entorno virtual para la sesión actual de la terminal; no elimina ningún archivo ni afecta el entorno virtual en disco. Si cierras la terminal o abres una nueva, el entorno virtual ya no estará activo hasta que lo actives de nuevo.
 
@@ -54,10 +122,10 @@ python -c "from pathlib import Path; print('✅' if Path('.env').exists() else '
 
 ## Verificar servicios/puertos inciados en el sistema operativo en cuestión
 
+
+
 ## Ejecutar manualmente procesos - tareas - tasks
-
 - Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
-
 ```bash
 python main_init_scripts.py --process scheduler_proceso_rastreo_data_fuentes_deportivas
 ```
@@ -69,6 +137,18 @@ pip install -r requirements.txt
 
 
 
+
+##  Formatting and Linting
+
+This project uses **Black** to ensure a consistent code style.
+
+### Configuration
+
+1.  **Install the VS Code Extension**: Search for and install the `ms-python.black-formatter` extension from the Marketplace.
+2.  **Install Black**: Make sure your virtual environment is activated and run `pip install black`.
+3.  **Enable Format on Save**: VS Code is configured via `.vscode/settings.json` to automatically format Python files on save using Black.
+
+Code style rules, like line length, are defined in the `pyproject.toml` file at the root of the project.
 
 
 
@@ -417,3 +497,31 @@ Este grupo de comandos te permite gestionar la clave de cifrado Fernet del proye
     python manage.py server run
 
 
+#LINK - 
+pip install coverage
+
+1. Ejecutar Pruebas con Cobertura
+Para ejecutar tus pruebas de pytest y recolectar datos de cobertura, usa el siguiente comando. Es crucial especificar la ruta de los módulos que quieres cubrir (ej. apps/, shared/, core/) para obtener un reporte preciso.
+
+# Desde la carpeta 'backend/'
+coverage run -m pytest
+
+2. Generar Reporte en la Terminal
+Una vez que hayas ejecutado las pruebas con coverage run, puedes ver un resumen de la cobertura directamente en tu terminal:
+
+# Desde la carpeta 'backend/'
+coverage report -m
+
+3. Generar Reporte HTML Detallado
+Para una visualización interactiva y detallada de la cobertura (ideal para identificar exactamente qué líneas de código no están cubiertas), genera un reporte HTML:
+# Desde la carpeta 'backend/'
+coverage html
+
+4. Ver el Reporte HTML
+Para abrir el reporte HTML en tu navegador web:
+
+Desde VS Code: Haz clic derecho en la carpeta htmlcov/ en el explorador de archivos y selecciona "Reveal in File Explorer" (Windows) o "Open in Integrated Terminal" y luego navega a la carpeta. Una vez allí, busca el archivo index.html y ábrelo con tu navegador.
+
+Desde la Terminal (Windows PowerShell/CMD):
+# Después de generar el reporte HTML, navega a la carpeta 'backend/'
+start htmlcov\index.html

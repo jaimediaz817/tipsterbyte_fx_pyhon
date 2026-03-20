@@ -1,48 +1,78 @@
 from typing import TYPE_CHECKING, Dict, Type
 from loguru import logger
 
+from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
 from apps.leagues_manager.domain.robots.base_robot import BaseRobot
+from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
+    DetalleFuenteExtraccion,
+)
+from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
 from apps.leagues_manager.robots.standings_robot import StandingsRobot
 from apps.leagues_manager.robots.odds_wplay_robot import OddsWPlayRobot
 from apps.leagues_manager.robots.calendar_robot import CalendarRobot
 from apps.leagues_manager.tests.mock_data_leagues import MockTorneo
 from apps.leagues_manager.tests.mock_data_leagues import MockDetalleFuenteExtraccion
+from shared.repositories.scheduler_repos.process_run_repository import (
+    ProcessRunRepository,
+)
 
 # ===================================================================
 # EL RUNNER (FACTORY/STRATEGY PARA SELECCIONAR EL ROBOT)
 # ===================================================================
+
 
 class JobRunnerApplication:
     """
     Clase responsable de recibir un trabajo y ejecutarlo
     usando el robot adecuado.
     """
+
     def __init__(self):
         # --- MAPEO INTELIGENTE: Asocia un 'tipo' de fuente con una clase de Robot ---
-        self.robot_factory: Dict[str, Type[BaseRobot]] = {
-            "standings": StandingsRobot,
-            "odds_wplay": OddsWPlayRobot,
-            "calendar": CalendarRobot,
-            # ... aquí se añadirían nuevos robots, ej: "odds_betfair": BetfairRobot
-        }
+        # Las claves ahora son los miembros del Enum
+        self.robot_factory: Dict[RobotTypeEnum, Type[BaseRobot]] = (
+            {  # <--- ¡CAMBIO DE TIPO EN EL DICCIONARIO!
+                RobotTypeEnum.STANDINGS: StandingsRobot,  # <--- Usa el Enum
+                RobotTypeEnum.ODDS_WPLAY: OddsWPlayRobot,  # <--- Usa el Enum
+                RobotTypeEnum.CALENDAR: CalendarRobot,  # <--- Usa el Enum
+                # ... aquí se añadirían nuevos robots, ej: RobotTypeEnum.ODDS_BETFAIR: BetfairRobot
+            }
+        )
         logger.trace("JobRunnerApplication inicializado con el mapeo de robots.")
 
-    async def run_job(self, torneo: 'MockTorneo', detalle: 'MockDetalleFuenteExtraccion'):
+    async def run_job(
+        self,
+        torneo: Torneo,
+        detalle: DetalleFuenteExtraccion,
+        run_id: str,
+        repo: ProcessRunRepository,
+    ):
         """
         Recibe un trabajo, encuentra el robot correcto, lo instancia y lo ejecuta.
         """
-        robot_type = detalle.fuente.type
-        
-        # Busca la clase del robot en el factory
-        robot_class = self.robot_factory.get(robot_type)
-
-        if not robot_class:
-            logger.warning(f"⚠️  No se encontró un robot para el tipo '{robot_type}' en el trabajo para '{torneo.name}'")
+        if detalle.fuente is None or not hasattr(detalle.fuente, "type"):
+            logger.warning(
+                f"⚠️  'detalle.fuente' es None o no tiene atributo 'type' en '{torneo.nombre}'"
+            )
             return
 
-        # Crea una instancia del robot específico y lo ejecuta
-        robot_instance = robot_class(torneo, detalle)
+        # `detalle.fuente.type` ahora será un miembro de RobotTypeEnum,
+        # que se puede usar directamente como clave.
+        robot_type_enum_member = detalle.fuente.type
+        robot_class = self.robot_factory.get(
+            robot_type_enum_member
+        )  # <--- Usar el miembro del Enum directamente
+
+        if not robot_class:
+            logger.warning(
+                f"⚠️  No hay robot para tipo '{robot_type_enum_member.value}' en '{torneo.nombre}'"
+            )
+            return
+
+        # --- PASAMOS repo al robot ---
+        robot_instance = robot_class(torneo, detalle, run_id, repo)
         await robot_instance.run()
+
 
 # --- Punto de entrada para el Task (para mantenerlo simple) ---
 # Creamos una única instancia del runner que será usada por el task.

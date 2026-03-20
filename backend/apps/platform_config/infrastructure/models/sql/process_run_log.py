@@ -10,8 +10,7 @@ class ProcessRunLog(Base):
 
     id = Column(Integer, primary_key=True)
     run_id = Column(String, ForeignKey("process_runs.run_id"), nullable=False)
-    # TODO: refactor aplicado: tb-hu-auth-01-users-or-clients-or-source
-    detalle_fuente_extraccion_id = Column(Integer)
+    detalle_fuente_extraccion_id = Column(Integer, ForeignKey("detalle_fuente_extraccion.id"), nullable=True)
     step = Column(String)
     level = Column(String)  # info, error, warning, debug
     message = Column(String)

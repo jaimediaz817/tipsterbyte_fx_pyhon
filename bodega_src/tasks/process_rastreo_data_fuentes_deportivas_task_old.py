@@ -1,18 +1,21 @@
-
-
 import asyncio
 from dataclasses import dataclass
 from loguru import logger
-from apps.leagues_manager.application.runner_leagues_manager import run_process_client_leagues_manager
+
+from bodega_src.tasks.runner_leagues_manager import run_process_client_leagues_manager
 from core.config import settings
 from core.db.sql.database_sql import SessionLocal
-from shared.constants.process.process_codes import PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS
+from shared.constants.process.process_codes import (
+    PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS,
+)
+
 
 # NOTE: esto es temporal, luego se moverá hacia: tests
 @dataclass
 class MockClient:
     id: int
     name: str
+
 
 class MockClientRepository:
     def __init__(self, session):
@@ -24,12 +27,13 @@ class MockClientRepository:
             MockClient(id=2, name="Cliente Beta"),
             MockClient(id=3, name="Cliente Gamma"),
         ]
-        
-        
+
+
 @dataclass
-class MockProcess:     
+class MockProcess:
     id: int
     code: str
+
 
 class MockProcessRepository:
     def __init__(self, session):
@@ -48,8 +52,7 @@ class MockProcessRepository:
         if code == PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS:
             return MockProcess(id=1, code=code)
         return None
-    
-            
+
 
 async def launch_process_rastreo_data_fuentes_deportivas_task():
     """_summary_
@@ -60,14 +63,16 @@ async def launch_process_rastreo_data_fuentes_deportivas_task():
     Returns:
         None
     Raises:
-        None        
+        None
     """
     logger.info("🚀 Iniciando tarea de rastreo de datos desde fuentes deportivas.")
     # Aquí se implementaría la lógica para rastrear datos desde las fuentes deportivas.
     # Por ejemplo, podrías llamar a funciones que interactúan con APIs o bases de datos.
     # ...
-    logger.info("✅ Tarea de rastreo de datos desde fuentes deportivas completada.")    
-    logger.info("🚀 Iniciando tarea de cruce cartera Sura para todos los clientes activos.")
+    logger.info("✅ Tarea de rastreo de datos desde fuentes deportivas completada.")
+    logger.info(
+        "🚀 Iniciando tarea de cruce cartera Sura para todos los clientes activos."
+    )
 
     # 🔒 Limitar a N procesos concurrentes reales
     semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_CLIENTS)
@@ -76,16 +81,20 @@ async def launch_process_rastreo_data_fuentes_deportivas_task():
         # TODO: Refactor
         # process_repo = ProcessRepository(session)
         process_repo = MockProcessRepository(session)
-        process = process_repo.get_active_by_code(PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS)
+        process = process_repo.get_active_by_code(
+            PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS
+        )
 
         if not process:
-            logger.warning(f"⚠️ Proceso '{PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS}' no está registrado en BD o no se encuentra activo.")
+            logger.warning(
+                f"⚠️ Proceso '{PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS}' no está registrado en BD o no se encuentra activo."
+            )
             return
 
         # TODO: Refactor
         # client_repo = ClientRepository(session)
         client_repo = MockClientRepository(session)
-        
+
         clients = client_repo.get_all_active_for_process(process.id)
 
         if not clients:
@@ -101,8 +110,10 @@ async def launch_process_rastreo_data_fuentes_deportivas_task():
         client_info = f"{client.name} (ID: {client.id})"
 
         if semaphore.locked():
-            logger.info(f"⏳ Cliente en espera: {client_info} (esperando cupo disponible...)")
-            
+            logger.info(
+                f"⏳ Cliente en espera: {client_info} (esperando cupo disponible...)"
+            )
+
         async with semaphore:
             try:
                 logger.info(f"▶️ Procesando cliente: {client_info}")
@@ -110,7 +121,7 @@ async def launch_process_rastreo_data_fuentes_deportivas_task():
                 await asyncio.to_thread(run_process_client_leagues_manager, client)
                 logger.success(f"✅ Cliente procesado exitosamente: {client_info}")
             except Exception as e:
-                logger.exception(f"❌ Error en cliente {client_info}: {e}")        
+                logger.exception(f"❌ Error en cliente {client_info}: {e}")
 
     await asyncio.gather(*(run_for_client(client) for client in clients))
 

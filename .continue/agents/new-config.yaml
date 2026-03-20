@@ -1,0 +1,28 @@
+name: TipsterByte Config
+version: 1.0.0
+schema: v1
+
+models:
+  # Tu modelo local potente (usa tus 64GB de RAM)
+  - name: DeepSeek Local
+    provider: ollama
+    model: deepseek-coder-v2:16b
+
+  - name: Gemini 3 Flash (Veloz)
+    provider: google
+    model: gemini-3-flash
+    apiKey: AIzaSyAr9K39TSEWXKAh-_PkK7UgL-DTw3WAWbs
+
+  - name: Gemini 1.5 Flash (Free)
+    provider: google
+    model: gemini-1.5-flash
+    apiKey: AIzaSyAr9K39TSEWXKAh-_PkK7UgL-DTw3WAWbs  # <--- Pega tu clave real aquí
+
+  # Modelo rápido para autocompletado (Ghost Text)
+  - name: Autocomplete
+    provider: ollama
+    model: qwen2.5-coder:1.5b-base
+
+# Esto es para que el autocompletado use el modelo rápido
+tabAutocompleteModel:
+  uses: ollama/qwen2.5-coder:1.5b-base

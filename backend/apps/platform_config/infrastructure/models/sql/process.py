@@ -18,5 +18,3 @@ class Process(Base):
     # --- RELACIONES NUEVAS ---
     # Un proceso tiene muchas ejecuciones (runs)
     runs = relationship("ProcessRun", back_populates="process", cascade="all, delete-orphan")
-    # Un proceso está vinculado a muchos detalles de fuente a través de la tabla pivote
-    fuente_processes = relationship("DetalleFuenteExtraccionProcess", back_populates="process")
