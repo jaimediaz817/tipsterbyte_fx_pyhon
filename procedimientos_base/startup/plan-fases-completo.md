@@ -128,7 +128,7 @@ self.semaphores = {
 
 ---
 
-## 🚀 **PRÓXIMO PASO**
+## � **PRÓXIMO PASO**
 
 Implementar **FASE 1 + 2** (2-3 horas total)
 

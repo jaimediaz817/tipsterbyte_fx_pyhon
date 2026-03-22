@@ -7,14 +7,35 @@ from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion im
     DetalleFuenteExtraccion,
 )
 from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
-from apps.leagues_manager.robots.standings_robot import StandingsRobot
-from apps.leagues_manager.robots.odds_wplay_robot import OddsWPlayRobot
-from apps.leagues_manager.robots.calendar_robot import CalendarRobot
 from apps.leagues_manager.tests.mock_data_leagues import MockTorneo
 from apps.leagues_manager.tests.mock_data_leagues import MockDetalleFuenteExtraccion
 from shared.repositories.scheduler_repos.process_run_repository import (
     ProcessRunRepository,
 )
+
+# --- EXCEPCIONES PERSONALIZADAS ---
+from core.exceptions import (
+    FuenteNotFoundException,
+    RobotNotFoundException,
+)
+
+# ===================================================================
+# IMPORTS DE ROBOTS (para que el decorador @register_robot se ejecute)
+# ===================================================================
+# Estos imports son necesarios para que los robots se registren automáticamente
+# al importar este módulo. Sin estos imports, el decorador nunca se ejecutaría.
+from apps.leagues_manager.robots.standings_robot import StandingsRobot  # noqa: F401
+from apps.leagues_manager.robots.odds_wplay_robot import OddsWPlayRobot  # noqa: F401
+from apps.leagues_manager.robots.calendar_robot import CalendarRobot  # noqa: F401
+
+# ===================================================================
+# REGISTRO AUTOMÁTICO DE ROBOTS (Patrón Decorador)
+# ===================================================================
+# Importar desde robot_registry.py para evitar importación circular
+from apps.leagues_manager.application.robot_registry import (
+    get_registered_robots,
+)
+
 
 # ===================================================================
 # EL RUNNER (FACTORY/STRATEGY PARA SELECCIONAR EL ROBOT)
@@ -27,18 +48,20 @@ class JobRunnerApplication:
     usando el robot adecuado.
     """
 
-    def __init__(self):
+    def __init__(
+        self, robot_factory: Dict[RobotTypeEnum, Type[BaseRobot]] | None = None
+    ):
         # --- MAPEO INTELIGENTE: Asocia un 'tipo' de fuente con una clase de Robot ---
-        # Las claves ahora son los miembros del Enum
-        self.robot_factory: Dict[RobotTypeEnum, Type[BaseRobot]] = (
-            {  # <--- ¡CAMBIO DE TIPO EN EL DICCIONARIO!
-                RobotTypeEnum.STANDINGS: StandingsRobot,  # <--- Usa el Enum
-                RobotTypeEnum.ODDS_WPLAY: OddsWPlayRobot,  # <--- Usa el Enum
-                RobotTypeEnum.CALENDAR: CalendarRobot,  # <--- Usa el Enum
-                # ... aquí se añadirían nuevos robots, ej: RobotTypeEnum.ODDS_BETFAIR: BetfairRobot
-            }
-        )
+        # Si se proporciona un factory, úsalo; de lo contrario, usa el factory por defecto
+        self.robot_factory = robot_factory or self._default_factory()
         logger.trace("JobRunnerApplication inicializado con el mapeo de robots.")
+
+    @staticmethod
+    def _default_factory() -> Dict[RobotTypeEnum, Type[BaseRobot]]:
+        """Retorna el factory por defecto con todos los robots registrados automáticamente."""
+        # ✅ Usa el registro automático de robots
+        # Los robots se registran con @register_robot al importar sus módulos
+        return get_registered_robots()
 
     async def run_job(
         self,
@@ -51,10 +74,7 @@ class JobRunnerApplication:
         Recibe un trabajo, encuentra el robot correcto, lo instancia y lo ejecuta.
         """
         if detalle.fuente is None or not hasattr(detalle.fuente, "type"):
-            logger.warning(
-                f"⚠️  'detalle.fuente' es None o no tiene atributo 'type' en '{torneo.nombre}'"
-            )
-            return
+            raise FuenteNotFoundException(detalle.id)
 
         # `detalle.fuente.type` ahora será un miembro de RobotTypeEnum,
         # que se puede usar directamente como clave.
@@ -64,10 +84,7 @@ class JobRunnerApplication:
         )  # <--- Usar el miembro del Enum directamente
 
         if not robot_class:
-            logger.warning(
-                f"⚠️  No hay robot para tipo '{robot_type_enum_member.value}' en '{torneo.nombre}'"
-            )
-            return
+            raise RobotNotFoundException(robot_type_enum_member.value)
 
         # Logging detallado: qué robot se ejecuta y para qué fuente
         fuente_name = (
@@ -91,5 +108,7 @@ class JobRunnerApplication:
 
 
 # --- Punto de entrada para el Task (para mantenerlo simple) ---
-# Creamos una única instancia del runner que será usada por el task.
-job_runner = JobRunnerApplication()
+# NOTA: El singleton global se eliminó en Fase 2.
+# Ahora se crea localmente donde se necesite:
+# job_runner = JobRunnerApplication()  # Sin argumentos usa el factory por defecto
+# job_runner = JobRunnerApplication(custom_factory)  # Con factory personalizado

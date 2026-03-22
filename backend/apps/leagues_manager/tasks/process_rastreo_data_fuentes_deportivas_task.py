@@ -23,9 +23,19 @@ from shared.repositories.scheduler_repos.process_run_repository import (
     ProcessRunRepository,
 )
 
-# --- CAMBIO CLAVE: Importamos la instancia del JobRunner ---
-from apps.leagues_manager.application.job_runner_application import job_runner
+# --- CAMBIO CLAVE: Importamos la CLASE JobRunner (no el singleton) ---
+from apps.leagues_manager.application.job_runner_application import (
+    JobRunnerApplication,
+)
 from apps.leagues_manager.tasks.utils import generate_run_id
+
+# --- EXCEPCIONES PERSONALIZADAS ---
+from core.exceptions import (
+    ProcessNotFoundException,
+    ProcessInactiveException,
+    ProcessRunCreationException,
+    NoActiveJobsException,
+)
 
 
 def _build_jobs_from_leagues(
@@ -141,6 +151,9 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
     )
     semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_CLIENTS)
 
+    # ✅ Crear instancia local de JobRunner (Fase 2: Inyección de dependencias)
+    job_runner = JobRunnerApplication()
+
     with SessionLocal() as session:
         # --- CONECTAR ProcessRunRepository ---
         repo = ProcessRunRepository(db=session)
@@ -149,22 +162,12 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
         platform_config_repo = SQLPlatformConfigRepository(session)
         process_entity = platform_config_repo.get_process_by_code(process_code)
         if not process_entity:
-            logger.error(
-                f"❌ Proceso '{process_code}' no encontrado. No se pueden lanzar tareas."
-            )
-            return
+            raise ProcessNotFoundException(process_code)
 
         # Validar si el proceso está activo
         is_active: bool = cast(bool, process_entity.is_active)
         if not is_active:
-            logger.warning(
-                f"⚠️  Proceso '{process_code}' está INACTIVO (is_active=False). No se ejecutarán tareas."
-            )
-            logger.info(
-                f"💡 Para activar este proceso, marca is_active=True en la tabla 'process' para el código '{process_code}'."
-            )
-            # NO crear ProcessRun si el proceso está inactivo
-            return
+            raise ProcessInactiveException(process_code, cast(int, process_entity.id))
 
         logger.info(
             f"✅ Proceso '{process_code}' está ACTIVO (is_active=True). Procediendo con la ejecución..."
@@ -173,10 +176,7 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
         # SOLO crear ProcessRun si el proceso está activo
         run = repo.create_run(run_id, process_code)
         if not run:
-            logger.error(
-                f"❌ No se pudo crear el ProcessRun para código '{process_code}'. Verifica que el proceso exista en BD."
-            )
-            return
+            raise ProcessRunCreationException(process_code, run_id)
 
         target_process_id: int | None = cast(
             int, process_entity.id
@@ -196,11 +196,8 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
         )
 
         if not flat_jobs_for_execution:
-            logger.warning(
-                f"🏁 No hay trabajos activos para el proceso '{process_code}'. Finalizando."
-            )
             repo.complete_run(run_id)
-            return
+            raise NoActiveJobsException(process_code)
 
         # Resumen de fuentes por tipo
         fuentes_por_tipo = {}

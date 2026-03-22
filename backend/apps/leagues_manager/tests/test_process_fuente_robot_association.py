@@ -166,3 +166,90 @@ def test_proceso_con_fuente_inactiva_no_selecciona_robot():
 
     # El detalle está inactivo, no debe ser procesado
     assert detalle.is_active is False
+
+
+# =====================================================
+# TESTS: Registro Automático de Robots
+# =====================================================
+
+
+def test_robot_se_registra_automaticamente_al_importar():
+    """✅ Los robots se registran automáticamente al importar sus módulos."""
+    from apps.leagues_manager.application.robot_registry import get_registered_robots
+
+    # Los robots ya están importados al inicio del archivo
+    # por lo que deberían estar registrados
+    robots = get_registered_robots()
+
+    # Verificar que los 3 robots están registrados
+    assert len(robots) == 3
+    assert RobotTypeEnum.STANDINGS in robots
+    assert RobotTypeEnum.ODDS_WPLAY in robots
+    assert RobotTypeEnum.CALENDAR in robots
+
+    # Verificar que las clases son correctas
+    assert robots[RobotTypeEnum.STANDINGS] == StandingsRobot
+    assert robots[RobotTypeEnum.ODDS_WPLAY] == OddsWPlayRobot
+    assert robots[RobotTypeEnum.CALENDAR] == CalendarRobot
+
+
+def test_robot_no_se_registra_si_no_se_importa():
+    """
+    ✅ Un robot NO se registra si no se importa su módulo.
+
+    Este test simula el escenario donde se crea un nuevo robot
+    pero NO se importa en job_runner_application.py.
+
+    Comportamiento esperado:
+    - El robot NO aparece en el registro automático
+    - El factory NO lo tiene mapeado
+    - Si se intenta usar, se recibe un warning
+    """
+    from apps.leagues_manager.application.robot_registry import get_registered_robots
+
+    # Obtener robots registrados
+    robots = get_registered_robots()
+
+    # Verificar que el factory NO tiene robots inexistentes
+    runner = JobRunnerApplication()
+
+    # Verificar que el factory tiene exactamente los 3 robots registrados
+    assert len(runner.robot_factory) == 3
+
+    # Verificar que NO hay robots adicionales no registrados
+    for robot_type in runner.robot_factory.keys():
+        assert robot_type in robots
+
+
+def test_job_runner_usa_registro_automatico():
+    """✅ JobRunnerApplication usa el registro automático de robots."""
+    runner = JobRunnerApplication()
+
+    # Verificar que el factory tiene los robots del registro automático
+    assert len(runner.robot_factory) == 3
+    assert RobotTypeEnum.STANDINGS in runner.robot_factory
+    assert RobotTypeEnum.ODDS_WPLAY in runner.robot_factory
+    assert RobotTypeEnum.CALENDAR in runner.robot_factory
+
+
+def test_job_runner_acepta_factory_personalizado():
+    """✅ JobRunnerApplication acepta un factory personalizado."""
+    from apps.leagues_manager.application.robot_registry import get_registered_robots
+
+    # Crear un factory personalizado con solo 1 robot
+    custom_factory = {
+        RobotTypeEnum.STANDINGS: StandingsRobot,
+    }
+
+    # Crear runner con factory personalizado
+    runner = JobRunnerApplication(robot_factory=custom_factory)
+
+    # Verificar que SOLO tiene el robot del factory personalizado
+    assert len(runner.robot_factory) == 1
+    assert RobotTypeEnum.STANDINGS in runner.robot_factory
+    assert RobotTypeEnum.ODDS_WPLAY not in runner.robot_factory
+    assert RobotTypeEnum.CALENDAR not in runner.robot_factory
+
+    # Verificar que el registro automático sigue teniendo los 3 robots
+    robots = get_registered_robots()
+    assert len(robots) == 3

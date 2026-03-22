@@ -7,6 +7,9 @@ from shared.repositories.scheduler_repos.process_run_repository import (
     ProcessRunRepository,
 )
 
+# --- EXCEPCIONES PERSONALIZADAS ---
+from core.exceptions import ScrapingException
+
 if TYPE_CHECKING:
     from apps.leagues_manager.tests.mock_data_leagues import (
         MockTorneo,
@@ -93,6 +96,14 @@ class BaseRobot(ABC):
             self._log_step(
                 "END", "info", f"Completado exitosamente para {self.job_context}"
             )
-        except Exception as e:
-            self._log_step("ERROR", "error", f"Falló para {self.job_context}: {e}")
+        except ScrapingException:
+            # Si ya es una ScrapingException, solo re-lanzar
             raise
+        except Exception as e:
+            # Envolver otras excepciones en ScrapingException
+            self._log_step("ERROR", "error", f"Falló para {self.job_context}: {e}")
+            raise ScrapingException(
+                robot_id=self.robot_id,
+                url=self.detalle.url,
+                original_error=e,
+            )
