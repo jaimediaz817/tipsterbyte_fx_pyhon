@@ -1,5 +1,13 @@
+from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
+    DetalleFuenteExtraccion,
+)
+from apps.leagues_manager.infrastructure.models.sql.fuente_extraccion import (
+    FuenteExtraccion,
+)
 from apps.leagues_manager.infrastructure.models.sql.liga import Liga
 from sqlalchemy.orm import Session, joinedload
+
+from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
 
 
 class SqlPlatformRepository:
@@ -7,18 +15,22 @@ class SqlPlatformRepository:
         self.db = db
 
     def get_all_leagues_with_full_details(self):
-        # Carga ligas, torneos y detalles de fuente con join
-        return (
+        """
+        Obtiene todas las ligas activas, con sus torneos activos,
+        detalles de fuente de extracción activos y fuentes de extracción asociadas.
+        La filtración por process_id se realizará en la lógica de la tarea.
+        """
+        query = (
             self.db.query(Liga)
             .filter(Liga.is_active == True)
             .options(
-                # Eager load torneos y detalles_fuente
-                # (ajusta los nombres según tus relaciones)
                 joinedload(Liga.torneos)
-                .joinedload(Liga.torneos.property.mapper.class_.detalles_fuente)
-                .joinedload(
-                    Liga.torneos.property.mapper.class_.detalles_fuente.property.mapper.class_.fuente
-                )
+                .joinedload(Torneo.detalles_fuente)
+                .joinedload(DetalleFuenteExtraccion.fuente),
+                joinedload(Liga.torneos)
+                .joinedload(Torneo.detalles_fuente)
+                .joinedload(DetalleFuenteExtraccion.process),
             )
-            .all()
         )
+        # Usar distinct para evitar duplicados si hay múltiples detalles por un mismo torneo/liga
+        return query.distinct(Liga.id).all()

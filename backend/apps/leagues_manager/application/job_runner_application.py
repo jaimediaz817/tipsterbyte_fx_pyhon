@@ -69,9 +69,25 @@ class JobRunnerApplication:
             )
             return
 
+        # Logging detallado: qué robot se ejecuta y para qué fuente
+        fuente_name = (
+            detalle.fuente.name if hasattr(detalle.fuente, "name") else "Sin nombre"
+        )
+        logger.info(
+            f"🤖 Ejecutando robot: {robot_class.__name__} | "
+            f"Fuente: '{fuente_name}' (tipo: {robot_type_enum_member.value}) | "
+            f"Torneo: '{torneo.nombre}' | "
+            f"Detalle ID: {detalle.id} | "
+            f"process_id: {detalle.process_id}"
+        )
+
         # --- PASAMOS repo al robot ---
         robot_instance = robot_class(torneo, detalle, run_id, repo)
         await robot_instance.run()
+
+        logger.info(
+            f"✅ Robot {robot_class.__name__} completado para fuente '{fuente_name}' en torneo '{torneo.nombre}'"
+        )
 
 
 # --- Punto de entrada para el Task (para mantenerlo simple) ---

@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from core.db.sql.base_class import Base
-from .torneo import Torneo
+from apps.platform_config.infrastructure.models.sql.process import Process
 
 
 class DetalleFuenteExtraccion(Base):
@@ -25,8 +25,16 @@ class DetalleFuenteExtraccion(Base):
     url = Column(String(500), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
+    # Campo para la relación con Process
+    process_id = Column(
+        Integer, ForeignKey("process.id", ondelete="RESTRICT"), nullable=False
+    )
+
     torneo = relationship("Torneo", back_populates="detalles_fuente")
     fuente = relationship("FuenteExtraccion", back_populates="detalles")
+    process = relationship(
+        "Process", back_populates="detalles_fuente_extraccion"
+    )  # Relación ORM
 
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

@@ -29,7 +29,9 @@ class ProcessRunRepository:
         """
         process = self.db.query(Process).filter(Process.code == process_code).first()
         if not process:
-            logger.error(f"❌ No se encontró el proceso con código '{process_code}'. No se puede crear el ProcessRun.")
+            logger.error(
+                f"❌ No se encontró el proceso con código '{process_code}'. No se puede crear el ProcessRun."
+            )
             return None
 
         run = ProcessRun(
@@ -47,10 +49,12 @@ class ProcessRunRepository:
         Marca un ProcessRun como completado exitosamente.
         Registra la fecha/hora de finalización.
         """
-        self.db.query(ProcessRun).filter(ProcessRun.run_id == run_id).update({
-            "status": "success",
-            "ended_at": datetime.now(),
-        })
+        self.db.query(ProcessRun).filter(ProcessRun.run_id == run_id).update(
+            {
+                "status": "success",
+                "ended_at": datetime.now(),
+            }
+        )
         self.db.commit()
         logger.success(f"✅ ProcessRun completado: run_id={run_id}")
 
@@ -59,10 +63,12 @@ class ProcessRunRepository:
         Marca un ProcessRun como fallido.
         Registra la fecha/hora de finalización.
         """
-        self.db.query(ProcessRun).filter(ProcessRun.run_id == run_id).update({
-            "status": "failed",
-            "ended_at": datetime.now(),
-        })
+        self.db.query(ProcessRun).filter(ProcessRun.run_id == run_id).update(
+            {
+                "status": "failed",
+                "ended_at": datetime.now(),
+            }
+        )
         self.db.commit()
         logger.error(f"❌ ProcessRun marcado como fallido: run_id={run_id}")
 
@@ -72,7 +78,6 @@ class ProcessRunRepository:
         step: str,
         level: str,
         message: str,
-        detalle_fuente_extraccion_id: int | None = None,
         input: str | None = None,
         output: str | None = None,
     ) -> None:
@@ -84,13 +89,11 @@ class ProcessRunRepository:
             step:                         Paso del hilo (usar constantes de process_run_steps.py).
             level:                        Nivel del log: 'info', 'warning', 'error', 'debug'.
             message:                      Descripción legible de lo ocurrido en el paso.
-            detalle_fuente_extraccion_id: ID del detalle de fuente que procesó este hilo (nullable).
             input:                        Datos de entrada del paso en formato texto/JSON (opcional).
             output:                       Resultado del paso en formato texto/JSON (opcional).
         """
         log = ProcessRunLog(
             run_id=run_id,
-            detalle_fuente_extraccion_id=detalle_fuente_extraccion_id,
             step=step,
             level=level,
             message=message,

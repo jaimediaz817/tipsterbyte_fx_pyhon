@@ -6,6 +6,8 @@ from pydantic import BaseModel, HttpUrl, Field
 class DetalleFuenteExtraccionCreateDTO(BaseModel):
     torneo_id: int
     fuente_id: int
-    url: HttpUrl  # Asume que es una URL válida
+    # url: HttpUrl  # Asume que es una URL válida
+    url: str = Field(..., max_length=500)
     is_active: bool = True
     # Puedes añadir otros campos como fecha_ultima_extraccion si es necesario en el futuro
+    process_id: int  # Campo para el ID del proceso

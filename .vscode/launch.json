@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--process",
-                "scheduler_proceso_rastreo_data_fuentes_deportivas"
+                "SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS"
             ]
         },
         {
@@ -22,8 +22,10 @@
             "module": "uvicorn",
             "args": [
                 "main_init_web_server:app",
-                "--host", "127.0.0.1",
-                "--port", "8010",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8010",
                 "--reload"
             ],
             "cwd": "${workspaceFolder}/backend",
@@ -44,7 +46,7 @@
                 "PYTHONPATH": "${workspaceFolder}/backend"
             },
             "justMyCode": true
-        }        
+        }
     ],
     // Aquí definimos las entradas que el depurador puede solicitar.
     "inputs": [
@@ -58,5 +60,5 @@
                 "placeHolder": "ej: seed-sql AuthSeeder"
             }
         }
-    ]    
+    ]
 }

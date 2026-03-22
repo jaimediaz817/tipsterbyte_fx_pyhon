@@ -464,7 +464,12 @@ class TestSQLLeaguesRepository(unittest.TestCase):
     def test_get_detalle_fuente_extraccion_by_torneo_and_fuente_found(self):
         """Prueba obtener un DetalleFuenteExtraccion por torneo y fuente cuando existe."""
         detalle_model = DetalleFuenteExtraccion(
-            id=1, torneo_id=1, fuente_id=1, url="https://api.wplay.co", is_active=True
+            id=1,
+            torneo_id=1,
+            fuente_id=1,
+            url="https://api.wplay.co",
+            is_active=True,
+            process_id=101,  # Añadir process_id
         )
         self.db_session_mock.query.return_value.filter.return_value.first.return_value = (
             detalle_model
@@ -481,6 +486,7 @@ class TestSQLLeaguesRepository(unittest.TestCase):
         self.assertEqual(torneo_id_obtenido, 1)
         self.assertEqual(fuente_id_obtenido, 1)
         self.assertEqual(url_obtenida, "https://api.wplay.co")
+        # self.assertEqual(result.process_id, 101)  # ¡NUEVA ASERCIÓN!
 
     def test_get_detalle_fuente_extraccion_by_torneo_and_fuente_not_found(self):
         """Prueba obtener un DetalleFuenteExtraccion por torneo y fuente cuando no existe."""
@@ -497,7 +503,12 @@ class TestSQLLeaguesRepository(unittest.TestCase):
     def test_create_detalle_fuente_extraccion(self):
         """Prueba crear un nuevo DetalleFuenteExtraccion."""
         detalle_model = DetalleFuenteExtraccion(
-            id=1, torneo_id=1, fuente_id=1, url="https://api.bet365.com", is_active=True
+            id=1,
+            torneo_id=1,
+            fuente_id=1,
+            url="https://api.bet365.com",
+            is_active=True,
+            process_id=101,  # Añadir process_id
         )
         self.db_session_mock.add.return_value = None
         self.db_session_mock.commit.return_value = None
@@ -508,19 +519,26 @@ class TestSQLLeaguesRepository(unittest.TestCase):
             "refresh",
             side_effect=lambda obj: setattr(obj, "id", 1),
         ):
+            # El método mockeado debe recibir el nuevo argumento
             result = self.repository.create_detalle_fuente_extraccion(
-                1, 1, "https://api.bet365.com", True
+                1, 1, "https://api.bet365.com", True, 101  # ¡NUEVO! Pasar process_id
             )
 
         self.assertIsInstance(result, DetalleFuenteExtraccion)
         self.assertEqual(result.torneo_id, 1)
         self.assertEqual(result.fuente_id, 1)
         self.assertEqual(result.url, "https://api.bet365.com")
+        self.assertEqual(result.process_id, 101)  # ¡NUEVA ASERCIÓN!
 
     def test_update_detalle_fuente_extraccion_success(self):
         """Prueba actualizar un DetalleFuenteExtraccion existente."""
         detalle_model = DetalleFuenteExtraccion(
-            id=1, torneo_id=1, fuente_id=1, url="https://api.wplay.co", is_active=True
+            id=1,
+            torneo_id=1,
+            fuente_id=1,
+            url="https://api.wplay.co",
+            is_active=True,
+            process_id=101,  # Añadir process_id
         )
         self.db_session_mock.query.return_value.filter.return_value.first.return_value = (
             detalle_model
@@ -528,11 +546,16 @@ class TestSQLLeaguesRepository(unittest.TestCase):
         self.db_session_mock.commit.return_value = None
         self.db_session_mock.refresh.return_value = None
 
-        data = {"url": "https://api.wplay.co/nueva", "is_active": False}
+        data = {
+            "url": "https://api.wplay.co/nueva",
+            "is_active": False,
+            "process_id": 102,
+        }  # ¡NUEVO! Actualizar process_id
         result = self.repository.update_detalle_fuente_extraccion(1, data)
 
         self.assertEqual(result.url, "https://api.wplay.co/nueva")
         self.assertEqual(result.is_active, False)
+        self.assertEqual(result.process_id, 102)  # ¡NUEVA ASERCIÓN!
 
     def test_update_detalle_fuente_extraccion_not_found(self):
         """Prueba actualizar un DetalleFuenteExtraccion que no existe."""
@@ -640,9 +663,14 @@ class TestSQLLeaguesRepository(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_to_detalle_fuente_extraccion(self):
-        """Prueba el mapeo de DetalleFuenteExtraccion a DetalleFuenteExtraccion (¡NUEVO!)."""
+        """Prueba el mapeo de DetalleFuenteExtraccion a DetalleFuenteExtraccion."""
         detalle_model = DetalleFuenteExtraccion(
-            id=1, torneo_id=1, fuente_id=1, url="https://api.wplay.co", is_active=True
+            id=1,
+            torneo_id=1,
+            fuente_id=1,
+            url="https://api.wplay.co",
+            is_active=True,
+            process_id=101,  # Añadir process_id
         )
         result = self.repository._to_detalle_fuente_extraccion(detalle_model)
 
@@ -656,9 +684,11 @@ class TestSQLLeaguesRepository(unittest.TestCase):
         self.assertEqual(fuente_id_obtenido, 1)
         url_obtenida = getattr(result, "url", None)
         self.assertEqual(url_obtenida, "https://api.wplay.co")
+        process_id_obtenido = getattr(result, "process_id", None)  # ¡NUEVA ASERCIÓN!
+        self.assertEqual(process_id_obtenido, 101)
 
     def test_to_detalle_fuente_extraccion_none(self):
-        """Prueba el mapeo cuando el modelo es None (¡NUEVO!)."""
+        """Prueba el mapeo cuando el modelo es None."""
         result: DetalleFuenteExtraccion | None = (
             self.repository._to_detalle_fuente_extraccion(None)
         )

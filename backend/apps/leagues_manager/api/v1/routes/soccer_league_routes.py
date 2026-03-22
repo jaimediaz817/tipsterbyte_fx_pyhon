@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from apps.leagues_manager.services.leagues_service import LeaguesService
-from apps.leagues_manager.application.dto.continente_create_dto import ContinenteCreateDTO
+from apps.leagues_manager.application.dto.continente_create_dto import (
+    ContinenteCreateDTO,
+)
 from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
 from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
 from apps.leagues_manager.application.dto.liga_dto import LigaDTO
@@ -9,9 +11,18 @@ from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
 from apps.leagues_manager.application.dto.pais_dto import PaisDTO
 from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
 from apps.leagues_manager.application.dto.torneo_dto import TorneoDTO
+from apps.leagues_manager.application.dto.fuente_extraccion_dto import (
+    FuenteExtraccionDTO,
+)
+from apps.leagues_manager.application.dto.detalle_fuente_extraccion_dto import (
+    DetalleFuenteExtraccionDTO,
+)
 from core.db.sql.database_sql import get_db_session
 from typing import List
-from apps.leagues_manager.infrastructure.repositories.sql_leagues_repository import SQLLeaguesRepository
+from apps.leagues_manager.infrastructure.repositories.sql_leagues_repository import (
+    SQLLeaguesRepository,
+)
+
 # from apps.leagues_manager.application.services.leagues_service import LeaguesService
 # from apps.leagues_manager.application.dtos.leagues_dtos import (
 #     ContinenteCreateDTO, PaisCreateDTO, LigaCreateDTO, TorneoCreateDTO,
@@ -20,39 +31,91 @@ from apps.leagues_manager.infrastructure.repositories.sql_leagues_repository imp
 
 router = APIRouter(prefix="/api/v1/leagues", tags=["LeaguesManager"])
 
+
 def get_service(db: Session = Depends(get_db_session)):
     repo = SQLLeaguesRepository(db)
     return LeaguesService(repo)
 
+
 @router.post("/continentes", response_model=ContinenteDTO)
-def crear_continente(dto: ContinenteCreateDTO, service: LeaguesService = Depends(get_service)):
+def crear_continente(
+    dto: ContinenteCreateDTO, service: LeaguesService = Depends(get_service)
+):
     return service.registrar_continente(dto)
+
 
 @router.post("/paises", response_model=PaisDTO)
 def crear_pais(dto: PaisCreateDTO, service: LeaguesService = Depends(get_service)):
     return service.registrar_pais(dto)
 
+
 @router.post("/ligas", response_model=LigaDTO)
 def crear_liga(dto: LigaCreateDTO, service: LeaguesService = Depends(get_service)):
     return service.registrar_liga(dto)
+
 
 @router.post("/torneos", response_model=TorneoDTO)
 def crear_torneo(dto: TorneoCreateDTO, service: LeaguesService = Depends(get_service)):
     return service.registrar_torneo(dto)
 
+
+# --- NUEVOS ENDPOINTS PARA CONTROL GRANULAR ---
+
+
+@router.post("/fuentes/{fuente_id}/pause", response_model=FuenteExtraccionDTO)
+def pausar_fuente(fuente_id: int, service: LeaguesService = Depends(get_service)):
+    """Pausa una fuente de extracción (is_active=False)."""
+    try:
+        return service.pausar_fuente_extraccion(fuente_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/fuentes/{fuente_id}/resume", response_model=FuenteExtraccionDTO)
+def reanudar_fuente(fuente_id: int, service: LeaguesService = Depends(get_service)):
+    """Reanuda una fuente de extracción (is_active=True)."""
+    try:
+        return service.reanudar_fuente_extraccion(fuente_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/detalles/{detalle_id}/pause", response_model=DetalleFuenteExtraccionDTO)
+def pausar_detalle(detalle_id: int, service: LeaguesService = Depends(get_service)):
+    """Pausa un detalle de fuente de extracción (is_active=False)."""
+    try:
+        return service.pausar_detalle_fuente_extraccion(detalle_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/detalles/{detalle_id}/resume", response_model=DetalleFuenteExtraccionDTO)
+def reanudar_detalle(detalle_id: int, service: LeaguesService = Depends(get_service)):
+    """Reanuda un detalle de fuente de extracción (is_active=True)."""
+    try:
+        return service.reanudar_detalle_fuente_extraccion(detalle_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # --- NUEVAS RUTAS GET ---
+
 
 # --- Continentes ---
 @router.get("/continentes", response_model=List[ContinenteDTO])
 def obtener_continentes(service: LeaguesService = Depends(get_service)):
     return service.obtener_todos_los_continentes()
 
+
 @router.get("/continentes/{continente_id}", response_model=ContinenteDTO)
-def obtener_continente(continente_id: int, service: LeaguesService = Depends(get_service)):
+def obtener_continente(
+    continente_id: int, service: LeaguesService = Depends(get_service)
+):
     continente = service.obtener_continente_por_id(continente_id)
     if not continente:
         raise HTTPException(status_code=404, detail="Continente no encontrado")
     return continente
+
 
 # # --- Paises ---
 # @router.get("/paises", response_model=List[PaisDTO])

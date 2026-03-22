@@ -4,13 +4,30 @@ from pydantic import BaseModel, HttpUrl, Field
 
 
 class DetalleFuenteExtraccionDTO(BaseModel):
+    # id: int
+    # torneo_id: int
+    # fuente_id: int
+    # url: HttpUrl
+    # is_active: bool
+    # created_at: datetime
+    # updated_at: datetime
     id: int
     torneo_id: int
     fuente_id: int
-    url: HttpUrl
+    url: str = Field(..., max_length=500)
     is_active: bool
+    process_id: int  # Campo para el ID del proceso
     created_at: datetime
     updated_at: datetime
+
+    # Opcional: si quieres incluir los objetos relacionados
+    # torneo: Optional[TorneoDTO] = None
+    # fuente: Optional[FuenteExtraccionDTO] = None
+    # process: Optional[ProcessDTO] = None
+
+    class Config:
+        orm_mode = True
+
     # Puedes añadir campos para representar la 'fuente' o el 'torneo'
     # si necesitas datos anidados en este DTO. Por ejemplo:
     # fuente: FuenteExtraccionDTO # Requiere importar FuenteExtraccionDTO y manejar la recursión

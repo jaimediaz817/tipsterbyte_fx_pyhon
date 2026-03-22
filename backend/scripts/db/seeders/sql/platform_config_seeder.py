@@ -10,9 +10,13 @@ from apps.platform_config.infrastructure.repositories.sql_platform_config_reposi
 from apps.platform_config.application.dto.process_create_dto import ProcessCreateDTO
 from scripts.db.seeders.base_seeder import BaseSeeder
 from shared.constants.process.process_codes import (
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_CALENDAR_EXTRACTION,
     PROCESS_CUOTAS_WPLAY,
+    PROCESS_ODDS_WPLAY_EXTRACTION,
+    PROCESS_STANDINGS_EXTRACTION,
+    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
 )
+
 
 # Datos a poblar
 SCHEDULED_PROCESSES = [
@@ -26,17 +30,35 @@ SCHEDULED_PROCESSES = [
 ]
 
 PROCESSES = [
-    {  # <-- ¡ESTE ES EL REGISTRO QUE FALTA EN TU BD!
+    {
         "code": SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
-        "name": "Orquestador de Rastreo de Datos de Fuentes Deportivas",
+        "name": "Orquestador de Rastreo de Datos de Fuentes Deportivas (General)",  # Renombrado para más claridad
         "is_active": True,
-        "description": "Proceso principal que orquesta la extracción de datos de diversas fuentes deportivas.",
+        "description": "Proceso principal que orquesta la extracción de datos de diversas fuentes deportivas. Usado como proceso por defecto para detalles de fuentes.",
     },
     {
         "code": PROCESS_CUOTAS_WPLAY,
         "name": "Ingesta y procesamiento de cuotas WPlay",
         "is_active": True,
         "description": "Extrae cuotas WPlay, normaliza datos, calcula métricas y prepara salidas.",
+    },
+    {  # ¡NUEVO PROCESO!
+        "code": PROCESS_STANDINGS_EXTRACTION,
+        "name": "Extracción de Tablas de Posiciones",
+        "is_active": True,
+        "description": "Proceso dedicado a la extracción de datos de tablas de posiciones (standings) de diversas fuentes.",
+    },
+    {  # ¡NUEVO PROCESO!
+        "code": PROCESS_ODDS_WPLAY_EXTRACTION,
+        "name": "Extracción de Cuotas Deportivas (WPlay)",
+        "is_active": True,
+        "description": "Proceso dedicado a la extracción de cuotas de apuestas de la casa WPlay.",
+    },
+    {  # ¡NUEVO PROCESO!
+        "code": PROCESS_CALENDAR_EXTRACTION,
+        "name": "Extracción de Calendarios de Torneos",
+        "is_active": True,
+        "description": "Proceso dedicado a la extracción de calendarios de partidos y eventos de torneos.",
     },
 ]
 

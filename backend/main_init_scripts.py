@@ -5,14 +5,20 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
 from shared.constants.process.process_codes import (
+    PROCESS_CALENDAR_EXTRACTION,
     PROCESS_CUOTAS_WPLAY,
+    PROCESS_ODDS_WPLAY_EXTRACTION,
+    PROCESS_STANDINGS_EXTRACTION,
     SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
 )
 from core.logger import configure_logging
 
+# Procesos disponibles que usan la misma función de tarea
 AVAILABLE_PROCESSES = {
     SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS: launch_process_rastreo_data_fuentes_deportivas_task,
-    # "proceso_otros_distintos...": proceso_otros_distintos_task,
+    PROCESS_STANDINGS_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,
+    PROCESS_ODDS_WPLAY_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,
+    PROCESS_CALENDAR_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,
 }
 
 
@@ -35,4 +41,5 @@ if __name__ == "__main__":
         logger.info(f"Procesos disponibles: {', '.join(AVAILABLE_PROCESSES.keys())}")
     else:
         logger.info(f"▶️ Ejecutando proceso: {args.process}")
-        asyncio.run(task())
+        # Pasar el process_code específico a la función de tarea
+        asyncio.run(task(process_code=args.process))

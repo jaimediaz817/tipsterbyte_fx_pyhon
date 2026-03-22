@@ -127,7 +127,7 @@ python -c "from pathlib import Path; print('✅' if Path('.env').exists() else '
 ## Ejecutar manualmente procesos - tareas - tasks
 - Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
 ```bash
-python main_init_scripts.py --process scheduler_proceso_rastreo_data_fuentes_deportivas
+python main_init_scripts.py --process SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
 ```
 
 ## Instalar dependencias requirements
@@ -525,3 +525,7 @@ Desde VS Code: Haz clic derecho en la carpeta htmlcov/ en el explorador de archi
 Desde la Terminal (Windows PowerShell/CMD):
 # Después de generar el reporte HTML, navega a la carpeta 'backend/'
 start htmlcov\index.html
+
+
+POWER WHELL: LIMPIAR CACHE
+Get-ChildItem -Path . -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force

@@ -114,7 +114,12 @@ class ILeaguesRepository(ABC):
 
     @abstractmethod
     def create_detalle_fuente_extraccion(
-        self, torneo_id: int, fuente_id: int, url: str, is_active: bool
+        self,
+        torneo_id: int,
+        fuente_id: int,
+        url: str,
+        is_active: bool,
+        process_id: int | None = None,
     ) -> DetalleFuenteExtraccion:
         pass
 

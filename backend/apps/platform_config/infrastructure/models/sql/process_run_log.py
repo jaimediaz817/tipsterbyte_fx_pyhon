@@ -1,8 +1,8 @@
-
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
 from core.db.sql.base_class import Base
 from sqlalchemy.orm import relationship
+
 
 # Log detallado por paso del proceso
 class ProcessRunLog(Base):
@@ -10,11 +10,15 @@ class ProcessRunLog(Base):
 
     id = Column(Integer, primary_key=True)
     run_id = Column(String, ForeignKey("process_runs.run_id"), nullable=False)
-    detalle_fuente_extraccion_id = Column(Integer, ForeignKey("detalle_fuente_extraccion.id"), nullable=True)
+
+    # detalle_fuente_extraccion_id = Column(
+    #     Integer, ForeignKey("detalle_fuente_extraccion.id"), nullable=True
+    # )
+
     step = Column(String)
     level = Column(String)  # info, error, warning, debug
     message = Column(String)
-    input = Column(Text, nullable=True)   # ← o usar JSON si se usa PostgreSQL
+    input = Column(Text, nullable=True)  # ← o usar JSON si se usa PostgreSQL
     output = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=func.now())
 

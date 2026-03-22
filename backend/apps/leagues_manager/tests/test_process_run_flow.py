@@ -40,7 +40,6 @@ class MockProcessRunRepository:
         step,
         level,
         message,
-        detalle_fuente_extraccion_id=None,
         input=None,
         output=None,
     ):
@@ -50,7 +49,6 @@ class MockProcessRunRepository:
                 "step": step,
                 "level": level,
                 "message": message,
-                "detalle_fuente_extraccion_id": detalle_fuente_extraccion_id,
                 "input": input,
                 "output": output,
                 "timestamp": datetime.now(),
@@ -72,7 +70,9 @@ class MockProcessRunRepository:
         return [l for l in self.logs if l["step"] == step]
 
     def get_logs_by_detalle_id(self, detalle_id: int) -> list:
-        return [l for l in self.logs if l["detalle_fuente_extraccion_id"] == detalle_id]
+        # Esta función ya no es relevante ya que no se guarda detalle_fuente_extraccion_id en los logs
+        # Se mantiene por compatibilidad pero retorna lista vacía
+        return []
 
     def get_logs_by_run_id(self, run_id: str) -> list:
         return [l for l in self.logs if l["run_id"] == run_id]
@@ -134,7 +134,6 @@ async def test_standings_robot_escribe_logs_start_y_end(
     start_logs = mock_repo.get_logs_by_step("START")
     assert len(start_logs) == 1, "Debe haber exactamente 1 log de START"
     assert start_logs[0]["run_id"] == run_id
-    assert start_logs[0]["detalle_fuente_extraccion_id"] == 10
 
     # ¿Escribió END?
     end_logs = mock_repo.get_logs_by_step("END")
@@ -165,7 +164,7 @@ async def test_run_id_propagado_correctamente_en_logs(
 async def test_detalle_id_diferente_por_robot(
     mock_repo, mock_torneo, mock_standings_detalle, mock_odds_detalle
 ):
-    """✅ Robots distintos deben escribir logs con detalle_id distintos."""
+    """✅ Robots distintos deben escribir logs correctamente (detalle_id ya no se guarda en logs)."""
     run_id = "runid_test_multi_robot_003"
 
     robot_standings = StandingsRobot(
@@ -176,14 +175,12 @@ async def test_detalle_id_diferente_por_robot(
     await robot_standings.run()
     await robot_odds.run()
 
-    logs_standings = mock_repo.get_logs_by_detalle_id(10)
-    logs_odds = mock_repo.get_logs_by_detalle_id(20)
+    # Verificar que ambos robots escribieron logs
+    all_logs = mock_repo.get_logs_by_run_id(run_id)
+    assert len(all_logs) > 0, "Debe haber logs para el run_id"
 
-    assert len(logs_standings) > 0, "Debe haber logs para detalle_id=10 (Standings)"
-    assert len(logs_odds) > 0, "Debe haber logs para detalle_id=20 (Odds)"
-
-    # ¿Los IDs no se mezclan?
-    for log in logs_standings:
-        assert log["detalle_fuente_extraccion_id"] == 10
-    for log in logs_odds:
-        assert log["detalle_fuente_extraccion_id"] == 20
+    # Verificar que hay logs de START y END para ambos robots
+    start_logs = mock_repo.get_logs_by_step("START")
+    end_logs = mock_repo.get_logs_by_step("END")
+    assert len(start_logs) == 2, "Debe haber 2 logs de START (uno por robot)"
+    assert len(end_logs) == 2, "Debe haber 2 logs de END (uno por robot)"

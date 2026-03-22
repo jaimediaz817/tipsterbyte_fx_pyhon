@@ -60,8 +60,7 @@ def run_id():
     return f"runid_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4()}"
 
 
-@pytest.mark.asyncio
-async def test_integration_create_run_y_write_logs(db_session, real_repo, run_id):
+def test_integration_create_run_y_write_logs(db_session, real_repo, run_id):
     """
     🔗 Test de integración REAL con datos controlados.
     Los datos se crean y se eliminan con rollback al finalizar el test.
@@ -105,16 +104,6 @@ async def test_integration_create_run_y_write_logs(db_session, real_repo, run_id
     db_session.add(fuente)
     db_session.flush()
 
-    unique_url = f"https://sofascore.com/laliga/{test_suffix}"
-    detalle = DetalleFuenteExtraccion(
-        torneo_id=torneo.id,
-        fuente_id=fuente.id,
-        url=unique_url,
-        is_active=True,
-    )
-    db_session.add(detalle)
-    db_session.flush()
-
     unique_process_code = f"{PROCESS_CUOTAS_WPLAY}_{test_suffix}"
     process_entity = Process(
         code=unique_process_code,
@@ -123,6 +112,17 @@ async def test_integration_create_run_y_write_logs(db_session, real_repo, run_id
         description="Test process description",
     )
     db_session.add(process_entity)
+    db_session.flush()
+
+    unique_url = f"https://sofascore.com/laliga/{test_suffix}"
+    detalle = DetalleFuenteExtraccion(
+        torneo_id=torneo.id,
+        fuente_id=fuente.id,
+        url=unique_url,
+        is_active=True,
+        process_id=process_entity.id,
+    )
+    db_session.add(detalle)
     db_session.flush()
 
     # --- SIMULACIÓN DE LA LÓGICA DEL REPOSITORIO DE ProcessRun ---

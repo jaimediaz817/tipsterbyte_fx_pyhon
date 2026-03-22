@@ -77,7 +77,6 @@ class BaseRobot(ABC):
             step=step,
             level=level,
             message=message,
-            detalle_fuente_extraccion_id=self.detalle.id,
             input=input_data,
             output=output_data,
         )

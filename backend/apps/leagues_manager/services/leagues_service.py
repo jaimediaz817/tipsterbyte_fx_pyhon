@@ -1,12 +1,12 @@
-from apps.leagues_manager.application.dto.DetalleFuenteExtraccionDTO import (
-    DetalleFuenteExtraccionDTO,
-)
 from apps.leagues_manager.application.dto.continente_create_dto import (
     ContinenteCreateDTO,
 )
 from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
 from apps.leagues_manager.application.dto.detalle_fuente_extraccion_create_dto import (
     DetalleFuenteExtraccionCreateDTO,
+)
+from apps.leagues_manager.application.dto.detalle_fuente_extraccion_dto import (
+    DetalleFuenteExtraccionDTO,
 )
 from apps.leagues_manager.application.dto.fuente_extraccion_create_dto import (
     FuenteExtraccionCreateDTO,
@@ -127,9 +127,39 @@ class LeaguesService(ILeaguesService):
 
         # .model_dump() de Pydantic 2.x ya maneja HttpUrl a string por defecto
         created = self.repo.create_detalle_fuente_extraccion(
-            dto.torneo_id, dto.fuente_id, str(dto.url), dto.is_active
+            dto.torneo_id, dto.fuente_id, str(dto.url), dto.is_active, dto.process_id
         )
         return DetalleFuenteExtraccionDTO(**created.__dict__)
+
+    # --- NUEVOS MÉTODOS PARA PAUSAR/ACTIVAR ---
+
+    def pausar_fuente_extraccion(self, fuente_id: int) -> FuenteExtraccionDTO:
+        """Pausa una fuente de extracción (is_active=False)."""
+        updated = self.repo.update_fuente_extraccion(fuente_id, {"is_active": False})
+        return FuenteExtraccionDTO(**updated.__dict__)
+
+    def reanudar_fuente_extraccion(self, fuente_id: int) -> FuenteExtraccionDTO:
+        """Reanuda una fuente de extracción (is_active=True)."""
+        updated = self.repo.update_fuente_extraccion(fuente_id, {"is_active": True})
+        return FuenteExtraccionDTO(**updated.__dict__)
+
+    def pausar_detalle_fuente_extraccion(
+        self, detalle_id: int
+    ) -> DetalleFuenteExtraccionDTO:
+        """Pausa un detalle de fuente de extracción (is_active=False)."""
+        updated = self.repo.update_detalle_fuente_extraccion(
+            detalle_id, {"is_active": False}
+        )
+        return DetalleFuenteExtraccionDTO(**updated.__dict__)
+
+    def reanudar_detalle_fuente_extraccion(
+        self, detalle_id: int
+    ) -> DetalleFuenteExtraccionDTO:
+        """Reanuda un detalle de fuente de extracción (is_active=True)."""
+        updated = self.repo.update_detalle_fuente_extraccion(
+            detalle_id, {"is_active": True}
+        )
+        return DetalleFuenteExtraccionDTO(**updated.__dict__)
 
     # def registrar_continente(self, dto: ContinenteCreateDTO) -> ContinenteDTO:
     #     existing = self.repo.get_continente_by_nombre(dto.nombre)

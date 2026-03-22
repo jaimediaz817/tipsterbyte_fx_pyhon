@@ -1,10 +1,19 @@
 import os
 import typer
 from loguru import logger
-import docker
 import subprocess
 import sys
-from docker.errors import NotFound
+
+# Importación opcional de docker (solo se usa para verificar contenedores)
+try:
+    import docker
+    from docker.errors import NotFound
+
+    DOCKER_AVAILABLE = True
+except ImportError:
+    DOCKER_AVAILABLE = False
+    docker = None
+    NotFound = Exception
 
 from core.db.no_sql.db_inspector import get_mongo_db_status
 from core.db.sql.admin.db_inspector import get_sql_db_status
@@ -17,6 +26,7 @@ styles = {
     "bold": "<bold>",
     "end": "</>",
 }
+
 
 def print_styled(message: str, style: str = "info"):
     start_tag = styles.get(style, "")
@@ -31,6 +41,7 @@ def print_styled(message: str, style: str = "info"):
     logger.opt(ansi=True).info(
         f"{start_tag}➡️  {message}{bold_start}{command_part}{bold_end}{end_tag}"
     )
+
 
 def execute_manage_command(args: list[str]) -> bool:
     """Ejecuta un subcomando de manage.py y muestra la salida en tiempo real."""
@@ -63,6 +74,7 @@ def execute_manage_command(args: list[str]) -> bool:
         logger.error(f"❌ Error inesperado: {e}")
         return False
 
+
 def ask_and_execute(question: str, command: list[str]) -> bool:
     """Pregunta al usuario si desea ejecutar un comando y lo ejecuta si responde 'y'."""
     typer.echo("")
@@ -73,11 +85,51 @@ def ask_and_execute(question: str, command: list[str]) -> bool:
         logger.warning("⏭️  Paso omitido por el usuario.")
         return False
 
+
 def print_header(title: str):
     """Imprime un encabezado con estilo."""
     typer.echo("\n" + "═" * 60)
     typer.echo(f"        {title}")
     typer.echo("═" * 60)
+
+
+def _clear_pycache():
+    """Limpia todos los directorios __pycache__ del proyecto."""
+    import shutil
+    from pathlib import Path
+
+    logger.info("🧹 Iniciando limpieza de cache (__pycache__)...")
+
+    # Directorio raíz del backend
+    backend_root = Path(__file__).resolve().parent.parent
+
+    pycache_dirs = list(backend_root.rglob("__pycache__"))
+
+    if not pycache_dirs:
+        print_styled("No se encontraron directorios __pycache__ para limpiar.", "info")
+        return
+
+    print_styled(
+        f"Se encontraron {len(pycache_dirs)} directorio(s) __pycache__.", "info"
+    )
+
+    if typer.confirm("¿Deseas eliminarlos?"):
+        deleted_count = 0
+        for pycache_dir in pycache_dirs:
+            try:
+                shutil.rmtree(pycache_dir)
+                logger.trace(f"Eliminado: {pycache_dir}")
+                deleted_count += 1
+            except Exception as e:
+                logger.error(f"No se pudo eliminar {pycache_dir}: {e}")
+
+        print_styled(
+            f"✅ Limpieza completada. Se eliminaron {deleted_count} directorio(s).",
+            "ok",
+        )
+    else:
+        logger.warning("⏭️  Limpieza cancelada por el usuario.")
+
 
 # =========================================================
 # MENÚ RESET
@@ -112,7 +164,9 @@ def menu_reset():
             break
 
         elif opcion == "1":
-            if typer.confirm("⚠️  ¿Seguro que deseas eliminar los archivos de migración?"):
+            if typer.confirm(
+                "⚠️  ¿Seguro que deseas eliminar los archivos de migración?"
+            ):
                 execute_manage_command(["sql", "state", "clear-migrations"])
 
         elif opcion == "2":
@@ -120,31 +174,44 @@ def menu_reset():
                 execute_manage_command(["sql", "state", "clear-all-tables"])
 
         elif opcion == "3":
-            if typer.confirm("☢️  ¿Seguro que deseas hacer un reset SQL completo (tablas + migraciones)?"):
+            if typer.confirm(
+                "☢️  ¿Seguro que deseas hacer un reset SQL completo (tablas + migraciones)?"
+            ):
                 execute_manage_command(["sql", "state", "reset", "--hard"])
 
         elif opcion == "4":
-            if typer.confirm("⚠️  ¿Seguro que deseas limpiar todos los documentos de MongoDB?"):
+            if typer.confirm(
+                "⚠️  ¿Seguro que deseas limpiar todos los documentos de MongoDB?"
+            ):
                 execute_manage_command(["nosql", "state", "clear"])
 
         elif opcion == "5":
-            if typer.confirm("💣  ¿Seguro que deseas hacer un reset completo de MongoDB?"):
+            if typer.confirm(
+                "💣  ¿Seguro que deseas hacer un reset completo de MongoDB?"
+            ):
                 execute_manage_command(["nosql", "state", "reset"])
 
         elif opcion == "6":
             typer.echo("")
-            typer.echo("☢️  ATENCIÓN: Esta acción reseteará TODO el proyecto a estado cero.")
+            typer.echo(
+                "☢️  ATENCIÓN: Esta acción reseteará TODO el proyecto a estado cero."
+            )
             typer.echo("     - Borrará todas las tablas SQL")
             typer.echo("     - Eliminará todos los archivos de migración")
             typer.echo("     - Dropeará la base de datos MongoDB")
             typer.echo("")
-            if typer.confirm("☢️  ¿Estás COMPLETAMENTE seguro? Esta acción es IRREVERSIBLE"):
+            if typer.confirm(
+                "☢️  ¿Estás COMPLETAMENTE seguro? Esta acción es IRREVERSIBLE"
+            ):
                 logger.warning("☢️  Iniciando reset TOTAL del proyecto...")
                 execute_manage_command(["sql", "state", "reset", "--hard"])
                 execute_manage_command(["nosql", "state", "reset"])
-                logger.success("✅ Reset TOTAL completado. El proyecto está en estado cero.")
+                logger.success(
+                    "✅ Reset TOTAL completado. El proyecto está en estado cero."
+                )
         else:
             logger.warning("⚠️  Opción no válida. Elige entre 0 y 6.")
+
 
 # =========================================================
 # MENÚ PRINCIPAL
@@ -152,6 +219,7 @@ def menu_reset():
 app = typer.Typer(
     help="Comandos para verificar el estado y guiar la configuración del proyecto."
 )
+
 
 @app.command(name="status", help="Menú principal del Project Manager.")
 def project_status():
@@ -161,11 +229,12 @@ def project_status():
         typer.echo("")
         typer.echo("  1. 📋 Verificar/Configurar el proyecto (project status)")
         typer.echo("  2. 🔴 Resetear el proyecto (estado cero)")
+        typer.echo("  3. 🧹 Refrescar Cache (limpiar __pycache__)")
         typer.echo("  0. ❌ Salir")
         typer.echo("")
         typer.echo("═" * 60)
 
-        opcion = typer.prompt("❓ Elige una opción [0/1/2]")
+        opcion = typer.prompt("❓ Elige una opción [0/1/2/3]")
 
         if opcion == "0":
             logger.info("👋 Hasta luego!")
@@ -177,8 +246,12 @@ def project_status():
         elif opcion == "2":
             menu_reset()
 
+        elif opcion == "3":
+            _clear_pycache()
+
         else:
-            logger.warning("⚠️  Opción no válida. Elige 0, 1 o 2.")
+            logger.warning("⚠️  Opción no válida. Elige 0, 1, 2 o 3.")
+
 
 # =========================================================
 # LÓGICA PROJECT STATUS (extraída a función privada)
@@ -191,21 +264,43 @@ def _run_project_status():
     # =====================================================
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 1/5: Verificando Docker...")
-    try:
-        client = docker.from_env()
-        pg_container = client.containers.get("db_pg_tipsterbyte_fx")
-        mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
 
-        if pg_container.status == "running" and mongo_container.status == "running":
-            print_styled("Docker: Contenedores PostgreSQL y MongoDB están en ejecución.", "ok")
-        else:
-            print_styled("Docker: Algunos contenedores no están en ejecución.", "warn")
-            logger.error("❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)")
+    if not DOCKER_AVAILABLE:
+        print_styled(
+            "Docker: Módulo docker no instalado. Saltando verificación.", "warn"
+        )
+        logger.info(
+            "💡 Para habilitar la verificación de Docker, instala: pip install docker"
+        )
+    else:
+        try:
+            # Verificación de tipo para Pylance (docker no es None aquí porque DOCKER_AVAILABLE=True)
+            assert (
+                docker is not None
+            ), "docker module should be available when DOCKER_AVAILABLE is True"
+            client = docker.from_env()
+            pg_container = client.containers.get("db_pg_tipsterbyte_fx")
+            mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
+
+            if pg_container.status == "running" and mongo_container.status == "running":
+                print_styled(
+                    "Docker: Contenedores PostgreSQL y MongoDB están en ejecución.",
+                    "ok",
+                )
+            else:
+                print_styled(
+                    "Docker: Algunos contenedores no están en ejecución.", "warn"
+                )
+                logger.error(
+                    "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+                )
+                return
+        except (NotFound, Exception):
+            print_styled("Docker: No se encontraron los contenedores.", "error")
+            logger.error(
+                "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+            )
             return
-    except (NotFound, Exception):
-        print_styled("Docker: No se encontraron los contenedores.", "error")
-        logger.error("❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)")
-        return
 
     # =====================================================
     # PASO 2: Migraciones SQL
@@ -217,18 +312,22 @@ def _run_project_status():
     is_migrated = len(code_only) == 0
 
     if is_migrated:
-        print_styled("PostgreSQL: La base de datos está migrada (tablas creadas).", "ok")
+        print_styled(
+            "PostgreSQL: La base de datos está migrada (tablas creadas).", "ok"
+        )
     else:
-        print_styled(f"PostgreSQL: Faltan {len(code_only)} tabla(s) por migrar.", "warn")
+        print_styled(
+            f"PostgreSQL: Faltan {len(code_only)} tabla(s) por migrar.", "warn"
+        )
 
         migration_created = ask_and_execute(
             "¿Deseas crear el archivo de migración ahora? (python manage.py sql create-migration)",
-            ["sql", "create-migration", "-m", "initial_project_structure"]
+            ["sql", "create-migration", "-m", "initial_project_structure"],
         )
         if migration_created:
             migrated_now = ask_and_execute(
                 "¿Deseas aplicar las migraciones ahora? (python manage.py sql migrate)",
-                ["sql", "migrate"]
+                ["sql", "migrate"],
             )
             if migrated_now:
                 sql_status = get_sql_db_status()
@@ -236,7 +335,9 @@ def _run_project_status():
                 if is_migrated:
                     print_styled("PostgreSQL: ¡Tablas creadas exitosamente!", "ok")
             else:
-                logger.warning("⚠️  Sin migraciones aplicadas, los seeders SQL no se ejecutarán.")
+                logger.warning(
+                    "⚠️  Sin migraciones aplicadas, los seeders SQL no se ejecutarán."
+                )
         else:
             logger.warning("⚠️  Sin archivo de migración no se puede continuar con SQL.")
 
@@ -254,10 +355,12 @@ def _run_project_status():
         if tables_with_data > 0:
             print_styled(f"PostgreSQL: Hay datos en {tables_with_data} tabla(s).", "ok")
         else:
-            print_styled("PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn")
+            print_styled(
+                "PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn"
+            )
             ask_and_execute(
                 "¿Deseas ejecutar los seeders SQL ahora? (python manage.py seed-sql)",
-                ["seed-sql"]
+                ["seed-sql"],
             )
 
     # =====================================================
@@ -268,18 +371,25 @@ def _run_project_status():
     mongo_status = get_mongo_db_status()
 
     if not mongo_status.get("connected"):
-        print_styled(f"MongoDB: No se pudo conectar. Error: {mongo_status.get('error')}", "error")
+        print_styled(
+            f"MongoDB: No se pudo conectar. Error: {mongo_status.get('error')}", "error"
+        )
         logger.info("👉 Revisa MONGO_USER / MONGO_PASSWORD en tu .env")
         return
 
     if mongo_status.get("collections_exist"):
         collections = mongo_status.get("collections", [])
-        print_styled(f"MongoDB: Esquema inicializado. {len(collections)} colección(es) encontrada(s).", "ok")
+        print_styled(
+            f"MongoDB: Esquema inicializado. {len(collections)} colección(es) encontrada(s).",
+            "ok",
+        )
     else:
-        print_styled("MongoDB: El esquema no ha sido inicializado (sin colecciones).", "warn")
+        print_styled(
+            "MongoDB: El esquema no ha sido inicializado (sin colecciones).", "warn"
+        )
         schema_created = ask_and_execute(
             "¿Deseas inicializar el esquema de MongoDB ahora? (python manage.py nosql init-schema)",
-            ["nosql", "init-schema"]
+            ["nosql", "init-schema"],
         )
         if schema_created:
             mongo_status = get_mongo_db_status()
@@ -298,7 +408,7 @@ def _run_project_status():
             print_styled("MongoDB: Las colecciones están vacías.", "warn")
             ask_and_execute(
                 "¿Deseas ejecutar los seeders de MongoDB ahora? (python manage.py nosql seed)",
-                ["nosql", "seed"]
+                ["nosql", "seed"],
             )
 
     # =====================================================
@@ -316,39 +426,15 @@ def _run_project_status():
     )
 
     if all_ok:
-        logger.opt(ansi=True).success("🎉 ¡El proyecto está completamente configurado y listo!")
+        logger.opt(ansi=True).success(
+            "🎉 ¡El proyecto está completamente configurado y listo!"
+        )
         print_styled("Inicia el servidor con `python manage.py server run`", "ok")
     else:
-        logger.opt(ansi=True).warning("⚠️  Aún hay pasos pendientes. Vuelve a ejecutar `python manage.py project status`")
+        logger.opt(ansi=True).warning(
+            "⚠️  Aún hay pasos pendientes. Vuelve a ejecutar `python manage.py project status`"
+        )
     typer.echo("═" * 60)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import os
@@ -580,6 +666,3 @@ def _run_project_status():
 #     else:
 #         logger.opt(ansi=True).warning("⚠️  Aún hay pasos pendientes. Vuelve a ejecutar `python manage.py project status`")
 #     typer.echo("═" * 60)
-
-
-

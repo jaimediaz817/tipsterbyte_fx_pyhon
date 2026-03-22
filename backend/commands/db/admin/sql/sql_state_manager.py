@@ -577,11 +577,13 @@ def clear_database():
         fg=typer.colors.YELLOW,
         bold=True,
     )
-    logger.warning(
-        f"Esto afectará a la base de datos: '{settings.POSTGRES_DB}', pero no la eliminará."
+    typer.secho(
+        f"Esto afectará a la base de datos: '{settings.POSTGRES_DB}', pero no la eliminará.",
+        fg=typer.colors.YELLOW,
     )
-    logger.warning(
-        "Esta operación es irreversible y todos los datos en las tablas se perderán."
+    typer.secho(
+        "Esta operación es irreversible y todos los datos en las tablas se perderán.",
+        fg=typer.colors.YELLOW,
     )
 
     confirmation = typer.prompt(

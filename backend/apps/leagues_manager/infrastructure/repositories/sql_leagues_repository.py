@@ -125,6 +125,7 @@ class SQLLeaguesRepository(ILeaguesRepository):
             fuente_id=m.fuente_id,
             url=m.url,
             is_active=m.is_active,
+            process_id=m.process_id,  # Mapeo del nuevo campo
             created_at=m.created_at,
             updated_at=m.updated_at,
         )
@@ -304,10 +305,19 @@ class SQLLeaguesRepository(ILeaguesRepository):
         return self._to_detalle_fuente_extraccion(m)
 
     def create_detalle_fuente_extraccion(
-        self, torneo_id: int, fuente_id: int, url: str, is_active: bool
+        self,
+        torneo_id: int,
+        fuente_id: int,
+        url: str,
+        is_active: bool,
+        process_id: int,  # ¡Nuevo parámetro!
     ) -> DetalleFuenteExtraccion:
         m = DetalleFuenteExtraccion(
-            torneo_id=torneo_id, fuente_id=fuente_id, url=url, is_active=is_active
+            torneo_id=torneo_id,
+            fuente_id=fuente_id,
+            url=url,
+            is_active=is_active,
+            process_id=process_id,  # Asignación del nuevo campo
         )
         self.db.add(m)
         self.db.commit()
@@ -327,6 +337,8 @@ class SQLLeaguesRepository(ILeaguesRepository):
                 f"DetalleFuenteExtraccion con ID {detalle_id} no encontrado"
             )
         update_from_dict(obj, data)
+        if "process_id" in data:  # Aseguramos que se actualice si se pasa
+            obj.process_id = data["process_id"]
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)

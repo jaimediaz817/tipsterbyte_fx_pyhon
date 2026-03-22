@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from apps.leagues_manager.application.dto.DetalleFuenteExtraccionDTO import (
+from apps.leagues_manager.application.dto.detalle_fuente_extraccion_dto import (
     DetalleFuenteExtraccionDTO,
 )
 from apps.leagues_manager.application.dto.continente_create_dto import (
