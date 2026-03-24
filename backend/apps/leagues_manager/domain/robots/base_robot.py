@@ -10,6 +10,14 @@ from shared.repositories.scheduler_repos.process_run_repository import (
 # --- EXCEPCIONES PERSONALIZADAS ---
 from core.exceptions import ScrapingException
 
+# --- LOGGING MEJORADO ---
+from core.robot_logging import (
+    log_robot_start,
+    log_robot_end,
+    log_step,
+    get_robot_emoji,
+)
+
 if TYPE_CHECKING:
     from apps.leagues_manager.tests.mock_data_leagues import (
         MockTorneo,
@@ -89,19 +97,82 @@ class BaseRobot(ABC):
         pass
 
     async def run(self):
-        self._log_step("START", "info", f"Iniciando para {self.job_context}")
-        logger.debug(f"   [run_id={self.run_id}] URL: {self.detalle.url}")
+        """Ejecuta el robot con logging mejorado y trazabilidad completa."""
+        # Obtener tipo de robot para emoji
+        robot_type = "UNKNOWN"
+        if self.fuente and hasattr(self.fuente, "type") and self.fuente.type:
+            # Usar getattr para acceder de forma segura al atributo value
+            robot_type = getattr(self.fuente.type, "value", str(self.fuente.type))
+
+        fuente_name = (
+            self.fuente.name
+            if self.fuente and hasattr(self.fuente, "name")
+            else "UNKNOWN"
+        )
+
+        # Log de inicio mejorado
+        log_robot_start(
+            run_id=self.run_id,
+            robot_type=robot_type,
+            robot_class_name=self.__class__.__name__,
+            torneo_nombre=self.torneo.nombre,
+            fuente_name=fuente_name,
+            detalle_id=self.detalle.id,
+            url=self.detalle.url,
+        )
+
+        # También escribir en BD
+        self.repo.write_log(
+            run_id=self.run_id,
+            step="START",
+            level="info",
+            message=f"Iniciando robot {self.__class__.__name__} para {self.job_context}",
+            input=f"url={self.detalle.url}",
+        )
+
         try:
             await self._execute_scraping()
-            self._log_step(
-                "END", "info", f"Completado exitosamente para {self.job_context}"
+
+            # Log de éxito mejorado
+            log_robot_end(
+                run_id=self.run_id,
+                robot_type=robot_type,
+                robot_class_name=self.__class__.__name__,
+                torneo_nombre=self.torneo.nombre,
+                success=True,
             )
+
+            # También escribir en BD
+            self.repo.write_log(
+                run_id=self.run_id,
+                step="END",
+                level="info",
+                message=f"Robot {self.__class__.__name__} completado exitosamente para {self.job_context}",
+            )
+
         except ScrapingException:
             # Si ya es una ScrapingException, solo re-lanzar
             raise
         except Exception as e:
+            # Log de error mejorado
+            log_robot_end(
+                run_id=self.run_id,
+                robot_type=robot_type,
+                robot_class_name=self.__class__.__name__,
+                torneo_nombre=self.torneo.nombre,
+                success=False,
+                error=e,
+            )
+
+            # También escribir en BD
+            self.repo.write_log(
+                run_id=self.run_id,
+                step="ERROR",
+                level="error",
+                message=f"Robot {self.__class__.__name__} falló para {self.job_context}: {e}",
+            )
+
             # Envolver otras excepciones en ScrapingException
-            self._log_step("ERROR", "error", f"Falló para {self.job_context}: {e}")
             raise ScrapingException(
                 robot_id=self.robot_id,
                 url=self.detalle.url,

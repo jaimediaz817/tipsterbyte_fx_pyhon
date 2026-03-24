@@ -105,16 +105,38 @@ def db_create_migration(
     logger.info(f"Generando migración con mensaje: '{message}'")
 
     try:
-        command = ["alembic", "revision", "--autogenerate", "-m", message]
+        # En Windows, usar shell=True para que encuentre el ejecutable correctamente
+        import platform
+
+        use_shell = platform.system() == "Windows"
+
+        command = [
+            sys.executable,
+            "-m",
+            "alembic",
+            "revision",
+            "--autogenerate",
+            "-m",
+            message,
+        ]
         # --- CAMBIO CLAVE: Añadir 'errors="replace"' para manejar caracteres inválidos ---
         # Esto reemplazará cualquier carácter que no sea UTF-8 con un '?' en lugar de fallar.
         subprocess.run(
-            command,
+            [
+                sys.executable,
+                "-m",
+                "alembic",
+                "revision",
+                "--autogenerate",
+                "-m",
+                message,
+            ],
             check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
+            shell=use_shell,
         )
         logger.success(
             "✅ Nueva migración generada exitosamente en 'alembic/versions/'."
@@ -184,14 +206,25 @@ def db_create_migration(
 
 
 @db_app.command("migrate")
-def db_migrate():
-    """Aplica todas las migraciones pendientes a la base de datos SQL."""
+def db_migrate(
+    revision: str = typer.Argument(
+        None,
+        help="La revisión a la que se quiere migrar. Ejemplo: 'abc123def456'. Si no se especifica, muestra las disponibles.",
+    )
+):
+    """
+    Aplica las migraciones de Alembic a la base de datos.
+
+    Ejemplos de uso:
+      python manage.py sql migrate                    # Muestra migraciones disponibles
+      python manage.py sql migrate head               # Aplica todas las migraciones pendientes
+      python manage.py sql migrate abc123def456       # Aplica una migración específica
+      python manage.py sql status                     # Ver estado actual
+    """
     configure_logging()
     load_all_models()
 
     # --- CAMBIO CLAVE: Validar si existen archivos de migración ---
-    # versions_dir = Settings.ALEMBIC_VERSIONS_DIR
-    # versions_dir = Path(__file__).parent / "alembic" / "versions"
     versions_dir = BACKEND_ROOT / "alembic" / "versions"
 
     print(f"Buscando archivos de migración en: {versions_dir}")
@@ -211,17 +244,154 @@ def db_migrate():
         logger.info("-" * 60)
         raise typer.Exit()
 
+    # Si NO se especifica revisión, mostrar migraciones disponibles
+    if revision is None:
+        logger.info(
+            "No se especificó una revisión. Mostrando migraciones disponibles..."
+        )
+
+        # Obtener migraciones disponibles usando alembic
+        try:
+            import platform
+
+            use_shell = platform.system() == "Windows"
+
+            result = subprocess.run(
+                [sys.executable, "-m", "alembic", "history", "--verbose"],
+                capture_output=True,
+                text=True,
+                check=True,
+                encoding="utf-8",
+                errors="replace",
+                shell=use_shell,
+            )
+
+            migrations = []
+            lines = result.stdout.strip().split("\n")
+
+            # Parsear la salida de alembic history
+            current_rev = None
+            current_msg = None
+
+            for line in lines:
+                line = line.strip()
+
+                # Detectar líneas de revisión
+                if line.startswith("Rev:"):
+                    if current_rev:
+                        # Guardar la migración anterior
+                        migrations.append(
+                            {
+                                "revision": current_rev,
+                                "message": current_msg or "Sin mensaje",
+                            }
+                        )
+
+                    # Extraer nueva revisión
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        current_rev = parts[1]
+                        # Verificar si tiene marcador (head)
+                        if len(parts) >= 3 and parts[2] == "(head)":
+                            current_msg = "HEAD - Migración más reciente"
+                        else:
+                            current_msg = None
+
+                # Detectar líneas de mensaje/comentario
+                elif (
+                    line.startswith("#")
+                    or line.startswith("Revises:")
+                    or line.startswith("Parent:")
+                ):
+                    if line.startswith("#"):
+                        # Extraer el mensaje del comentario
+                        msg_content = line[1:].strip()
+                        if msg_content and not msg_content.startswith("Create Date:"):
+                            current_msg = msg_content
+
+            # Agregar la última migración procesada
+            if current_rev:
+                migrations.append(
+                    {
+                        "revision": current_rev,
+                        "message": current_msg or "Sin mensaje",
+                    }
+                )
+
+            if not migrations:
+                logger.warning("⚠️ No se pudieron obtener las migraciones.")
+                logger.info("Intentando aplicar todas las migraciones pendientes...")
+            else:
+                # Mostrar migraciones disponibles
+                typer.echo("\n" + "=" * 70)
+                typer.secho(
+                    " 🔄 MIGRACIONES DISPONIBLES", fg=typer.colors.CYAN, bold=True
+                )
+                typer.echo("=" * 70)
+
+                for i, migration in enumerate(migrations[:10], 1):  # Mostrar máximo 10
+                    marker = " (HEAD)" if i == 1 else ""
+                    typer.echo(f"  {i:2d}. {migration['revision'][:12]}...{marker}")
+                    typer.echo(f"      {migration['message']}")
+
+                typer.echo("=" * 70)
+
+                # Mostrar ejemplos de uso
+                typer.echo("")
+                typer.secho(" 💡 EJEMPLOS DE USO:", fg=typer.colors.GREEN, bold=True)
+                typer.echo("-" * 70)
+                typer.secho(
+                    "  Para aplicar todas las migraciones pendientes:",
+                    fg=typer.colors.WHITE,
+                )
+                typer.secho(
+                    "    python manage.py sql migrate head", fg=typer.colors.CYAN
+                )
+                typer.echo("")
+                typer.secho(
+                    "  Para aplicar una migración específica:", fg=typer.colors.WHITE
+                )
+                if migrations:
+                    example_rev = (
+                        migrations[0]["revision"][:12] if migrations else "abc123def456"
+                    )
+                    typer.secho(
+                        f"    python manage.py sql migrate {example_rev}",
+                        fg=typer.colors.CYAN,
+                    )
+                typer.echo("")
+                typer.secho(
+                    "  Para ver el estado actual de las migraciones:",
+                    fg=typer.colors.WHITE,
+                )
+                typer.secho("    python manage.py sql status", fg=typer.colors.CYAN)
+                typer.echo("-" * 70)
+                typer.echo("")
+
+                # Aplicar todas las migraciones (head)
+                logger.info("Aplicando todas las migraciones pendientes...")
+
+        except subprocess.CalledProcessError as e:
+            logger.warning("⚠️ No se pudieron obtener las migraciones.")
+            logger.info("Intentando aplicar todas las migraciones pendientes...")
+
     logger.info(
-        f"Aplicando {len(migration_files)} migracion(es) SQL a la base de datos..."
+        f"🚀 Aplicando migraciones de Alembic hasta la revisión: '{revision}'..."
     )
     try:
+        # En Windows, usar shell=True para que encuentre el ejecutable correctamente
+        import platform
+
+        use_shell = platform.system() == "Windows"
+
         subprocess.run(
-            ["alembic", "upgrade", "head"],
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
             check=True,
             # capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
+            shell=use_shell,
         )
         logger.success("✅ Migraciones aplicadas exitosamente.")
     except subprocess.CalledProcessError as e:
@@ -251,7 +421,7 @@ def db_migrate():
 # Comandos que no pertenecen a un subgrupo.
 
 
-@app.command("seed-sql")
+@db_app.command("seed")
 def seed_sql_data(
     seeder_name: str = typer.Argument(
         None,
@@ -473,7 +643,7 @@ def server_run(host: str = "127.0.0.1", port: int = 8000, reload: bool = True):
     subprocess.run(command)
 
 
-@app.command("truncate-sql")
+@db_app.command("truncate")
 def truncate_sql_data(
     tables: list[str] = typer.Argument(
         ..., help="Lista de nombres de tablas a truncar (separadas por espacios)."

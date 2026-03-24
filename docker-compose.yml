@@ -1,52 +1,113 @@
-# version: "3.9"
+# docker-compose.yml - Configuración con perfiles para desarrollo y producción
+# Uso:
+#   Desarrollo: docker-compose --profile dev up -d
+#   Producción: docker-compose --profile prod up -d
+
 networks:
   tipsterbyte_net:
     driver: bridge
 
 services:
   # ====================
-  # Database - PostgreSQL
+  # PostgreSQL - Desarrollo
   # ====================
-  postgres_tipsterbyte:
-    image: postgres:17 # O la versión que prefieras, como postgres:13-alpine
-    container_name: db_pg_tipsterbyte_fx
-    # La sección 'environment' se elimina. 'env_file' se encarga de todo.
-    # Las variables POSTGRES_USER, POSTGRES_PASSWORD y POSTGRES_DB se leerán del .env
+  postgres_tipsterbyte_dev:
+    image: postgres:17
+    container_name: db_pg_tipsterbyte_fx_dev
+    profiles: [ "dev" ]
     env_file:
-      - ./backend/.env
+      - ./backend/.env.dev
     volumes:
-      - database_data:/var/lib/postgresql/data
+      - database_data_dev:/var/lib/postgresql/data
       - ./backend/backups/postgresql_backups:/backups
     ports:
       - "5433:5432"
     networks:
       - tipsterbyte_net
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ====================
-  # Database - MongoDB
+  # PostgreSQL - Producción
   # ====================
-  mongo_tipsterbyte:
-    image: mongo:5.0 # O la versión que prefieras, como mongo:4.4
-    restart: always
-    container_name: db_mongo_tipsterbyte_fx
-    # Aquí sí es necesario 'environment' porque los nombres de las variables
-    # que espera la imagen de Mongo (MONGO_INITDB_ROOT_...) son diferentes
-    # a los que tienes en tu .env (MONGO_...).
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    # 'env_file' provee los valores para las variables de arriba (${MONGO_USER}, etc.)
+  postgres_tipsterbyte_prod:
+    image: postgres:17
+    container_name: db_pg_tipsterbyte_fx_prod
+    profiles: [ "prod" ]
     env_file:
-      - ./backend/.env
+      - ./backend/.env.prod
+    volumes:
+      - database_data_prod:/var/lib/postgresql/data
+      - ./backend/backups/postgresql_backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - tipsterbyte_net
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # ====================
+  # MongoDB - Desarrollo
+  # ====================
+  mongo_tipsterbyte_dev:
+    image: mongo:5.0
+    container_name: db_mongo_tipsterbyte_fx_dev
+    profiles: [ "dev" ]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: tipster_admin
+      MONGO_INITDB_ROOT_PASSWORD: tipster_mongo_pass
+    env_file:
+      - ./backend/.env.dev
     ports:
       - "27017:27017"
     volumes:
-      - mongodata:/data/db
+      - mongodata_dev:/data/db
       - ./backend/backups/mongo_backups:/backups
     networks:
       - tipsterbyte_net
+    restart: unless-stopped
+
+  # ====================
+  # MongoDB - Producción
+  # ====================
+  mongo_tipsterbyte_prod:
+    image: mongo:5.0
+    container_name: db_mongo_tipsterbyte_fx_prod
+    profiles: [ "prod" ]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: tipster_admin
+      MONGO_INITDB_ROOT_PASSWORD: tipster_mongo_pass
+    env_file:
+      - ./backend/.env.prod
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata_prod:/data/db
+      - ./backend/backups/mongo_backups:/backups
+    networks:
+      - tipsterbyte_net
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
 
 volumes:
-  database_data:
-  mongodata:
+  database_data_dev:
+  database_data_prod:
+  mongodata_dev:
+  mongodata_prod:

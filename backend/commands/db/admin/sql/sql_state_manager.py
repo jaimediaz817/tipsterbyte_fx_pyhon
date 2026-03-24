@@ -61,7 +61,7 @@ def _get_database_stats(engine):
 app = typer.Typer(help="Gestiona el estado de la base de datos SQL (PostgreSQL).")
 
 # Constantes para PostgreSQL
-DOCKER_POSTGRES_CONTAINER_NAME = "db_pg_tipsterbyte_fx"
+DOCKER_POSTGRES_CONTAINER_NAME = settings.POSTGRES_CONTAINER_NAME
 
 # --- CAMBIO CLAVE: Definimos la nueva ruta del directorio de backups ---
 # SQL_BACKUP_DIR_PATH = project_root / "backups" / "postgresql_backups"
@@ -138,6 +138,114 @@ def _find_latest_backup(backup_dir: Path) -> Path | None:
     return max(backups, key=lambda f: f.stat().st_mtime)
 
 
+def _get_available_migrations() -> list[dict]:
+    """Obtiene la lista de migraciones disponibles desde Alembic."""
+    try:
+        # Primero obtener la revisión actual
+        current_revision = None
+        try:
+            current_result = subprocess.run(
+                [sys.executable, "-m", "alembic", "current"],
+                capture_output=True,
+                text=True,
+                check=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if current_result.stdout.strip():
+                current_line = current_result.stdout.strip()
+                # Extraer la revisión del formato "abc123def456 (head)"
+                if current_line:
+                    parts = current_line.split()
+                    if parts:
+                        current_revision = parts[0]
+        except subprocess.CalledProcessError:
+            pass
+
+        # Obtener el historial de migraciones
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", "history", "--verbose"],
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+        migrations = []
+        lines = result.stdout.strip().split("\n")
+
+        # Parsear la salida de alembic history
+        current_rev = None
+        current_msg = None
+
+        for line in lines:
+            line = line.strip()
+
+            # Detectar líneas de revisión
+            if line.startswith("Rev:"):
+                if current_rev:
+                    # Guardar la migración anterior
+                    migrations.append(
+                        {
+                            "revision": current_rev,
+                            "message": current_msg or "Sin mensaje",
+                            "is_head": current_rev == current_revision,
+                        }
+                    )
+
+                # Extraer nueva revisión
+                parts = line.split()
+                if len(parts) >= 2:
+                    current_rev = parts[1]
+                    # Verificar si tiene marcador (head)
+                    if len(parts) >= 3 and parts[2] == "(head)":
+                        current_msg = "HEAD - Migración más reciente"
+                    else:
+                        current_msg = None
+
+            # Detectar líneas de mensaje/comentario
+            elif (
+                line.startswith("#")
+                or line.startswith("Revises:")
+                or line.startswith("Parent:")
+            ):
+                if line.startswith("#"):
+                    # Extraer el mensaje del comentario
+                    msg_content = line[1:].strip()
+                    if msg_content and not msg_content.startswith("Create Date:"):
+                        current_msg = msg_content
+
+        # Agregar la última migración procesada
+        if current_rev:
+            migrations.append(
+                {
+                    "revision": current_rev,
+                    "message": current_msg or "Sin mensaje",
+                    "is_head": current_rev == current_revision,
+                }
+            )
+
+        # Si no se encontraron migraciones, agregar la actual
+        if not migrations and current_revision:
+            migrations.append(
+                {
+                    "revision": current_revision,
+                    "message": "Migración actual",
+                    "is_head": True,
+                }
+            )
+
+        return migrations
+
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"No se pudo obtener el historial de migraciones: {e.stderr}")
+        return []
+    except Exception as e:
+        logger.warning(f"Error inesperado al obtener migraciones: {e}")
+        return []
+
+
 def _drop_and_create_db():
     """Función helper para conectarse al servidor de BD y recrear la base de datos."""
     # Nos conectamos a una BD de mantenimiento (como 'postgres') para poder operar sobre nuestra BD
@@ -184,7 +292,15 @@ def _check_and_create_migrations():
             "No se encontraron archivos de migración. Creando una migración inicial..."
         )
         subprocess.run(
-            ["alembic", "revision", "--autogenerate", "-m", "initial migration"],
+            [
+                sys.executable,
+                "-m",
+                "alembic",
+                "revision",
+                "--autogenerate",
+                "-m",
+                "initial migration",
+            ],
             check=True,
         )
         logger.success("Migración inicial creada exitosamente.")
@@ -206,31 +322,115 @@ def clear_migrations_files_only():
 @app.command("migrate")
 def db_migrate(
     revision: str = typer.Argument(
-        "head", help="La revisión a la que se quiere migrar. 'head' para la última."
+        "head",
+        help="La revisión a la que se quiere migrar. 'head' para la última. Ejemplo: 'abc123def456'",
     )
 ):
     """Aplica las migraciones de Alembic a la base de datos."""
     configure_logging()
+
+    # Verificar que existen archivos de migración
+    versions_dir = Path(settings.ALEMBIC_VERSIONS_DIR)
+    if not versions_dir.exists() or not any(versions_dir.glob("*.py")):
+        logger.warning("⚠️ No se encontraron archivos de migración.")
+        typer.echo("")
+        typer.secho(" 💡 SOLUCIÓN:", fg=typer.colors.GREEN, bold=True)
+        typer.echo("-" * 70)
+        typer.secho("  Crea una nueva migración con:", fg=typer.colors.WHITE)
+        typer.secho(
+            '    python manage.py sql create-migration "tu mensaje"',
+            fg=typer.colors.CYAN,
+        )
+        typer.echo("-" * 70)
+        return
+
+    # Si se especifica "head" o no se especifica revisión, mostrar migraciones disponibles
+    if revision == "head":
+        logger.info(
+            "No se especificó una revisión. Mostrando migraciones disponibles..."
+        )
+
+        # Obtener migraciones disponibles
+        migrations = _get_available_migrations()
+
+        if not migrations:
+            logger.warning("⚠️ No se pudieron obtener las migraciones.")
+            logger.info("Intentando aplicar todas las migraciones pendientes...")
+        else:
+            # Mostrar migraciones disponibles
+            typer.echo("\n" + "=" * 70)
+            typer.secho(" 🔄 MIGRACIONES DISPONIBLES", fg=typer.colors.CYAN, bold=True)
+            typer.echo("=" * 70)
+
+            for i, migration in enumerate(migrations[:10], 1):  # Mostrar máximo 10
+                marker = " (HEAD)" if i == 1 else ""
+                typer.echo(f"  {i:2d}. {migration['revision'][:12]}...{marker}")
+                typer.echo(f"      {migration['message']}")
+
+            typer.echo("=" * 70)
+
+            # Mostrar ejemplos de uso
+            typer.echo("")
+            typer.secho(" 💡 EJEMPLOS DE USO:", fg=typer.colors.GREEN, bold=True)
+            typer.echo("-" * 70)
+            typer.secho(
+                "  Para aplicar todas las migraciones pendientes:",
+                fg=typer.colors.WHITE,
+            )
+            typer.secho("    python manage.py sql migrate head", fg=typer.colors.CYAN)
+            typer.echo("")
+            typer.secho(
+                "  Para aplicar una migración específica:", fg=typer.colors.WHITE
+            )
+            if migrations:
+                example_rev = (
+                    migrations[0]["revision"][:12] if migrations else "abc123def456"
+                )
+                typer.secho(
+                    f"    python manage.py sql migrate {example_rev}",
+                    fg=typer.colors.CYAN,
+                )
+            typer.echo("")
+            typer.secho(
+                "  Para ver el estado actual de las migraciones:", fg=typer.colors.WHITE
+            )
+            typer.secho("    python manage.py sql status", fg=typer.colors.CYAN)
+            typer.echo("-" * 70)
+            typer.echo("")
+
+            # Aplicar todas las migraciones (head)
+            logger.info("Aplicando todas las migraciones pendientes...")
+
     logger.info(
         f"🚀 Aplicando migraciones de Alembic hasta la revisión: '{revision}'..."
     )
     try:
-        subprocess.run(
-            ["alembic", "upgrade", revision],
+        # En Windows, usar shell=True para que encuentre el ejecutable correctamente
+        import platform
+
+        use_shell = platform.system() == "Windows"
+
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", revision],
             check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
-            # --- CAMBIO CLAVE: Añadir manejo de errores de codificación ---
             errors="replace",
+            shell=use_shell,
         )
         logger.success("✅ Migraciones aplicadas exitosamente.")
+        if result.stdout:
+            typer.echo(result.stdout)
     except subprocess.CalledProcessError as e:
-        # Usamos un logging más detallado para futuros diagnósticos
         stderr_output = e.stderr.strip() if e.stderr else "No stderr output."
         logger.error(
             f"❌ Falló la aplicación de las migraciones.\nDetalles:\n{stderr_output}"
         )
+        raise typer.Exit(code=1)
+    except FileNotFoundError as e:
+        logger.error(f"❌ No se encontró el ejecutable de Python o Alembic: {e}")
+        logger.info("💡 Asegúrate de tener Python y Alembic instalados correctamente.")
         raise typer.Exit(code=1)
     except Exception as e:
         logger.error(f"❌ Ocurrió un error inesperado durante la migración: {e}")
@@ -372,7 +572,10 @@ def backup_database(
 @app.command("restore")
 def restore_database(
     file: Path = typer.Option(
-        None, "--file", "-f", help="Ruta opcional al archivo de backup a restaurar."
+        None,
+        "--file",
+        "-f",
+        help="Ruta al archivo de backup a restaurar. Ejemplo: --file 'C:\\Users\\jdiaz\\Documents\\...\\backups\\postgresql_backups\\backup_tipsterbyte_fx_db_20260323_185336.sqlc'",
     ),
     skip_confirmation: bool = typer.Option(
         False, hidden=True, help="Omitir la confirmación. Usar con precaución."
@@ -390,15 +593,34 @@ def restore_database(
     if file:
         # Caso 1: El usuario especificó un archivo. Validamos que exista.
         logger.info(f"Intentando restaurar desde el archivo especificado: {file}")
+
+        # Si el archivo no existe como ruta absoluta, intentar buscarlo en el directorio de backups
         if not file.exists():
-            logger.error(
-                f"❌ El archivo de backup especificado no existe: {file.resolve()}"
-            )
-            raise typer.Exit(code=1)
-        backup_to_restore = file
+            # Verificar si es solo un nombre de archivo (sin ruta completa)
+            if len(file.parts) == 1:
+                # Buscar en el directorio de backups por defecto
+                potential_backup = SQL_BACKUP_DIR_PATH / file.name
+                if potential_backup.exists():
+                    logger.info(
+                        f"✅ Archivo encontrado en el directorio de backups: {potential_backup}"
+                    )
+                    backup_to_restore = potential_backup
+                else:
+                    logger.error(
+                        f"❌ El archivo de backup especificado no existe: {file.resolve()}"
+                    )
+                    logger.info(f"💡 Buscado también en: {potential_backup.resolve()}")
+                    raise typer.Exit(code=1)
+            else:
+                logger.error(
+                    f"❌ El archivo de backup especificado no existe: {file.resolve()}"
+                )
+                raise typer.Exit(code=1)
+        else:
+            backup_to_restore = file
     else:
-        # Caso 2: No se especificó archivo. Buscamos el último backup disponible.
-        logger.info("No se especificó un archivo. Buscando el último backup...")
+        # Caso 2: No se especificó archivo. Mostrar backups disponibles y ejemplos.
+        logger.info("No se especificó un archivo. Mostrando backups disponibles...")
 
         # Validamos que el directorio de backups exista y no esté vacío.
         if not SQL_BACKUP_DIR_PATH.exists() or not any(SQL_BACKUP_DIR_PATH.iterdir()):
@@ -410,18 +632,71 @@ def restore_database(
             )
             raise typer.Exit(code=1)
 
-        # Usamos la función helper para encontrar el archivo .sql más reciente.
-        latest_backup = _find_latest_backup(SQL_BACKUP_DIR_PATH)
-        if not latest_backup:
+        # Listar backups disponibles
+        backups_sqlc = list(SQL_BACKUP_DIR_PATH.glob("*.sqlc"))
+        backups_sql = list(SQL_BACKUP_DIR_PATH.glob("*.sql"))
+        backup_files = sorted(
+            backups_sqlc + backups_sql, key=lambda f: f.stat().st_mtime, reverse=True
+        )
+
+        if not backup_files:
             logger.error(
-                f"❌ No se encontraron archivos de backup (.sql) en: {SQL_BACKUP_DIR_PATH.resolve()}"
+                f"❌ No se encontraron archivos de backup (.sql o .sqlc) en: {SQL_BACKUP_DIR_PATH.resolve()}"
             )
             logger.warning(
                 "Ejecuta 'python manage.py sql state backup' para crear uno primero."
             )
             raise typer.Exit(code=1)
 
-        logger.info(f"✅ Backup más reciente encontrado: {latest_backup.name}")
+        # Mostrar backups disponibles de forma intuitiva
+        typer.echo("\n" + "=" * 70)
+        typer.secho(" 📦 BACKUPS DISPONIBLES", fg=typer.colors.CYAN, bold=True)
+        typer.echo("=" * 70)
+
+        for i, backup in enumerate(backup_files[:10], 1):  # Mostrar máximo 10
+            backup_size = backup.stat().st_size / (1024 * 1024)
+            mod_time = datetime.fromtimestamp(backup.stat().st_mtime).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            marker = " (más reciente)" if i == 1 else ""
+            typer.echo(f"  {i:2d}. {backup.name}")
+            typer.echo(
+                f"      Tamaño: {backup_size:.2f} MB | Fecha: {mod_time}{marker}"
+            )
+
+        typer.echo("=" * 70)
+
+        # Mostrar ejemplos de uso
+        typer.echo("")
+        typer.secho(" 💡 EJEMPLOS DE USO:", fg=typer.colors.GREEN, bold=True)
+        typer.echo("-" * 70)
+        typer.secho("  Para restaurar el backup más reciente:", fg=typer.colors.WHITE)
+        typer.secho("    python manage.py sql state restore", fg=typer.colors.CYAN)
+        typer.echo("")
+        typer.secho(
+            "  Para restaurar un backup específico por nombre:", fg=typer.colors.WHITE
+        )
+        latest_example = (
+            backup_files[0].name
+            if backup_files
+            else "backup_tipsterbyte_fx_db_20260323_195912.sqlc"
+        )
+        typer.secho(
+            f'    python manage.py sql state restore --file "{latest_example}"',
+            fg=typer.colors.CYAN,
+        )
+        typer.echo("")
+        typer.secho("  Para restaurar usando la ruta completa:", fg=typer.colors.WHITE)
+        typer.secho(
+            f'    python manage.py sql state restore --file "{SQL_BACKUP_DIR_PATH / latest_example}"',
+            fg=typer.colors.CYAN,
+        )
+        typer.echo("-" * 70)
+        typer.echo("")
+
+        # Usar el más reciente
+        latest_backup = backup_files[0]
+        logger.info(f"✅ Se usará el backup más reciente: {latest_backup.name}")
         backup_to_restore = latest_backup
 
     # --- LÓGICA DE CONFIRMACIÓN DE SEGURIDAD ---
@@ -529,6 +804,8 @@ def reset_database(
         try:
             subprocess.run(
                 [
+                    sys.executable,
+                    "-m",
                     "alembic",
                     "revision",
                     "--autogenerate",
@@ -847,7 +1124,7 @@ def db_status():
     try:
         # 1. Intentamos obtener la revisión actual. Capturamos la salida para analizarla.
         current_rev = subprocess.run(
-            ["alembic", "current"],
+            [sys.executable, "-m", "alembic", "current"],
             capture_output=True,
             text=True,
             check=True,
@@ -863,7 +1140,7 @@ def db_status():
         # 2. Si 'current' funcionó, ahora comprobamos si hay cambios pendientes.
         logger.info("\nComprobando si se necesita una nueva migración...")
         check_result = subprocess.run(
-            ["alembic", "check"],
+            [sys.executable, "-m", "alembic", "check"],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -883,7 +1160,7 @@ def db_status():
             try:
                 # Ejecutamos 'upgrade --sql head' para ver el SQL que se generaría.
                 sql_preview_result = subprocess.run(
-                    ["alembic", "upgrade", "head", "--sql"],
+                    [sys.executable, "-m", "alembic", "upgrade", "head", "--sql"],
                     capture_output=True,
                     text=True,
                     check=True,

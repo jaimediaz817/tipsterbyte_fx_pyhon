@@ -37,6 +37,17 @@ from core.exceptions import (
     NoActiveJobsException,
 )
 
+# --- CONFIGURACIÓN DE SEMÁFOROS DIFERENCIADOS ---
+from core.config_semaphore import get_concurrency_for_robot_type
+from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
+
+# --- LOGGING MEJORADO ---
+from core.robot_logging import (
+    LogSymbols,
+    get_robot_emoji,
+    log_semaphore_status,
+)
+
 
 def _build_jobs_from_leagues(
     leagues, target_process_id: int | None = None, is_general_orchestrator: bool = False
@@ -146,10 +157,49 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
                       Por defecto, usa el orquestador general.
     """
     run_id = generate_run_id()
+    short_run_id = run_id[:8]
+
+    # Log de inicio mejorado con formato visual
     logger.info(
-        f"🚀 Iniciando orquestador para proceso '{process_code}'. run_id={run_id}"
+        f"\n"
+        f"{'='*70}\n"
+        f"{LogSymbols.START} INICIANDO ORQUESTADOR DE PROCESO\n"
+        f"{'='*70}\n"
+        f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+        f"  📋 Process Code: {process_code}\n"
+        f"  {LogSymbols.TIME} Timestamp: {datetime.now().isoformat()}\n"
+        f"{'='*70}"
     )
-    semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_CLIENTS)
+
+    # ✅ FASE 4: Semáforos diferenciados por tipo de robot
+    # Crear un semáforo global como fallback
+    global_semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_CLIENTS)
+
+    # Diccionario para almacenar semáforos por tipo de robot
+    semaphores_by_type: dict[str, asyncio.Semaphore] = {}
+
+    def get_semaphore_for_robot_type(robot_type: str) -> asyncio.Semaphore:
+        """
+        Retorna el semáforo apropiado para un tipo de robot específico.
+        Si no hay configuración específica, usa el semáforo global.
+        """
+        if robot_type not in semaphores_by_type:
+            # Obtener concurrencia específica para este tipo de robot
+            # Convertir string a RobotTypeEnum
+            try:
+                robot_enum = RobotTypeEnum(robot_type)
+                concurrency = get_concurrency_for_robot_type(robot_enum)
+            except ValueError:
+                # Si el tipo no existe en el enum, usar concurrencia global
+                concurrency = settings.MAX_CONCURRENT_CLIENTS
+                logger.warning(
+                    f"⚠️ Tipo de robot '{robot_type}' no encontrado en enum, usando concurrencia global"
+                )
+            semaphores_by_type[robot_type] = asyncio.Semaphore(concurrency)
+            logger.info(
+                f"🔧 Semáforo creado para tipo '{robot_type}': {concurrency} concurrencia máxima"
+            )
+        return semaphores_by_type[robot_type]
 
     # ✅ Crear instancia local de JobRunner (Fase 2: Inyección de dependencias)
     job_runner = JobRunnerApplication()
@@ -235,6 +285,16 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
             )
             job_info = f"Trabajo para '{torneo.nombre}' (Fuente: {fuente_name})"
 
+            # Obtener el tipo de robot para este detalle
+            robot_type = (
+                detalle.fuente.type.value
+                if hasattr(detalle.fuente.type, "value")
+                else str(detalle.fuente.type)
+            )
+
+            # Obtener el semáforo específico para este tipo de robot
+            semaphore = get_semaphore_for_robot_type(robot_type)
+
             if semaphore.locked():
                 logger.info(
                     f"⏳ Cliente en espera: {job_info} (esperando cupo disponible...)"
@@ -251,12 +311,32 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
         try:
             await asyncio.gather(*tasks)
             repo.complete_run(run_id)
+
+            # Log de finalización exitosa con formato mejorado
             logger.success(
-                f"🏁 Orquestador finalizado para proceso '{process_code}'. run_id={run_id}"
+                f"\n"
+                f"{'='*70}\n"
+                f"{LogSymbols.SUCCESS} ORQUESTADOR COMPLETADO EXITOSAMENTE\n"
+                f"{'='*70}\n"
+                f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+                f"  📋 Process Code: {process_code}\n"
+                f"  ✅ Trabajos ejecutados: {len(flat_jobs_for_execution)}\n"
+                f"  {LogSymbols.TIME} Finalizado: {datetime.now().isoformat()}\n"
+                f"{'='*70}\n"
             )
         except Exception as e:
             repo.fail_run(run_id)
+
+            # Log de error con formato mejorado
             logger.error(
-                f"❌ Orquestador falló para proceso '{process_code}'. run_id={run_id}. Error: {e}"
+                f"\n"
+                f"{'='*70}\n"
+                f"{LogSymbols.ERROR} ORQUESTADOR FALLÓ\n"
+                f"{'='*70}\n"
+                f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+                f"  📋 Process Code: {process_code}\n"
+                f"  {LogSymbols.ERROR} Error: {e}\n"
+                f"  {LogSymbols.TIME} Falló: {datetime.now().isoformat()}\n"
+                f"{'='*70}\n"
             )
             raise

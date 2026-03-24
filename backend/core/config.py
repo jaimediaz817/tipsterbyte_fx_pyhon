@@ -59,44 +59,77 @@ class Settings(BaseSettings):
         "development", description="Entorno actual: development | production"
     )
     DEBUG: bool = Field(True, description="Modo debug")
-    DATABASE_URL: str = Field(description="URL de conexión a base de datos")
-    POSTGRES_USER: str = Field(description="Usuario de PostgreSQL")
-    POSTGRES_PASSWORD: str = Field(description="Contraseña de PostgreSQL")
-    POSTGRES_DB: str = Field(description="Base de datos de PostgreSQL")
-    POSTGRES_HOST: str = Field(description="Host de PostgreSQL")
-    POSTGRES_PORT: str = Field(description="Puerto de PostgreSQL")
+    DATABASE_URL: str = Field(
+        "postgresql://postgres:postgres@localhost:5433/tipsterbyte_fx_db",
+        description="URL de conexión a base de datos",
+    )
+    POSTGRES_USER: str = Field("postgres", description="Usuario de PostgreSQL")
+    POSTGRES_PASSWORD: str = Field("postgres", description="Contraseña de PostgreSQL")
+    POSTGRES_DB: str = Field(
+        "tipsterbyte_fx_db", description="Base de datos de PostgreSQL"
+    )
+    POSTGRES_HOST: str = Field("localhost", description="Host de PostgreSQL")
+    POSTGRES_PORT: str = Field("5433", description="Puerto de PostgreSQL")
 
     DATABASE_POOL_SIZE: int = Field(
-        description="Tamaño del pool de conexiones a la base de datos"
+        5, description="Tamaño del pool de conexiones a la base de datos"
     )
     DATABASE_MAX_OVERFLOW: int = Field(
-        description="Número máximo de conexiones adicionales al pool"
+        10, description="Número máximo de conexiones adicionales al pool"
     )
-    DATABASE_POOL_TIMEOUT: int = Field(description="Tiempo de espera del pool")
+    DATABASE_POOL_TIMEOUT: int = Field(30, description="Tiempo de espera del pool")
 
-    MONGO_USER: str = Field(description="Usuario de MongoDB")
-    MONGO_PASSWORD: str = Field(description="Contraseña de MongoDB")
-    MONGO_HOST: str = Field(description="Host de MongoDB")
-    MONGO_PORT: str = Field(description="Puerto de MongoDB")
+    MONGO_USER: str = Field("tipster_admin", description="Usuario de MongoDB")
+    MONGO_PASSWORD: str = Field(
+        "tipster_mongo_pass", description="Contraseña de MongoDB"
+    )
+    MONGO_HOST: str = Field("localhost", description="Host de MongoDB")
+    MONGO_PORT: str = Field("27017", description="Puerto de MongoDB")
     MONGO_DB: str = Field(
-        description="Base de datos de MongoDB"
-    )  # Ya existe, asegurarse que se usa para el nombre de la BD
+        "tipsterbyte_fx_nosql_db", description="Base de datos de MongoDB"
+    )
     MONGO_URI: str = Field(
-        description="URI de conexión completa para MongoDB"
-    )  # Nueva adición
+        "mongodb://tipster_admin:tipster_mongo_pass@localhost:27017/tipsterbyte_fx_nosql_db?authSource=admin",
+        description="URI de conexión completa para MongoDB",
+    )
+    MONGO_CONTAINER_NAME: str = Field(
+        "db_mongo_tipsterbyte_fx_dev",
+        description="Nombre del contenedor Docker de MongoDB",
+    )
+
+    POSTGRES_CONTAINER_NAME: str = Field(
+        "db_pg_tipsterbyte_fx_dev",
+        description="Nombre del contenedor Docker de PostgreSQL",
+    )
 
     LOG_LEVEL: str = Field(
-        "INFO", description="Nivel de logs: DEBUG, INFO, WARNING, ERROR"
+        "DEBUG", description="Nivel de logs: DEBUG, INFO, WARNING, ERROR"
     )
     EXECUTION_BASE_DIR: str = Field(
-        description="Directorio base de las ejecuciones de las tareas"
+        "./executions", description="Directorio base de las ejecuciones de las tareas"
     )
-    SELENIUM_HUB_URL: str = Field(description="Endpoint del hub de Selenium")
+    SELENIUM_HUB_URL: str = Field(
+        "http://localhost:4444/wd/hub", description="Endpoint del hub de Selenium"
+    )
 
     MAX_CONCURRENT_CLIENTS: int = Field(
-        description="Número máximo de clientes a procesar concurrentemente"
+        5, description="Número máximo de clientes a procesar concurrentemente"
     )
-    SUPPORT_EMAIL: str = Field(description="Email de soporte")
+    SUPPORT_EMAIL: str = Field(
+        "jdsolutions817@gmail.com", description="Email de soporte"
+    )
+
+    # --- Variables de Logs ---
+    LOG_RETENTION_DAYS: int = Field(3, description="Días de retención de logs")
+    LOG_ARCHIVE_RETENTION_DAYS: int = Field(
+        30, description="Días de retención de logs archivados"
+    )
+    LOG_ARCHIVE_DIR: str = Field(
+        "data/logs_archive", description="Directorio de logs archivados"
+    )
+    AUTO_CLEANUP_ENABLED: bool = Field(
+        False, description="Habilitar limpieza automática de logs"
+    )
 
     # class Config:
     #     env_file = ".env"
@@ -107,25 +140,50 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings()
+    settings: Settings = Settings()  # type: ignore[call-arg]
 except ValidationError as e:
     print("\n" + "=" * 80)
     print("❌ ERROR CRÍTICO DE CONFIGURACIÓN ❌")
+    print("=" * 80)
+    print("\n🔍 VARIABLES FALTANTES O INCORRECTAS EN EL ARCHIVO .env:\n")
+
+    # Extraer nombres de campos con error
+    for error in e.errors():
+        field_name = error.get("loc", ["unknown"])[0]
+        print(f"   ❌ {field_name}")
+
+    print("\n" + "-" * 80)
+    print("📝 UBICACIÓN DEL ARCHIVO DE CONFIGURACIÓN:")
+    print(f"   📁 {BACKEND_ROOT / 'core' / 'config.py'}")
+    print("-" * 80)
+
+    print("\n✅ SOLUCIÓN:")
+    print("   1. Abre el archivo: backend/core/config.py")
+    print("   2. Busca la clase 'Settings'")
+    print("   3. Agrega las variables faltantes con sus valores por defecto:")
+    print("\n   Ejemplo:")
+    print("   ---")
     print(
-        "Faltan variables requeridas en el archivo .env o en las variables de entorno.\n"
+        "   VARIABLE_FALTANTE: str = Field('valor_default', description='Descripción')"
     )
-    print(str(e))
+    print("   ---\n")
+
+    print("📋 VARIABLES REQUERIDAS EN EL MODELO Settings:")
+    print("   - ENV, DEBUG, DATABASE_URL, POSTGRES_USER, POSTGRES_PASSWORD")
+    print("   - POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT")
+    print("   - DATABASE_POOL_SIZE, DATABASE_MAX_OVERFLOW, DATABASE_POOL_TIMEOUT")
     print(
-        "\nPor favor revisa el archivo .env y asegúrate de que todas las variables requeridas estén definidas."
+        "   - MONGO_USER, MONGO_PASSWORD, MONGO_HOST, MONGO_PORT, MONGO_DB, MONGO_URI"
     )
+    print("   - LOG_LEVEL, EXECUTION_BASE_DIR, SELENIUM_HUB_URL")
+    print("   - MAX_CONCURRENT_CLIENTS, SUPPORT_EMAIL")
+    print(
+        "   - LOG_RETENTION_DAYS, LOG_ARCHIVE_RETENTION_DAYS, LOG_ARCHIVE_DIR, AUTO_CLEANUP_ENABLED"
+    )
+
+    print("\n" + "=" * 80)
+    print(f"📁 Ruta del .env: {BACKEND_ROOT / '.env'}")
+    print(f"📁 Ruta del config.py: {BACKEND_ROOT / 'core' / 'config.py'}")
     print("=" * 80 + "\n")
-    sys.exit(1)
-    print(
-        "Faltan variables requeridas en el archivo .env o en las variables de entorno.\n"
-    )
-    print(str(e))
-    print(
-        "\nPor favor revisa el archivo .env y asegúrate de que todas las variables requeridas estén definidas."
-    )
-    print("=" * 80 + "\n")
+
     sys.exit(1)

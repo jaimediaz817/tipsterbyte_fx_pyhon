@@ -19,6 +19,14 @@ from core.exceptions import (
     RobotNotFoundException,
 )
 
+# --- LOGGING MEJORADO ---
+from core.robot_logging import (
+    log_robot_start,
+    log_robot_end,
+    get_robot_emoji,
+    LogSymbols,
+)
+
 # ===================================================================
 # IMPORTS DE ROBOTS (para que el decorador @register_robot se ejecute)
 # ===================================================================
@@ -90,20 +98,40 @@ class JobRunnerApplication:
         fuente_name = (
             detalle.fuente.name if hasattr(detalle.fuente, "name") else "Sin nombre"
         )
+
+        # Log de inicio con formato mejorado
+        emoji = get_robot_emoji(robot_type_enum_member.value)
+        short_run_id = run_id[:8]
         logger.info(
-            f"🤖 Ejecutando robot: {robot_class.__name__} | "
-            f"Fuente: '{fuente_name}' (tipo: {robot_type_enum_member.value}) | "
-            f"Torneo: '{torneo.nombre}' | "
-            f"Detalle ID: {detalle.id} | "
-            f"process_id: {detalle.process_id}"
+            f"\n"
+            f"{'='*60}\n"
+            f"{LogSymbols.START} INICIANDO EJECUCIÓN DE ROBOT\n"
+            f"{'='*60}\n"
+            f"  {emoji} Robot: {robot_class.__name__}\n"
+            f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+            f"  {LogSymbols.TORNEO} Torneo: {torneo.nombre}\n"
+            f"  {LogSymbols.FUENTE} Fuente: {fuente_name}\n"
+            f"  📋 Tipo: {robot_type_enum_member.value}\n"
+            f"  📋 Detalle ID: {detalle.id}\n"
+            f"  📋 Process ID: {detalle.process_id}\n"
+            f"{'='*60}"
         )
 
         # --- PASAMOS repo al robot ---
         robot_instance = robot_class(torneo, detalle, run_id, repo)
         await robot_instance.run()
 
+        # Log de finalización con formato mejorado
         logger.info(
-            f"✅ Robot {robot_class.__name__} completado para fuente '{fuente_name}' en torneo '{torneo.nombre}'"
+            f"\n"
+            f"{'='*60}\n"
+            f"{LogSymbols.SUCCESS} ROBOT COMPLETADO EXITOSAMENTE\n"
+            f"{'='*60}\n"
+            f"  {emoji} Robot: {robot_class.__name__}\n"
+            f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+            f"  {LogSymbols.TORNEO} Torneo: {torneo.nombre}\n"
+            f"  {LogSymbols.FUENTE} Fuente: {fuente_name}\n"
+            f"{'='*60}\n"
         )
 
 
