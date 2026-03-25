@@ -89,7 +89,7 @@ def configure_logging():
         level="ERROR",
     )
 
-    # Consola
+    # Consola SIEMPRE activa
     logger.add(
         sink=sys.stdout,
         level=settings.LOG_LEVEL.upper(),
@@ -97,139 +97,143 @@ def configure_logging():
         colorize=True,
     )
 
-    # System (core, excluye scheduler)
-    def system_filter(record):
-        name = record["name"]
-        return bool(name and name.startswith("core") and "scheduler" not in name)
+    # Archivos SOLO si FILE_LOGGING_ENABLED está habilitado
+    if settings.FILE_LOGGING_ENABLED:
+        # System (core, excluye scheduler)
+        def system_filter(record):
+            name = record["name"]
+            return bool(name and name.startswith("core") and "scheduler" not in name)
 
-    _safe_add_sink(
-        sink_path=LOGS_ROOT / "system.log",
-        level="INFO",
-        format=file_format,
-        filter=system_filter,
-        rotation="10 MB",
-        retention="7 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-        delay=True,
-        mode="a",
-        catch=True,
-    )
-
-    # Scheduler
-    (LOGS_ROOT / "scheduler").mkdir(exist_ok=True)
-
-    def scheduler_filter(record):
-        name = record["name"]
-        return bool(name and "scheduler" in name)
-
-    _safe_add_sink(
-        sink_path=LOGS_ROOT / "scheduler" / "scheduler.log",
-        level="INFO",
-        format=file_format,
-        filter=scheduler_filter,
-        rotation="5 MB",
-        retention="14 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-        delay=True,
-        mode="a",
-        catch=True,
-    )
-
-    # Robots de leagues_manager → robots.log
-    def robots_filter(record):
-        n = record["name"]
-        # Coincide tanto con apps.leagues_manager.robots.* como apps.leagues_manager.domain.robots.*
-        return bool(
-            n
-            and n.startswith("apps.leagues_manager")
-            and (".robots." in n or n.endswith(".robots"))
+        _safe_add_sink(
+            sink_path=LOGS_ROOT / "system.log",
+            level="INFO",
+            format=file_format,
+            filter=system_filter,
+            rotation="10 MB",
+            retention="7 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=True,
+            diagnose=True,
+            delay=True,
+            mode="a",
+            catch=True,
         )
 
-    _safe_add_sink(
-        sink_path=LOGS_ROOT / "robots.log",
-        level="INFO",
-        format=file_format,
-        filter=robots_filter,
-        rotation="10 MB",
-        retention="10 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-        delay=True,
-        mode="a",
-        catch=True,
-    )
+        # Scheduler
+        (LOGS_ROOT / "scheduler").mkdir(exist_ok=True)
 
-    # Sinks dinámicos por módulo en apps (excluyendo robots)
-    apps_dir = BACKEND_ROOT / "apps"
-    module_names: list[str] = []
-    if apps_dir.exists():
-        for module_path in apps_dir.iterdir():
-            if module_path.is_dir() and (module_path / "__init__.py").exists():
-                module_name = module_path.name
-                module_names.append(module_name)
+        def scheduler_filter(record):
+            name = record["name"]
+            return bool(name and "scheduler" in name)
 
-                def create_module_filter(name: str):
-                    def _f(record):
-                        n = record["name"]
-                        return (
-                            n.startswith(f"apps.{name}")
-                            and ".robots." not in n
-                            and not n.endswith(".robots")
-                        )
+        _safe_add_sink(
+            sink_path=LOGS_ROOT / "scheduler" / "scheduler.log",
+            level="INFO",
+            format=file_format,
+            filter=scheduler_filter,
+            rotation="5 MB",
+            retention="14 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=True,
+            diagnose=True,
+            delay=True,
+            mode="a",
+            catch=True,
+        )
 
-                    return _f
+        # Robots de leagues_manager → robots.log
+        def robots_filter(record):
+            n = record["name"]
+            # Coincide tanto con apps.leagues_manager.robots.* como apps.leagues_manager.domain.robots.*
+            return bool(
+                n
+                and n.startswith("apps.leagues_manager")
+                and (".robots." in n or n.endswith(".robots"))
+            )
 
-                _safe_add_sink(
-                    sink_path=LOGS_ROOT / f"{module_name}.log",
-                    level="INFO",
-                    format=file_format,
-                    filter=create_module_filter(module_name),
-                    rotation="10 MB",
-                    retention="10 days",
-                    compression="zip",
-                    enqueue=True,
-                    backtrace=True,
-                    diagnose=True,
-                    delay=True,
-                    mode="a",
-                    catch=True,
-                )
+        _safe_add_sink(
+            sink_path=LOGS_ROOT / "robots.log",
+            level="INFO",
+            format=file_format,
+            filter=robots_filter,
+            rotation="10 MB",
+            retention="10 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=True,
+            diagnose=True,
+            delay=True,
+            mode="a",
+            catch=True,
+        )
 
-    # General: excluye core, scheduler y TODOS los apps.*
-    # Esto evita duplicados de robots y de módulos de apps en general_app.log.
-    def is_general_log(record):
-        name = record["name"]
-        if name.startswith("core") or "scheduler" in name:
-            return False
-        # Excluye cualquier logger bajo apps.*
-        if name.startswith("apps."):
-            return False
-        return True
+        # Sinks dinámicos por módulo en apps (excluyendo robots)
+        apps_dir = BACKEND_ROOT / "apps"
+        module_names: list[str] = []
+        if apps_dir.exists():
+            for module_path in apps_dir.iterdir():
+                if module_path.is_dir() and (module_path / "__init__.py").exists():
+                    module_name = module_path.name
+                    module_names.append(module_name)
 
-    _safe_add_sink(
-        sink_path=LOGS_ROOT / "general_app.log",
-        level="INFO",
-        format=file_format,
-        filter=is_general_log,
-        rotation="20 MB",
-        retention="5 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-        delay=True,
-        mode="a",
-        catch=True,
-    )
+                    def create_module_filter(name: str):
+                        def _f(record):
+                            n = record["name"]
+                            return (
+                                n.startswith(f"apps.{name}")
+                                and ".robots." not in n
+                                and not n.endswith(".robots")
+                            )
 
-    logger.info(
-        "✅ Logging dinámico y segmentado configurado con manejo robusto de errores."
-    )
+                        return _f
+
+                    _safe_add_sink(
+                        sink_path=LOGS_ROOT / f"{module_name}.log",
+                        level="INFO",
+                        format=file_format,
+                        filter=create_module_filter(module_name),
+                        rotation="10 MB",
+                        retention="10 days",
+                        compression="zip",
+                        enqueue=True,
+                        backtrace=True,
+                        diagnose=True,
+                        delay=True,
+                        mode="a",
+                        catch=True,
+                    )
+
+        # General: excluye core, scheduler y TODOS los apps.*
+        # Esto evita duplicados de robots y de módulos de apps en general_app.log.
+        def is_general_log(record):
+            name = record["name"]
+            if name.startswith("core") or "scheduler" in name:
+                return False
+            # Excluye cualquier logger bajo apps.*
+            if name.startswith("apps."):
+                return False
+            return True
+
+        _safe_add_sink(
+            sink_path=LOGS_ROOT / "general_app.log",
+            level="INFO",
+            format=file_format,
+            filter=is_general_log,
+            rotation="20 MB",
+            retention="5 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=True,
+            diagnose=True,
+            delay=True,
+            mode="a",
+            catch=True,
+        )
+
+        logger.info(
+            "✅ Logging dinámico y segmentado configurado con manejo robusto de errores."
+        )
+    else:
+        logger.info("🔇 Logging en archivos DESHABILITADO. Solo consola activa.")

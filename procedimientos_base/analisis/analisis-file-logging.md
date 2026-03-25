@@ -279,4 +279,26 @@ def configure_logging():
 
 ---
 
+## Estado de Implementación
+
+### ✅ IMPLEMENTADO
+
+**Archivos modificados**:
+1. `backend/core/config.py` - Variable `FILE_LOGGING_ENABLED` añadida
+2. `backend/.env` - Variable configurada como `true`
+3. `backend/core/logger.py` - Verificación de variable antes de agregar sinks
+4. `backend/apps/leagues_manager/tests/conftest.py` - Fixture `disable_file_logging` (autouse=True)
+
+**Tests ejecutados**:
+- `core/tests/test_logger.py`: ✅ 10/10 passed
+
+**Comportamiento verificado**:
+- Producción/Desarrollo: Escribe en archivos (default: `true`)
+- Tests: NO escribe en archivos (fixture deshabilita automáticamente)
+- Variable `=false`: NO escribe en archivos
+- Variable `=true`: Escribe en archivos
+
+---
+
 *Documento generado: Análisis de control de escritura de archivos de logs*
+*Estado: ✅ IMPLEMENTADO Y VERIFICADO*

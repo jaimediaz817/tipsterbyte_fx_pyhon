@@ -3,6 +3,7 @@ import typer
 from loguru import logger
 import subprocess
 import sys
+from typing import Any
 
 # Importación opcional de docker (solo se usa para verificar contenedores)
 try:
@@ -221,6 +222,106 @@ app = typer.Typer(
 )
 
 
+# =========================================================
+# COMANDO CONFIG - Diagnóstico de Configuración
+# =========================================================
+@app.command(
+    name="config", help="Muestra el estado actual de la configuración del sistema."
+)
+def project_config():
+    """Muestra diagnóstico completo de todas las variables de configuración."""
+    from core.config import settings
+
+    typer.echo("\n" + "═" * 70)
+    typer.secho(
+        "        CONFIGURACIÓN ACTUAL - TipsterByte FX", fg=typer.colors.CYAN, bold=True
+    )
+    typer.echo("═" * 70)
+
+    # ── ENTORNO ──
+    typer.echo("\n── ENTORNO " + "─" * 59)
+    _print_setting("ENV", settings.ENV, "info")
+    _print_setting("DEBUG", settings.DEBUG, "ok" if settings.DEBUG else "warn")
+
+    # ── LOGGING ──
+    typer.echo("\n── LOGGING " + "─" * 60)
+    _print_setting("LOG_LEVEL", settings.LOG_LEVEL, "info")
+    _print_setting(
+        "PROCESS_RUN_LOGGING_ENABLED",
+        settings.PROCESS_RUN_LOGGING_ENABLED,
+        "ok" if settings.PROCESS_RUN_LOGGING_ENABLED else "error",
+    )
+    _print_setting(
+        "FILE_LOGGING_ENABLED",
+        settings.FILE_LOGGING_ENABLED,
+        "ok" if settings.FILE_LOGGING_ENABLED else "error",
+    )
+
+    # ── BASE DE DATOS ──
+    typer.echo("\n── BASE DE DATOS " + "─" * 54)
+    _print_setting("DATABASE_URL", settings.DATABASE_URL, "info", mask=True)
+    _print_setting("MONGO_URI", settings.MONGO_URI, "info", mask=True)
+
+    # ── CONCURRENCIA ──
+    typer.echo("\n── CONCURRENCIA " + "─" * 55)
+    _print_setting("MAX_CONCURRENT_CLIENTS", settings.MAX_CONCURRENT_CLIENTS, "info")
+
+    # ── LOGS ──
+    typer.echo("\n── LOGS " + "─" * 63)
+    _print_setting("LOG_RETENTION_DAYS", settings.LOG_RETENTION_DAYS, "info")
+    _print_setting(
+        "LOG_ARCHIVE_RETENTION_DAYS", settings.LOG_ARCHIVE_RETENTION_DAYS, "info"
+    )
+    _print_setting("LOG_ARCHIVE_DIR", settings.LOG_ARCHIVE_DIR, "info")
+    _print_setting("AUTO_CLEANUP_ENABLED", settings.AUTO_CLEANUP_ENABLED, "warn")
+
+    # ── SELENIUM ──
+    typer.echo("\n── SELENIUM " + "─" * 59)
+    _print_setting("SELENIUM_HUB_URL", settings.SELENIUM_HUB_URL, "info")
+
+    typer.echo("\n" + "═" * 70)
+
+
+def _print_setting(key: str, value: Any, status: str = "info", mask: bool = False):
+    """Imprime una configuración con formato y colores."""
+    colors = {
+        "ok": typer.colors.GREEN,
+        "warn": typer.colors.YELLOW,
+        "error": typer.colors.RED,
+        "info": typer.colors.CYAN,
+    }
+
+    color = colors.get(status, typer.colors.WHITE)
+
+    # Formatear valor
+    if mask and isinstance(value, str):
+        if "://" in value:
+            # Enmascarar credenciales
+            parts = value.split("://")
+            if len(parts) > 1:
+                value_str = f"{parts[0]}://***"
+            else:
+                value_str = value
+        else:
+            value_str = value[:20] + "***" if len(value) > 20 else value
+    elif isinstance(value, bool):
+        value_str = "True" if value else "False"
+    else:
+        value_str = str(value)
+
+    # Indicador de estado
+    status_indicator = ""
+    if isinstance(value, bool):
+        status_indicator = " [ACTIVO]" if value else " [INACTIVO]"
+
+    typer.echo(f"  {key:<35} = ", nl=False)
+    typer.secho(f"{value_str}", fg=color, bold=True, nl=False)
+    if status_indicator:
+        typer.secho(status_indicator, fg=color)
+    else:
+        typer.echo()
+
+
 @app.command(name="status", help="Menú principal del Project Manager.")
 def project_status():
 
@@ -254,14 +355,12 @@ def project_status():
 
 
 # =========================================================
-# LÓGICA PROJECT STATUS (extraída a función privada)
+# LÓGICA PROJECT STATUS (refactorizada con funciones auxiliares)
 # =========================================================
-def _run_project_status():
-    logger.info("🚀 Verificando el estado del proyecto TipsterByte...")
 
-    # =====================================================
-    # PASO 1: Docker
-    # =====================================================
+
+def _check_docker() -> bool:
+    """Verifica el estado de los contenedores Docker. Retorna True si todo está OK."""
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 1/5: Verificando Docker...")
 
@@ -272,41 +371,43 @@ def _run_project_status():
         logger.info(
             "💡 Para habilitar la verificación de Docker, instala: pip install docker"
         )
-    else:
-        try:
-            # Verificación de tipo para Pylance (docker no es None aquí porque DOCKER_AVAILABLE=True)
-            assert (
-                docker is not None
-            ), "docker module should be available when DOCKER_AVAILABLE is True"
-            client = docker.from_env()
-            pg_container = client.containers.get("db_pg_tipsterbyte_fx")
-            mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
+        return True
 
-            if pg_container.status == "running" and mongo_container.status == "running":
-                print_styled(
-                    "Docker: Contenedores PostgreSQL y MongoDB están en ejecución.",
-                    "ok",
-                )
-            else:
-                print_styled(
-                    "Docker: Algunos contenedores no están en ejecución.", "warn"
-                )
-                logger.error(
-                    "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
-                )
-                return
-        except (NotFound, Exception):
-            print_styled("Docker: No se encontraron los contenedores.", "error")
-            logger.error(
-                "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+    try:
+        assert docker is not None
+        client = docker.from_env()
+        pg_container = client.containers.get("db_pg_tipsterbyte_fx")
+        mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
+
+        containers_running = (
+            pg_container.status == "running" and mongo_container.status == "running"
+        )
+
+        if containers_running:
+            print_styled(
+                "Docker: Contenedores PostgreSQL y MongoDB están en ejecución.", "ok"
             )
-            return
+            return True
 
-    # =====================================================
-    # PASO 2: Migraciones SQL
-    # =====================================================
+        print_styled("Docker: Algunos contenedores no están en ejecución.", "warn")
+        logger.error(
+            "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+        )
+        return False
+
+    except (NotFound, Exception):
+        print_styled("Docker: No se encontraron los contenedores.", "error")
+        logger.error(
+            "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+        )
+        return False
+
+
+def _check_sql_migrations() -> tuple[bool, dict]:
+    """Verifica el estado de las migraciones SQL. Retorna (is_migrated, sql_status)."""
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 2/5: Verificando migraciones SQL (PostgreSQL)...")
+
     sql_status = get_sql_db_status()
     code_only = sql_status.get("code_only", [])
     is_migrated = len(code_only) == 0
@@ -315,59 +416,70 @@ def _run_project_status():
         print_styled(
             "PostgreSQL: La base de datos está migrada (tablas creadas).", "ok"
         )
-    else:
-        print_styled(
-            f"PostgreSQL: Faltan {len(code_only)} tabla(s) por migrar.", "warn"
-        )
+        return True, sql_status
 
-        migration_created = ask_and_execute(
-            "¿Deseas crear el archivo de migración ahora? (python manage.py sql create-migration)",
-            ["sql", "create-migration", "-m", "initial_project_structure"],
-        )
-        if migration_created:
-            migrated_now = ask_and_execute(
-                "¿Deseas aplicar las migraciones ahora? (python manage.py sql migrate)",
-                ["sql", "migrate"],
-            )
-            if migrated_now:
-                sql_status = get_sql_db_status()
-                is_migrated = len(sql_status.get("code_only", [])) == 0
-                if is_migrated:
-                    print_styled("PostgreSQL: ¡Tablas creadas exitosamente!", "ok")
-            else:
-                logger.warning(
-                    "⚠️  Sin migraciones aplicadas, los seeders SQL no se ejecutarán."
-                )
-        else:
-            logger.warning("⚠️  Sin archivo de migración no se puede continuar con SQL.")
+    print_styled(f"PostgreSQL: Faltan {len(code_only)} tabla(s) por migrar.", "warn")
 
-    # =====================================================
-    # PASO 3: Seeders SQL
-    # =====================================================
+    migration_created = ask_and_execute(
+        "¿Deseas crear el archivo de migración ahora? (python manage.py sql create-migration)",
+        ["sql", "create-migration", "-m", "initial_project_structure"],
+    )
+
+    if not migration_created:
+        logger.warning("⚠️  Sin archivo de migración no se puede continuar con SQL.")
+        return False, sql_status
+
+    migrated_now = ask_and_execute(
+        "¿Deseas aplicar las migraciones ahora? (python manage.py sql migrate)",
+        ["sql", "migrate"],
+    )
+
+    if not migrated_now:
+        logger.warning(
+            "⚠️  Sin migraciones aplicadas, los seeders SQL no se ejecutarán."
+        )
+        return False, sql_status
+
+    sql_status = get_sql_db_status()
+    is_migrated = len(sql_status.get("code_only", [])) == 0
+
+    if is_migrated:
+        print_styled("PostgreSQL: ¡Tablas creadas exitosamente!", "ok")
+
+    return is_migrated, sql_status
+
+
+def _check_sql_seeders(is_migrated: bool, sql_status: dict) -> None:
+    """Verifica y opcionalmente ejecuta los seeders SQL."""
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 3/5: Verificando datos iniciales SQL...")
+
     if not is_migrated:
         logger.warning("⏭️  Saltando seeders SQL: las tablas no están migradas.")
-    else:
-        tables_with_data = sum(
-            1 for count in sql_status.get("table_counts", {}).values() if count > 0
-        )
-        if tables_with_data > 0:
-            print_styled(f"PostgreSQL: Hay datos en {tables_with_data} tabla(s).", "ok")
-        else:
-            print_styled(
-                "PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn"
-            )
-            ask_and_execute(
-                "¿Deseas ejecutar los seeders SQL ahora? (python manage.py seed-sql)",
-                ["seed-sql"],
-            )
+        return
 
-    # =====================================================
-    # PASO 4: Esquema MongoDB
-    # =====================================================
+    tables_with_data = sum(
+        1 for count in sql_status.get("table_counts", {}).values() if count > 0
+    )
+
+    if tables_with_data > 0:
+        print_styled(f"PostgreSQL: Hay datos en {tables_with_data} tabla(s).", "ok")
+        return
+
+    print_styled(
+        "PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn"
+    )
+    ask_and_execute(
+        "¿Deseas ejecutar los seeders SQL ahora? (python manage.py seed-sql)",
+        ["seed-sql"],
+    )
+
+
+def _check_mongo_schema() -> tuple[bool, dict]:
+    """Verifica el esquema de MongoDB. Retorna (schema_exists, mongo_status)."""
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 4/5: Verificando esquema MongoDB...")
+
     mongo_status = get_mongo_db_status()
 
     if not mongo_status.get("connected"):
@@ -375,7 +487,7 @@ def _run_project_status():
             f"MongoDB: No se pudo conectar. Error: {mongo_status.get('error')}", "error"
         )
         logger.info("👉 Revisa MONGO_USER / MONGO_PASSWORD en tu .env")
-        return
+        return False, mongo_status
 
     if mongo_status.get("collections_exist"):
         collections = mongo_status.get("collections", [])
@@ -383,47 +495,58 @@ def _run_project_status():
             f"MongoDB: Esquema inicializado. {len(collections)} colección(es) encontrada(s).",
             "ok",
         )
-    else:
-        print_styled(
-            "MongoDB: El esquema no ha sido inicializado (sin colecciones).", "warn"
-        )
-        schema_created = ask_and_execute(
-            "¿Deseas inicializar el esquema de MongoDB ahora? (python manage.py nosql init-schema)",
-            ["nosql", "init-schema"],
-        )
-        if schema_created:
-            mongo_status = get_mongo_db_status()
+        return True, mongo_status
 
-    # =====================================================
-    # PASO 5: Seeders MongoDB
-    # =====================================================
+    print_styled(
+        "MongoDB: El esquema no ha sido inicializado (sin colecciones).", "warn"
+    )
+
+    schema_created = ask_and_execute(
+        "¿Deseas inicializar el esquema de MongoDB ahora? (python manage.py nosql init-schema)",
+        ["nosql", "init-schema"],
+    )
+
+    if schema_created:
+        mongo_status = get_mongo_db_status()
+
+    return mongo_status.get("collections_exist", False), mongo_status
+
+
+def _check_mongo_seeders(collections_exist: bool, mongo_status: dict) -> None:
+    """Verifica y opcionalmente ejecuta los seeders de MongoDB."""
     typer.echo("\n" + "─" * 60)
     logger.info("📋 PASO 5/5: Verificando datos iniciales MongoDB...")
-    if not mongo_status.get("collections_exist"):
-        logger.warning("⏭️  Saltando seeders MongoDB: el esquema no está inicializado.")
-    else:
-        if mongo_status.get("has_data"):
-            print_styled("MongoDB: La base de datos tiene datos iniciales.", "ok")
-        else:
-            print_styled("MongoDB: Las colecciones están vacías.", "warn")
-            ask_and_execute(
-                "¿Deseas ejecutar los seeders de MongoDB ahora? (python manage.py nosql seed)",
-                ["nosql", "seed"],
-            )
 
-    # =====================================================
-    # RESUMEN FINAL
-    # =====================================================
+    if not collections_exist:
+        logger.warning("⏭️  Saltando seeders MongoDB: el esquema no está inicializado.")
+        return
+
+    if mongo_status.get("has_data"):
+        print_styled("MongoDB: La base de datos tiene datos iniciales.", "ok")
+        return
+
+    print_styled("MongoDB: Las colecciones están vacías.", "warn")
+    ask_and_execute(
+        "¿Deseas ejecutar los seeders de MongoDB ahora? (python manage.py nosql seed)",
+        ["nosql", "seed"],
+    )
+
+
+def _print_final_summary() -> None:
+    """Imprime el resumen final del estado del proyecto."""
     typer.echo("\n" + "═" * 60)
+
     final_sql = get_sql_db_status()
     final_mongo = get_mongo_db_status()
 
-    all_ok = (
+    sql_ok = (
         len(final_sql.get("code_only", [])) == 0
         and len(final_sql.get("synced", [])) > 0
-        and final_mongo.get("collections_exist", False)
-        and final_mongo.get("has_data", False)
     )
+    mongo_ok = final_mongo.get("collections_exist", False) and final_mongo.get(
+        "has_data", False
+    )
+    all_ok = sql_ok and mongo_ok
 
     if all_ok:
         logger.opt(ansi=True).success(
@@ -434,235 +557,31 @@ def _run_project_status():
         logger.opt(ansi=True).warning(
             "⚠️  Aún hay pasos pendientes. Vuelve a ejecutar `python manage.py project status`"
         )
+
     typer.echo("═" * 60)
 
 
-# import os
-# import typer
-# from loguru import logger
-# import docker
-# import subprocess
-# import sys
-# from docker.errors import NotFound
+def _run_project_status():
+    """Función principal que ejecuta la verificación completa del estado del proyecto."""
+    logger.info("🚀 Verificando el estado del proyecto TipsterByte...")
 
-# from core.db.no_sql.db_inspector import get_mongo_db_status
-# from core.db.sql.admin.db_inspector import get_sql_db_status
+    # PASO 1: Docker
+    if not _check_docker():
+        return
 
-# styles = {
-#     "ok": "<green>",
-#     "warn": "<yellow>",
-#     "error": "<red>",
-#     "info": "<cyan>",
-#     "bold": "<bold>",
-#     "end": "</>",
-# }
+    # PASO 2: Migraciones SQL
+    is_migrated, sql_status = _check_sql_migrations()
 
-# def print_styled(message: str, style: str = "info"):
-#     start_tag = styles.get(style, "")
-#     end_tag = styles.get("end", "")
-#     bold_start = styles.get("bold", "")
-#     bold_end = styles.get("end", "")
-#     command_part = ""
-#     if "`" in message:
-#         parts = message.split("`")
-#         message = parts[0]
-#         command_part = parts[1]
-#     logger.opt(ansi=True).info(
-#         f"{start_tag}➡️  {message}{bold_start}{command_part}{bold_end}{end_tag}"
-#     )
+    # PASO 3: Seeders SQL
+    _check_sql_seeders(is_migrated, sql_status)
 
-# def execute_manage_command(args: list[str]) -> bool:
-#     """Ejecuta un subcomando de manage.py y muestra la salida en tiempo real."""
-#     full_command = [sys.executable, "manage.py"] + args
-#     logger.info(f"⚙️  Ejecutando: {' '.join(full_command)}")
-#     try:
-#         # --- CAMBIO CLAVE: Forzar UTF-8 en el entorno del subproceso ---
-#         env = os.environ.copy()
-#         env["PYTHONIOENCODING"] = "utf-8"
-#         env["PYTHONUTF8"] = "1"
+    # PASO 4: Esquema MongoDB
+    collections_exist, mongo_status = _check_mongo_schema()
+    if not mongo_status.get("connected"):
+        return
 
-#         process = subprocess.Popen(
-#             full_command,
-#             stdout=subprocess.PIPE,
-#             stderr=subprocess.STDOUT,
-#             text=True,
-#             encoding="utf-8",
-#             errors="replace",
-#             env=env,  # <-- Pasamos el entorno con UTF-8 forzado
-#         )
-#         if process.stdout:
-#             for line in iter(process.stdout.readline, ""):
-#                 print(line.strip())
-#         process.wait()
-#         if process.returncode == 0:
-#             logger.success("✅ Comando ejecutado exitosamente.")
-#             return True
-#         else:
-#             logger.error(f"❌ El comando falló con código {process.returncode}.")
-#             return False
-#     except Exception as e:
-#         logger.error(f"❌ Error inesperado: {e}")
-#         return False
+    # PASO 5: Seeders MongoDB
+    _check_mongo_seeders(collections_exist, mongo_status)
 
-# def ask_and_execute(question: str, command: list[str]) -> bool:
-#     """Pregunta al usuario si desea ejecutar un comando y lo ejecuta si responde 'y'."""
-#     typer.echo("")
-#     confirmed = typer.confirm(f"❓ {question}")
-#     if confirmed:
-#         return execute_manage_command(command)
-#     else:
-#         logger.warning("⏭️  Paso omitido por el usuario.")
-#         return False
-
-# app = typer.Typer(
-#     help="Comandos para verificar el estado y guiar la configuración del proyecto."
-# )
-
-# @app.command(name="status", help="Verifica el estado del proyecto y guía la configuración inicial.")
-# def project_status():
-#     logger.info("🚀 Verificando el estado del proyecto TipsterByte...")
-
-#     # =========================================================
-#     # PASO 1: Docker
-#     # =========================================================
-#     typer.echo("\n" + "─" * 60)
-#     logger.info("📋 PASO 1/5: Verificando Docker...")
-#     try:
-#         client = docker.from_env()
-#         pg_container = client.containers.get("db_pg_tipsterbyte_fx")
-#         mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
-
-#         if pg_container.status == "running" and mongo_container.status == "running":
-#             print_styled("Docker: Contenedores PostgreSQL y MongoDB están en ejecución.", "ok")
-#         else:
-#             print_styled("Docker: Algunos contenedores no están en ejecución.", "warn")
-#             logger.error("❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)")
-#             return
-#     except (NotFound, Exception):
-#         print_styled("Docker: No se encontraron los contenedores.", "error")
-#         logger.error("❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)")
-#         return
-
-#     # =========================================================
-#     # PASO 2: Migraciones SQL
-#     # =========================================================
-#     typer.echo("\n" + "─" * 60)
-#     logger.info("📋 PASO 2/5: Verificando migraciones SQL (PostgreSQL)...")
-#     sql_status = get_sql_db_status()
-#     code_only = sql_status.get("code_only", [])
-#     is_migrated = len(code_only) == 0
-
-#     if is_migrated:
-#         print_styled("PostgreSQL: La base de datos está migrada (tablas creadas).", "ok")
-#     else:
-#         print_styled(f"PostgreSQL: Faltan {len(code_only)} tabla(s) por migrar.", "warn")
-
-#         # --- PASO 2A: Primero crear el archivo de migración ---
-#         migration_created = ask_and_execute(
-#             "¿Deseas crear el archivo de migración inicial ahora? (python manage.py sql create-migration)",
-#             ["sql", "create-migration", "-m", "initial_project_structure"]
-#         )
-
-#         if migration_created:
-#             # --- PASO 2B: Luego aplicar la migración ---
-#             migrated_now = ask_and_execute(
-#                 "¿Deseas aplicar las migraciones a la base de datos ahora? (python manage.py sql migrate)",
-#                 ["sql", "migrate"]
-#             )
-#             if migrated_now:
-#                 sql_status = get_sql_db_status()
-#                 is_migrated = len(sql_status.get("code_only", [])) == 0
-#                 if is_migrated:
-#                     print_styled("PostgreSQL: ¡Tablas creadas exitosamente!", "ok")
-#                 else:
-#                     logger.warning("⚠️  Las migraciones se aplicaron pero aún hay tablas pendientes.")
-#             else:
-#                 logger.warning("⚠️  Sin aplicar migraciones, los seeders SQL no se ejecutarán.")
-#         else:
-#             logger.warning("⚠️  Sin archivo de migración, no se puede continuar con SQL.")
-
-#     # =========================================================
-#     # PASO 3: Seeders SQL
-#     # =========================================================
-#     typer.echo("\n" + "─" * 60)
-#     logger.info("📋 PASO 3/5: Verificando datos iniciales SQL...")
-#     if not is_migrated:
-#         logger.warning("⏭️  Saltando seeders SQL: las tablas no están migradas.")
-#     else:
-#         tables_with_data = sum(
-#             1 for count in sql_status.get("table_counts", {}).values() if count > 0
-#         )
-#         if tables_with_data > 0:
-#             print_styled(f"PostgreSQL: Hay datos en {tables_with_data} tabla(s).", "ok")
-#         else:
-#             print_styled("PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn")
-#             ask_and_execute(
-#                 "¿Deseas ejecutar los seeders SQL ahora? (python manage.py seed-sql)",
-#                 ["seed-sql"]
-#             )
-
-#     # =========================================================
-#     # PASO 4: Esquema MongoDB
-#     # =========================================================
-#     typer.echo("\n" + "─" * 60)
-#     logger.info("📋 PASO 4/5: Verificando esquema MongoDB...")
-#     mongo_status = get_mongo_db_status()
-
-#     if not mongo_status.get("connected"):
-#         print_styled(f"MongoDB: No se pudo conectar. Error: {mongo_status.get('error')}", "error")
-#         logger.info("👉 Revisa MONGO_USER / MONGO_PASSWORD en tu .env")
-#         return
-
-#     if mongo_status.get("collections_exist"):
-#         collections = mongo_status.get("collections", [])
-#         print_styled(f"MongoDB: Esquema inicializado. {len(collections)} colección(es) encontrada(s).", "ok")
-#     else:
-#         print_styled("MongoDB: El esquema no ha sido inicializado (sin colecciones).", "warn")
-#         schema_created = ask_and_execute(
-#             "¿Deseas inicializar el esquema de MongoDB ahora? (python manage.py nosql init-schema)",
-#             ["nosql", "init-schema"]
-#         )
-#         if schema_created:
-#             mongo_status = get_mongo_db_status()
-
-#     # =========================================================
-#     # PASO 5: Seeders MongoDB
-#     # =========================================================
-#     typer.echo("\n" + "─" * 60)
-#     logger.info("📋 PASO 5/5: Verificando datos iniciales MongoDB...")
-#     if not mongo_status.get("collections_exist"):
-#         logger.warning("⏭️  Saltando seeders MongoDB: el esquema no está inicializado.")
-#     else:
-#         if mongo_status.get("has_data"):
-#             print_styled("MongoDB: La base de datos tiene datos iniciales.", "ok")
-#         else:
-#             print_styled("MongoDB: Las colecciones están vacías.", "warn")
-#             ask_and_execute(
-#                 "¿Deseas ejecutar los seeders de MongoDB ahora? (python manage.py nosql seed)",
-#                 ["nosql", "seed"]
-#             )
-
-#     # =========================================================
-#     # RESUMEN FINAL
-#     # =========================================================
-#     typer.echo("\n" + "═" * 60)
-#     final_sql = get_sql_db_status()
-#     final_mongo = get_mongo_db_status()
-
-#     all_ok = (
-#         # SQL: no hay tablas pendientes de migrar (code_only vacío)
-#         len(final_sql.get("code_only", [])) == 0
-#         # SQL: hay tablas sincronizadas (al menos una)
-#         and len(final_sql.get("synced", [])) > 0
-#         # MongoDB: colecciones creadas y con datos
-#         and final_mongo.get("collections_exist", False)
-#         and final_mongo.get("has_data", False)
-#     )
-
-#     if all_ok:
-#         # Quitar los debugs temporales
-#         logger.opt(ansi=True).success("🎉 ¡El proyecto está completamente configurado y listo!")
-#         print_styled("Inicia el servidor con `python manage.py server run`", "ok")
-#     else:
-#         logger.opt(ansi=True).warning("⚠️  Aún hay pasos pendientes. Vuelve a ejecutar `python manage.py project status`")
-#     typer.echo("═" * 60)
+    # RESUMEN FINAL
+    _print_final_summary()

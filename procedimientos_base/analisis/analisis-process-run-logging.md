@@ -199,4 +199,14 @@ PROCESS_RUN_LOGGING_ENABLED=false
 
 ---
 
+## Sistemas Relacionados
+
+### Control de Archivos de Logs
+Se implementó un sistema similar para controlar la escritura de archivos de logs:
+- **Variable**: `FILE_LOGGING_ENABLED`
+- **Comportamiento**: Consola SIEMPRE activa, archivos controlados por variable
+- **Documento**: `procedimientos_base/analisis-file-logging.md`
+
+---
+
 *Documento generado: Análisis de estabilidad del sistema de logging de process_run*

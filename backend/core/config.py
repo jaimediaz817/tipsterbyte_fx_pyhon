@@ -137,6 +137,12 @@ class Settings(BaseSettings):
         description="Controla si se escribe en las tablas process_run y process_run_log. Valores: true/1/yes = ESCRIBE en BD, false/0 = NO escribe (usa NoOp)",
     )
 
+    # --- Variables de File Logging ---
+    FILE_LOGGING_ENABLED: bool = Field(
+        True,
+        description="Controla si se escriben logs en archivos. Consola SIEMPRE activa. Valores: true = ESCRIBE en archivos, false = NO escribe en archivos",
+    )
+
     # class Config:
     #     env_file = ".env"
     #     case_sensitive = True
