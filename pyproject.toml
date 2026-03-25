@@ -10,3 +10,16 @@ requires-python = ">=3.11"
 
 [tool.black]
 line-length = 88
+
+[tool.coverage.run]
+source = ["apps", "core", "shared"]
+omit = [
+    "*/__init__.py",
+    "*/tests/*",
+    "*/migrations/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+relative_files = true

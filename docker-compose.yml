@@ -106,8 +106,44 @@ services:
           cpus: '1'
           memory: 1G
 
+  # ====================
+  # SonarQube - Análisis de Calidad (Versión 10.5.1 LTA - Long-Term Active)
+  # ====================
+  sonarqube:
+    profiles: [ "dev" ]
+    image: sonarqube:community
+    container_name: sonarqube_tipsterbyte
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_WEB_PORT=9000
+      # Conexión a PostgreSQL (base de datos dedicada para SonarQube)
+      - SONAR_JDBC_URL=jdbc:postgresql://postgres_tipsterbyte_dev:5432/sonarqube
+      - SONAR_JDBC_USERNAME=postgres
+      - SONAR_JDBC_PASSWORD=postgres
+      # Optimización de memoria (aprovechando RAM disponible)
+      - SONAR_WEB_JAVAOPTS=-Xmx4096m -Xms1024m
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - tipsterbyte_net
+    depends_on:
+      - postgres_tipsterbyte_dev
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/api/system/status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   database_data_dev:
   database_data_prod:
   mongodata_dev:
   mongodata_prod:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

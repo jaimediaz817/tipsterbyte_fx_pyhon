@@ -65,6 +65,8 @@ motor                    # Driver asíncrono para MongoDB
 # Herramientas de desarrollo (opcional)
 # -------------------------------
 pytest                    # Para pruebas unitarias
+pytest-cov                # Integración de pytest con coverage para generar XML
+pytest-xdist              # Ejecución paralela de tests (opcional, mejora performance)
 mocker                    # Mocking para pruebas unitarias    
 pytest-mock               # Integración de pytest y mocker
 # black                   # Formateo de código

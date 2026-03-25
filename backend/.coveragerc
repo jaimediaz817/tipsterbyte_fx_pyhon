@@ -1,0 +1,11 @@
+[run]
+source = apps,core,shared
+omit = 
+    */__init__.py
+    */tests/*
+    */migrations/*
+    */__pycache__/*
+
+[xml]
+output = coverage.xml
+relative_files = True

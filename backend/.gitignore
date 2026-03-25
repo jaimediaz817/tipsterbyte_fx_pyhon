@@ -18,3 +18,10 @@ backups/
 
 # MIGRATIONS
 alembic/versions/
+
+# .gitignore
+.claude/settings.local.json
+
+# Ignorar archivos de configuración de IDEs
+.vscode/
+.idea/
