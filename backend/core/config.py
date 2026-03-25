@@ -131,6 +131,12 @@ class Settings(BaseSettings):
         False, description="Habilitar limpieza automática de logs"
     )
 
+    # --- Variables de Process Run Logging ---
+    PROCESS_RUN_LOGGING_ENABLED: bool = Field(
+        True,
+        description="Controla si se escribe en las tablas process_run y process_run_log. Valores: true/1/yes = ESCRIBE en BD, false/0 = NO escribe (usa NoOp)",
+    )
+
     # class Config:
     #     env_file = ".env"
     #     case_sensitive = True

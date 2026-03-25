@@ -3,9 +3,7 @@ from abc import ABC, abstractmethod
 from loguru import logger
 from typing import TYPE_CHECKING, Dict, Type
 
-from shared.repositories.scheduler_repos.process_run_repository import (
-    ProcessRunRepository,
-)
+from shared.repositories.scheduler_repos import IProcessRunRepository
 
 # --- EXCEPCIONES PERSONALIZADAS ---
 from core.exceptions import ScrapingException
@@ -42,7 +40,7 @@ class BaseRobot(ABC):
         torneo: "MockTorneo",
         detalle: "MockDetalleFuenteExtraccion",
         run_id: str,
-        repo: "ProcessRunRepository",  # <-- NUEVO
+        repo: "IProcessRunRepository",  # <-- NUEVO
     ):
         self.torneo = torneo
         self.detalle = detalle

@@ -9,9 +9,7 @@ from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion im
 from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
 from apps.leagues_manager.tests.mock_data_leagues import MockTorneo
 from apps.leagues_manager.tests.mock_data_leagues import MockDetalleFuenteExtraccion
-from shared.repositories.scheduler_repos.process_run_repository import (
-    ProcessRunRepository,
-)
+from shared.repositories.scheduler_repos import IProcessRunRepository
 
 # --- EXCEPCIONES PERSONALIZADAS ---
 from core.exceptions import (
@@ -76,7 +74,7 @@ class JobRunnerApplication:
         torneo: Torneo,
         detalle: DetalleFuenteExtraccion,
         run_id: str,
-        repo: ProcessRunRepository,
+        repo: IProcessRunRepository,
     ):
         """
         Recibe un trabajo, encuentra el robot correcto, lo instancia y lo ejecuta.

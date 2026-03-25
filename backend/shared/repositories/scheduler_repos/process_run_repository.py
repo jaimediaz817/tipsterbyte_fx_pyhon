@@ -4,9 +4,12 @@ from apps.platform_config.infrastructure.models.sql.process import Process
 from apps.platform_config.infrastructure.models.sql.process_run import ProcessRun
 from apps.platform_config.infrastructure.models.sql.process_run_log import ProcessRunLog
 from loguru import logger
+from shared.repositories.scheduler_repos.i_process_run_repository import (
+    IProcessRunRepository,
+)
 
 
-class ProcessRunRepository:
+class ProcessRunRepository(IProcessRunRepository):
     """
     Repositorio para gestionar el ciclo de vida de una ejecución (ProcessRun)
     y sus logs detallados por paso (ProcessRunLog).

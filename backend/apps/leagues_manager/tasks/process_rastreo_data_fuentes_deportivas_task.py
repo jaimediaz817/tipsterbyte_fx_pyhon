@@ -19,9 +19,7 @@ from core.db.sql.database_sql import SessionLocal
 from shared.constants.process.process_codes import (
     SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
 )
-from shared.repositories.scheduler_repos.process_run_repository import (
-    ProcessRunRepository,
-)
+from shared.repositories.scheduler_repos import ProcessRunRepositoryFactory
 
 # --- CAMBIO CLAVE: Importamos la CLASE JobRunner (no el singleton) ---
 from apps.leagues_manager.application.job_runner_application import (
@@ -205,8 +203,8 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
     job_runner = JobRunnerApplication()
 
     with SessionLocal() as session:
-        # --- CONECTAR ProcessRunRepository ---
-        repo = ProcessRunRepository(db=session)
+        # --- CONECTAR ProcessRunRepository (usa factory para tests) ---
+        repo = ProcessRunRepositoryFactory.get_repository(db=session)
 
         # PRIMERO: Verificar si el proceso existe y está activo ANTES de crear el ProcessRun
         platform_config_repo = SQLPlatformConfigRepository(session)

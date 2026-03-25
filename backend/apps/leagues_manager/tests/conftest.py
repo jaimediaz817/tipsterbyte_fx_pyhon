@@ -1,6 +1,7 @@
 """
-Fixture de pytest para limpiar las tablas de process_run y process_run_log
-después de cada test que las utilice.
+Fixture de pytest para tests unitarios.
+- Deshabilita logging en BD automáticamente (NoOpProcessRunRepository)
+- Limpia tablas de process_run/process_run_log después de tests de integración
 """
 
 import sys
@@ -20,6 +21,41 @@ import pytest
 from core.db.sql.database_sql import SessionLocal
 from apps.platform_config.infrastructure.models.sql.process_run import ProcessRun
 from apps.platform_config.infrastructure.models.sql.process_run_log import ProcessRunLog
+from shared.repositories.scheduler_repos import (
+    NoOpProcessRunRepository,
+    ProcessRunRepositoryFactory,
+)
+
+
+@pytest.fixture(autouse=True)
+def disable_process_run_logging():
+    """
+    Fixture que deshabilita automáticamente el logging en BD para TODOS los tests.
+    Los tests unitarios usarán NoOpProcessRunRepository automáticamente.
+    """
+    original_value = os.environ.get("PROCESS_RUN_LOGGING_ENABLED")
+    os.environ["PROCESS_RUN_LOGGING_ENABLED"] = "false"
+    yield
+    # Restaurar valor original después del test
+    if original_value is None:
+        os.environ.pop("PROCESS_RUN_LOGGING_ENABLED", None)
+    else:
+        os.environ["PROCESS_RUN_LOGGING_ENABLED"] = original_value
+
+
+@pytest.fixture
+def noop_process_run_repo():
+    """
+    Fixture que proporciona un NoOpProcessRunRepository para tests.
+    Útil cuando necesitas verificar que se llamaron ciertos métodos
+    sin escribir en la base de datos.
+
+    Ejemplo:
+        def test_mi_test(noop_process_run_repo):
+            noop_process_run_repo.create_run("run_123", "TEST_PROCESS")
+            assert "run_123" in noop_process_run_repo.get_runs_created()
+    """
+    return NoOpProcessRunRepository()
 
 
 @pytest.fixture(scope="function")
