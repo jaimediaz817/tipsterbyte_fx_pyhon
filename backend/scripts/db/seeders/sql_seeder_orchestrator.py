@@ -10,7 +10,7 @@ from core.logger import configure_logging
 # from base_seeder import BaseSeeder
 
 
-def run_seeders(specific_seeder: str = None, update_existing: bool = False):
+def run_seeders(specific_seeder: str | None = None, update_existing: bool = False):
     """
     Descubre y ejecuta dinámicamente todos los seeders SQL o uno específico.
     """
@@ -41,16 +41,19 @@ def run_seeders(specific_seeder: str = None, update_existing: bool = False):
 
     # Ordenar seeders para asegurar dependencias correctas
     # platform_config_seeder debe ejecutarse primero porque leagues_manager depende de él
+    # geografia_seeder debe ejecutarse antes de leagues_manager_seeder porque crea los países/continentes
     def get_seeder_priority(seeder_class):
         name = seeder_class.__name__.lower()
         if "platform_config" in name:
             return 0  # Primero
         elif "auth" in name:
             return 1  # Segundo
+        elif "geografia" in name:
+            return 2  # Tercero (crea países y continentes)
         elif "leagues_manager" in name:
-            return 2  # Tercero (depende de platform_config)
+            return 3  # Cuarto (depende de platform_config y geografia)
         else:
-            return 3  # Otros
+            return 4  # Otros
 
     all_seeder_classes.sort(key=get_seeder_priority)
 

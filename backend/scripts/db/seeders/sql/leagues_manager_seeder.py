@@ -1,7 +1,4 @@
 # ...existing imports...
-from apps.leagues_manager.application.dto.continente_create_dto import (
-    ContinenteCreateDTO,
-)
 from apps.leagues_manager.application.dto.fuente_extraccion_create_dto import (
     FuenteExtraccionCreateDTO,
 )
@@ -11,7 +8,6 @@ from apps.leagues_manager.application.dto.detalle_fuente_extraccion_create_dto i
 
 from apps.leagues_manager.domain.enums.categoria_liga_enum import CategoriaLigaEnum
 from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
-from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
 from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
 from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
 from apps.leagues_manager.infrastructure.repositories.sql_leagues_repository import (
@@ -35,16 +31,8 @@ from shared.constants.process.process_codes import (
     PROCESS_EXTRACT_DATA_FUENTES,
 )
 
-# ...existing CONTINENTES, PAISES, LIGAS, TORNEOS...
-CONTINENTES = [
-    {"nombre": "Europa", "codigo": "UEFA"},
-    {"nombre": "América del Sur", "codigo": "CONMEBOL"},
-]
-
-PAISES = [
-    {"nombre": "España", "codigo_iso": "ESP", "continente": "Europa"},
-    {"nombre": "Colombia", "codigo_iso": "COL", "continente": "América del Sur"},
-]
+# NOTA: Los continentes y países ahora los crea el geografia_seeder
+# Este seeder solo crea ligas, torneos y fuentes de extracción
 
 # Se ajusta el valor de 'categoria' para que coincida con el Enum (A, B, C, D)
 LIGAS = [
@@ -175,52 +163,24 @@ class LeaguesManagerSeeder(BaseSeeder):
                         f"Proceso '{process_code}' no encontrado en la base de datos después de intentar crearlo."
                     )
 
-            # --- MAPAS PARA GUARDAR ENTIDADES CREADAS (igual que antes) ---
-            continente_map = {}
-            pais_map = {}
+            # --- MAPAS PARA GUARDAR ENTIDADES CREADAS ---
+            # NOTA: Los continentes y países ahora los crea el geografia_seeder
             liga_map = {}
             torneo_map = {}
             fuente_map = {}
 
-            # 1) Continentes (igual que antes)
-            self.logger.info("Poblando continentes...")
-            for continente_item in CONTINENTES:
-                continente_dto = service.registrar_continente(
-                    ContinenteCreateDTO(**continente_item), update=update
-                )
-                continente_map[continente_dto.nombre] = continente_dto
-
-            # 2) Países (igual que antes)
-            self.logger.info("Poblando países...")
-            for pais_item in PAISES:
-                continente_nombre = pais_item["continente"]
-                continente = continente_map.get(continente_nombre)
-
-                if not continente:
-                    self.logger.warning(
-                        f"Continente '{continente_nombre}' no encontrado para el país '{pais_item['nombre']}'. Saltando..."
-                    )
-                    continue
-
-                pais_dto = service.registrar_pais(
-                    PaisCreateDTO(
-                        nombre=pais_item["nombre"],
-                        codigo_iso=pais_item.get("codigo_iso"),
-                        continente_id=continente.id,
-                    ),
-                    update=update,
-                )
-                pais_map[pais_dto.nombre] = pais_dto
-
-            # 3) Ligas (igual que antes)
+            # 1) Ligas
+            # NOTA: Las ligas requieren países que ya deben existir (creados por geografia_seeder)
             self.logger.info("Poblando ligas...")
             for liga_item in LIGAS:
                 pais_nombre = liga_item["pais"]
-                pais = pais_map.get(pais_nombre)
+                # Buscar el país en la base de datos (debe existir por geografia_seeder)
+                pais = repo.get_pais_by_nombre(pais_nombre)
 
                 if not pais:
                     self.logger.warning(
-                        f"País '{pais_nombre}' no encontrado para la liga '{liga_item['nombre']}'. Saltando..."
+                        f"País '{pais_nombre}' no encontrado para la liga '{liga_item['nombre']}'. "
+                        f"Asegúrese de ejecutar geografia_seeder primero. Saltando..."
                     )
                     continue
 
@@ -238,7 +198,7 @@ class LeaguesManagerSeeder(BaseSeeder):
                 )
                 liga_map[liga_dto.nombre] = liga_dto
 
-            # 4) Torneos (igual que antes)
+            # 2) Torneos
             self.logger.info("Poblando torneos...")
             for torneo_item in TORNEOS:
                 liga_nombre = torneo_item["liga"]

@@ -60,10 +60,10 @@ class LeaguesService(ILeaguesService):
         if existing:
             if update:
                 updated = self.repo.update_pais(existing.id, dto.model_dump())
-                return PaisDTO(**updated.__dict__)
-            return PaisDTO(**existing.__dict__)
+                return PaisDTO(**updated.__dict__, was_created=False)
+            return PaisDTO(**existing.__dict__, was_created=False)
         created = self.repo.create_pais(dto.nombre, dto.codigo_iso, dto.continente_id)
-        return PaisDTO(**created.__dict__)
+        return PaisDTO(**created.__dict__, was_created=True)
 
     def registrar_liga(self, dto: LigaCreateDTO, update: bool = False) -> LigaDTO:
         existing = self.repo.get_liga_by_nombre_and_pais(dto.nombre, dto.pais_id)
@@ -160,31 +160,3 @@ class LeaguesService(ILeaguesService):
             detalle_id, {"is_active": True}
         )
         return DetalleFuenteExtraccionDTO(**updated.__dict__)
-
-    # def registrar_continente(self, dto: ContinenteCreateDTO) -> ContinenteDTO:
-    #     existing = self.repo.get_continente_by_nombre(dto.nombre)
-    #     if existing:
-    #         return ContinenteDTO(**existing.__dict__)
-    #     created = self.repo.create_continente(dto.nombre, dto.codigo)
-    #     return ContinenteDTO(**created.__dict__)
-
-    # def registrar_pais(self, dto: PaisCreateDTO) -> PaisDTO:
-    #     existing = self.repo.get_pais_by_nombre_and_continente(dto.nombre, dto.continente_id)
-    #     if existing:
-    #         return PaisDTO(**existing.__dict__)
-    #     created = self.repo.create_pais(dto.nombre, dto.codigo_iso, dto.continente_id)
-    #     return PaisDTO(**created.__dict__)
-
-    # def registrar_liga(self, dto: LigaCreateDTO) -> LigaDTO:
-    #     existing = self.repo.get_liga_by_nombre_and_pais(dto.nombre, dto.pais_id)
-    #     if existing:
-    #         return LigaDTO(**existing.__dict__)
-    #     created = self.repo.create_liga(dto.nombre, dto.nombre_categoria, dto.pais_id)
-    #     return LigaDTO(**created.__dict__)
-
-    # def registrar_torneo(self, dto: TorneoCreateDTO) -> TorneoDTO:
-    #     existing = self.repo.get_torneo_by_nombre_and_liga(dto.nombre, dto.liga_id)
-    #     if existing:
-    #         return TorneoDTO(**existing.__dict__)
-    #     created = self.repo.create_torneo(dto.nombre, dto.liga_id, dto.fecha_inicio, dto.fecha_fin)
-    #     return TorneoDTO(**created.__dict__)
