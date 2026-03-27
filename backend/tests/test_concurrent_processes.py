@@ -18,7 +18,7 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
 from shared.constants.process.process_codes import (
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACT_DATA_FUENTES,
     PROCESS_STANDINGS_EXTRACTION,
     PROCESS_ODDS_WPLAY_EXTRACTION,
     PROCESS_CALENDAR_EXTRACTION,
@@ -63,7 +63,7 @@ async def run_concurrent_processes():
     processes = [
         {
             "name": "Proceso General",
-            "code": SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+            "code": PROCESS_EXTRACT_DATA_FUENTES,
             "description": "Ejecuta TODOS los robots (standings, odds, calendar)",
         },
         {

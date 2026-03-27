@@ -18,7 +18,7 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
 from shared.constants.process.process_codes import (
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACT_DATA_FUENTES,
 )
 
 
@@ -74,12 +74,12 @@ async def run_scheduler_flow():
     # PASO 4: Ejecutar proceso
     # =====================================================
     print("\n📋 PASO 4: Ejecutando proceso...")
-    print(f"   🚀 Proceso: {SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS}")
+    print(f"   🚀 Proceso: {PROCESS_EXTRACT_DATA_FUENTES}")
 
     try:
         # Ejecutar el orquestador
         await launch_process_rastreo_data_fuentes_deportivas_task(
-            process_code=SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
+            process_code=PROCESS_EXTRACT_DATA_FUENTES
         )
         print("   ✅ Proceso ejecutado exitosamente")
     except Exception as e:
@@ -103,9 +103,7 @@ async def run_scheduler_flow():
     print("=" * 80)
     print(f"   ✅ Configuración de semáforos: OK")
     print(f"   ✅ Robots registrados: {len(robots)}")
-    print(
-        f"   ✅ Proceso ejecutado: {SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS}"
-    )
+    print(f"   ✅ Proceso ejecutado: {PROCESS_EXTRACT_DATA_FUENTES}")
     print(f"   ✅ Flujo completado sin errores")
     print("\n🎯 CONCLUSIÓN: El flujo del scheduler funciona correctamente")
     print("=" * 80 + "\n")

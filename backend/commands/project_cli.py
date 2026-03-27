@@ -232,54 +232,107 @@ def project_config():
     """Muestra diagnóstico completo de todas las variables de configuración."""
     from core.config import settings
 
-    typer.echo("\n" + "═" * 70)
+    typer.echo("\n" + "=" * 70)
     typer.secho(
-        "        CONFIGURACIÓN ACTUAL - TipsterByte FX", fg=typer.colors.CYAN, bold=True
+        "        CONFIGURACION ACTUAL - TipsterByte FX", fg=typer.colors.CYAN, bold=True
     )
-    typer.echo("═" * 70)
+    typer.echo("=" * 70)
 
-    # ── ENTORNO ──
-    typer.echo("\n── ENTORNO " + "─" * 59)
-    _print_setting("ENV", settings.ENV, "info")
-    _print_setting("DEBUG", settings.DEBUG, "ok" if settings.DEBUG else "warn")
+    # ── EXTRACCION AUTOMATICA DE CAMPOS ──
+    # Usamos dir() + __annotations__ para obtener TODOS los campos definidos en Settings
+    # Excluimos métodos privados y atributos internos de Pydantic
+    all_attrs = dir(settings)
+    fields = {}
+    for attr_name in all_attrs:
+        # Excluir métodos, atributos privados y atributos internos de Pydantic
+        if (
+            not attr_name.startswith("_")
+            and attr_name
+            not in ["model_config", "model_fields", "model_computed_fields"]
+            and not callable(getattr(settings, attr_name, None))
+        ):
+            fields[attr_name] = True
 
-    # ── LOGGING ──
-    typer.echo("\n── LOGGING " + "─" * 60)
-    _print_setting("LOG_LEVEL", settings.LOG_LEVEL, "info")
-    _print_setting(
-        "PROCESS_RUN_LOGGING_ENABLED",
-        settings.PROCESS_RUN_LOGGING_ENABLED,
-        "ok" if settings.PROCESS_RUN_LOGGING_ENABLED else "error",
-    )
-    _print_setting(
-        "FILE_LOGGING_ENABLED",
-        settings.FILE_LOGGING_ENABLED,
-        "ok" if settings.FILE_LOGGING_ENABLED else "error",
-    )
+    # Categorizar campos automaticamente
+    categories = _categorize_fields(fields)
 
-    # ── BASE DE DATOS ──
-    typer.echo("\n── BASE DE DATOS " + "─" * 54)
-    _print_setting("DATABASE_URL", settings.DATABASE_URL, "info", mask=True)
-    _print_setting("MONGO_URI", settings.MONGO_URI, "info", mask=True)
+    # Mostrar cada categoria
+    for category, field_names in categories.items():
+        if field_names:
+            typer.echo(f"\n-- {category.upper()} " + "-" * (60 - len(category)))
+            for field_name in field_names:
+                value = getattr(settings, field_name, None)
+                # Determinar status automaticamente
+                status = _determine_status(field_name, value)
+                # Enmascarar valores sensibles automaticamente
+                mask = _should_mask(field_name)
+                _print_setting(field_name, value, status, mask=mask)
 
-    # ── CONCURRENCIA ──
-    typer.echo("\n── CONCURRENCIA " + "─" * 55)
-    _print_setting("MAX_CONCURRENT_CLIENTS", settings.MAX_CONCURRENT_CLIENTS, "info")
+    typer.echo("\n" + "=" * 70)
 
-    # ── LOGS ──
-    typer.echo("\n── LOGS " + "─" * 63)
-    _print_setting("LOG_RETENTION_DAYS", settings.LOG_RETENTION_DAYS, "info")
-    _print_setting(
-        "LOG_ARCHIVE_RETENTION_DAYS", settings.LOG_ARCHIVE_RETENTION_DAYS, "info"
-    )
-    _print_setting("LOG_ARCHIVE_DIR", settings.LOG_ARCHIVE_DIR, "info")
-    _print_setting("AUTO_CLEANUP_ENABLED", settings.AUTO_CLEANUP_ENABLED, "warn")
 
-    # ── SELENIUM ──
-    typer.echo("\n── SELENIUM " + "─" * 59)
-    _print_setting("SELENIUM_HUB_URL", settings.SELENIUM_HUB_URL, "info")
+def _categorize_fields(fields: dict) -> dict[str, list[str]]:
+    """Categoriza automáticamente los campos por tipo."""
+    # Campos internos de Pydantic que NO son configuraciones del usuario
+    PYDANTIC_INTERNAL_FIELDS = {
+        "model_config",
+        "model_extra",
+        "model_fields_set",
+        "model_computed_fields",
+    }
 
-    typer.echo("\n" + "═" * 70)
+    categories = {
+        "ENTORNO": [],
+        "LOGGING": [],
+        "BASE DE DATOS": [],
+        "CONCURRENCIA": [],
+        "LOGS": [],
+        "SELENIUM": [],
+        "OTROS": [],
+    }
+
+    for field_name in fields.keys():
+        # Excluir campos internos de Pydantic y campos privados
+        if field_name.startswith("_") or field_name in PYDANTIC_INTERNAL_FIELDS:
+            continue
+
+        # Categorizar por nombre del campo
+        field_lower = field_name.lower()
+
+        if any(x in field_lower for x in ["env", "debug", "environment"]):
+            categories["ENTORNO"].append(field_name)
+        elif any(x in field_lower for x in ["log_level", "logging", "file_logging"]):
+            categories["LOGGING"].append(field_name)
+        elif any(x in field_lower for x in ["database", "postgres", "mongo", "db"]):
+            categories["BASE DE DATOS"].append(field_name)
+        elif any(x in field_lower for x in ["concurrent", "pool", "overflow"]):
+            categories["CONCURRENCIA"].append(field_name)
+        elif any(
+            x in field_lower for x in ["retention", "archive", "cleanup", "alembic"]
+        ):
+            categories["LOGS"].append(field_name)
+        elif any(x in field_lower for x in ["selenium", "hub"]):
+            categories["SELENIUM"].append(field_name)
+        else:
+            categories["OTROS"].append(field_name)
+
+    return categories
+
+
+def _determine_status(field_name: str, value: Any) -> str:
+    """Determina automáticamente el status basado en el tipo y valor."""
+    if isinstance(value, bool):
+        return "ok" if value else "warn"
+    if isinstance(value, str):
+        if any(x in field_name.lower() for x in ["url", "uri", "database"]):
+            return "info"
+    return "info"
+
+
+def _should_mask(field_name: str) -> bool:
+    """Determina si un campo debe ser enmascarado (contiene credenciales)."""
+    sensitive_keywords = ["password", "secret", "uri", "url", "database", "key"]
+    return any(keyword in field_name.lower() for keyword in sensitive_keywords)
 
 
 def _print_setting(key: str, value: Any, status: str = "info", mask: bool = False):
@@ -470,8 +523,8 @@ def _check_sql_seeders(is_migrated: bool, sql_status: dict) -> None:
         "PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn"
     )
     ask_and_execute(
-        "¿Deseas ejecutar los seeders SQL ahora? (python manage.py seed-sql)",
-        ["seed-sql"],
+        "¿Deseas ejecutar los seeders SQL ahora? (python manage.py sql seed)",
+        ["sql", "seed"],
     )
 
 

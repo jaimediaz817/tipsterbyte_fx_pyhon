@@ -97,6 +97,84 @@ def db_create_migration(
     configure_logging()
     load_all_models()
 
+    # --- NUEVA VALIDACIÓN: Aplicar migraciones pendientes primero ---
+    logger.info("🔍 Verificando si hay migraciones pendientes...")
+    try:
+        import platform
+
+        use_shell = platform.system() == "Windows"
+
+        # Verificar estado de migraciones
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", "current"],
+            capture_output=True,
+            text=True,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
+            shell=use_shell,
+        )
+
+        # Si hay error o desfase, aplicar migraciones primero
+        if result.returncode != 0 or "head" not in result.stdout.lower():
+            logger.warning(
+                "⚠️ Migraciones pendientes detectadas. Aplicando automáticamente..."
+            )
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "alembic", "upgrade", "head"],
+                    check=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    shell=use_shell,
+                )
+                logger.success("✅ Migraciones pendientes aplicadas.")
+            except subprocess.CalledProcessError as migrate_error:
+                stderr_output = (
+                    migrate_error.stderr.strip() if migrate_error.stderr else ""
+                )
+
+                # Detectar error específico de "DuplicateTable"
+                if (
+                    "already exists" in stderr_output.lower()
+                    or "DuplicateTable" in stderr_output
+                ):
+                    logger.warning("⚠️ Las tablas ya existen en la BD.")
+                    logger.info("➡️  SOLUCIÓN: Marcando migración como aplicada...")
+                    try:
+                        # Marcar la migración como aplicada sin ejecutarla
+                        subprocess.run(
+                            [sys.executable, "-m", "alembic", "stamp", "head"],
+                            check=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="replace",
+                            shell=use_shell,
+                        )
+                        logger.success("✅ Migración marcada como aplicada.")
+                    except Exception as stamp_error:
+                        logger.error(
+                            f"❌ No se pudo marcar la migración: {stamp_error}"
+                        )
+                        logger.info("\n➡️  SOLUCIÓN MANUAL:")
+                        logger.info("   Ejecuta: alembic stamp head")
+                        logger.info(
+                            "   Luego vuelve a intentar: python manage.py sql create-migration"
+                        )
+                        raise typer.Exit(code=1)
+                else:
+                    logger.error(f"❌ Error aplicando migraciones: {stderr_output}")
+                    logger.info("\n➡️  SOLUCIÓN MANUAL:")
+                    logger.info("   1. Verifica el estado: python manage.py sql state")
+                    logger.info(
+                        "   2. Si hay inconsistencias: python manage.py sql state clear-migrations"
+                    )
+                    logger.info("   3. Luego vuelve a intentar")
+                    raise typer.Exit(code=1)
+    except Exception as e:
+        logger.warning(f"⚠️ No se pudo verificar estado de migraciones: {e}")
+
     if not message:
         logger.info("No se proporcionó mensaje. Usando mensaje autogenerado.")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -174,35 +252,6 @@ def db_create_migration(
                 )
 
         raise typer.Exit(code=1)
-
-
-# def db_create_migration(message: str | None = typer.Argument(None, help="Mensaje descriptivo. Si se omite, se genera uno automático.")):
-#     """
-#     Genera un nuevo archivo de migración de Alembic.
-#     Si no se proporciona un mensaje descriptivo, se genera uno automáticamente con un timestamp.
-#     Args:
-#         message (str | None): Mensaje descriptivo para la migración. Si se omite, se genera uno automático.
-#     Uso:
-#         Para crear una migración con un mensaje personalizado, ejecuta:
-#             python manage.py db create-migration "Tu mensaje descriptivo"
-#         Si omites el mensaje, se generará uno automáticamente.
-#     """
-#     """Genera un nuevo archivo de migración de Alembic."""
-#     configure_logging()
-#     load_all_models()
-
-#     # --- CAMBIO CLAVE: Añadimos la lógica para el mensaje automático ---
-#     if not message:
-#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#         message = f"auto_migration_{timestamp}"
-#         logger.info("No se proporcionó mensaje. Usando mensaje autogenerado.")
-
-#     logger.info(f"Generando migración con mensaje: '{message}'")
-#     try:
-#         subprocess.run(["alembic", "revision", "--autogenerate", "-m", message], check=True)
-#         logger.success("✅ Archivo de migración generado exitosamente.")
-#     except Exception as e:
-#         logger.error(f"❌ Falló la generación de la migración. Error: {e}")
 
 
 @db_app.command("migrate")
@@ -404,19 +453,6 @@ def db_migrate(
         logger.error(f"❌ Falló la aplicación de las migraciones. Error: {e}")
 
 
-# --- CAMBIO CLAVE: Añadimos el comando 'seed' ---
-# @db_app.command("seed")
-# def db_seed():
-
-#     """
-#     Puebla la base de datos con datos iniciales (roles, usuario admin, etc.).
-#     """
-#     configure_logging()
-#     # --- CAMBIO CLAVE: Llama a la función aquí ---
-#     load_all_models()
-#     seed_sql_data_auth_module()
-
-
 # --- 4. DEFINICIÓN DE COMANDOS DIRECTOS ---
 # Comandos que no pertenecen a un subgrupo.
 
@@ -515,7 +551,7 @@ def mongo_init_schema():
 @mongo_app.command("seed")
 def mongo_seed():
     """Puebla la base de datos MongoDB con datos de ejemplo (señales, logs, etc.)."""
-    asyncio.run(seed_nosql_data_auth_module())
+    asyncio.run(seed_nosql_data_auth_module())  # type: ignore[arg-type]
 
 
 # Anidamos los comandos de backup/restore/reset para MongoDB

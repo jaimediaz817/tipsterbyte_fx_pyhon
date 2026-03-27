@@ -1,20 +1,35 @@
-# SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS = "scheduler_proceso_rastreo_data_fuentes_deportivas"
-# # TODO: refactorizar!
-# PROCESS_CUOTAS_WPLAY = "process_cuotas_wplay"
+# ============================================================================
+# CÓDIGOS DE PROCESOS - JERARQUÍA Y USO
+# ============================================================================
+#
+# ARQUITECTURA:
+# ┌─────────────────────────────────────────────────────────────────────┐
+# │  PROCESS_EXTRACT_DATA_FUENTES (Orquestador General)                │
+# │     │                                                               │
+# │     ├── PROCESS_STANDINGS_EXTRACTION (Robot específico)            │
+# │     ├── PROCESS_ODDS_WPLAY_EXTRACTION (Robot específico)           │
+# │     └── PROCESS_CALENDAR_EXTRACTION (Robot específico)             │
+# └─────────────────────────────────────────────────────────────────────┘
+#
+# USO:
+# - PROCESS_EXTRACT_DATA_FUENTES: Ejecuta TODOS los robots (scheduler nocturno)
+# - PROCESS_STANDINGS_EXTRACTION: Ejecuta SOLO standings (manual o scheduler)
+# - PROCESS_ODDS_WPLAY_EXTRACTION: Ejecuta SOLO odds (manual o scheduler)
+# - PROCESS_CALENDAR_EXTRACTION: Ejecuta SOLO calendar (manual o scheduler)
+#
+# FILTRADO:
+# El orquestador usa DetalleFuenteExtraccion.process_id para filtrar:
+# - Si process_code == PROCESS_EXTRACT_DATA_FUENTES → ejecuta TODOS
+# - Si process_code == PROCESS_STANDINGS_EXTRACTION → filtra por process_id
+# ============================================================================
 
-# # TODO: tb-hu-refactors-block-01:;  pendiente quitar:
-# PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS = "extraccion_data_fuentes_deportivas"
-# ------------------------------------------------------------------------------------------------------
+# Proceso orquestador: ejecuta TODOS los robots de extracción
+PROCESS_EXTRACT_DATA_FUENTES = "extract_data_fuentes"
 
-# Códigos de procesos para el módulo de planificación (Scheduler)
-SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS = (
-    "SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS"
-)
+# Procesos específicos: ejecutan UN solo tipo de robot
+PROCESS_STANDINGS_EXTRACTION = "PROCESS_STANDINGS_EXTRACTION"
+PROCESS_ODDS_WPLAY_EXTRACTION = "PROCESS_ODDS_WPLAY_EXTRACTION"
+PROCESS_CALENDAR_EXTRACTION = "PROCESS_CALENDAR_EXTRACTION"
 
-# Códigos de procesos para tipos específicos de robots/extracciones
-PROCESS_STANDINGS_EXTRACTION = "PROCESS_STANDINGS_EXTRACTION"  # ¡NUEVO!
-PROCESS_ODDS_WPLAY_EXTRACTION = "PROCESS_ODDS_WPLAY_EXTRACTION"  # ¡NUEVO!
-PROCESS_CALENDAR_EXTRACTION = "PROCESS_CALENDAR_EXTRACTION"  # ¡NUEVO!
-
-# Otros códigos de procesos existentes (ej: de ingesta de datos)
-PROCESS_CUOTAS_WPLAY = "PROCESS_CUOTAS_WPLAY"
+# Proceso de limpieza de logs (independiente)
+PROCESS_LOG_CLEANUP = "PROCESS_LOG_CLEANUP"

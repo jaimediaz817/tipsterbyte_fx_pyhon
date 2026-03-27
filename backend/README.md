@@ -127,7 +127,7 @@ python -c "from pathlib import Path; print('✅' if Path('.env').exists() else '
 ## Ejecutar manualmente procesos - tareas - tasks
 - Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
 ```bash
-python main_init_scripts.py --process SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
+python main_init_scripts.py --process PROCESS_EXTRACT_DATA_FUENTES
 ```
 
 ## Instalar dependencias requirements

@@ -25,7 +25,7 @@ class ProcessRunRepository(IProcessRunRepository):
 
         Args:
             run_id:       ID único generado por generate_run_id().
-            process_code: Código del proceso (ej: SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS).
+            process_code: Código del proceso (ej: PROCESS_EXTRACT_DATA_FUENTES).
 
         Returns:
             ProcessRun creado, o None si el proceso no existe en la BD.

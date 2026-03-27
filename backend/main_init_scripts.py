@@ -5,17 +5,16 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
 from shared.constants.process.process_codes import (
-    PROCESS_CALENDAR_EXTRACTION,
-    PROCESS_CUOTAS_WPLAY,
-    PROCESS_ODDS_WPLAY_EXTRACTION,
+    PROCESS_EXTRACT_DATA_FUENTES,
     PROCESS_STANDINGS_EXTRACTION,
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_ODDS_WPLAY_EXTRACTION,
+    PROCESS_CALENDAR_EXTRACTION,
 )
 from core.logger import configure_logging
 
 # Procesos disponibles que usan la misma función de tarea
 AVAILABLE_PROCESSES = {
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS: launch_process_rastreo_data_fuentes_deportivas_task,
+    PROCESS_EXTRACT_DATA_FUENTES: launch_process_rastreo_data_fuentes_deportivas_task,
     PROCESS_STANDINGS_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,
     PROCESS_ODDS_WPLAY_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,
     PROCESS_CALENDAR_EXTRACTION: launch_process_rastreo_data_fuentes_deportivas_task,

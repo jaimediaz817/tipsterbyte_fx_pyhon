@@ -17,7 +17,7 @@ from apps.platform_config.infrastructure.repositories.sql_platform_config_reposi
 from core.config import settings
 from core.db.sql.database_sql import SessionLocal
 from shared.constants.process.process_codes import (
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACT_DATA_FUENTES,
 )
 from shared.repositories.scheduler_repos import ProcessRunRepositoryFactory
 
@@ -143,7 +143,7 @@ def _build_jobs_from_leagues(
 
 
 async def launch_process_rastreo_data_fuentes_deportivas_task(
-    process_code: str = SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    process_code: str = PROCESS_EXTRACT_DATA_FUENTES,
 ):  # ¡NUEVO PARÁMETRO CON DEFAULT!
     """
     Orquesta el proceso de rastreo. Genera una lista de todos los trabajos
@@ -231,9 +231,7 @@ async def launch_process_rastreo_data_fuentes_deportivas_task(
         )  # Este es el ID que usaremos para filtrar
 
         # Verificar si es el orquestador general (debe ejecutar TODOS los trabajos)
-        is_general_orchestrator = (
-            process_code == SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
-        )
+        is_general_orchestrator = process_code == PROCESS_EXTRACT_DATA_FUENTES
 
         # Obtener todas las ligas (la filtración por process_id se hará en _build_jobs_from_leagues)
         leagues = SqlPlatformRepository(session).get_all_leagues_with_full_details()

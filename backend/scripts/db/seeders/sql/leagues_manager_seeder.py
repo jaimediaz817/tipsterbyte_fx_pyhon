@@ -32,7 +32,7 @@ from shared.constants.process.process_codes import (
     PROCESS_STANDINGS_EXTRACTION,
     PROCESS_ODDS_WPLAY_EXTRACTION,
     PROCESS_CALENDAR_EXTRACTION,
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACT_DATA_FUENTES,
 )
 
 # ...existing CONTINENTES, PAISES, LIGAS, TORNEOS...
@@ -126,7 +126,7 @@ class LeaguesManagerSeeder(BaseSeeder):
 
             processes_to_ensure = [
                 {
-                    "code": SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+                    "code": PROCESS_EXTRACT_DATA_FUENTES,
                     "name": "Orquestador de Rastreo de Datos de Fuentes Deportivas (General)",
                     "is_active": True,
                     "description": "Proceso principal que orquesta la extracción de datos de diversas fuentes deportivas.",
@@ -162,7 +162,7 @@ class LeaguesManagerSeeder(BaseSeeder):
                 PROCESS_STANDINGS_EXTRACTION,
                 PROCESS_ODDS_WPLAY_EXTRACTION,
                 PROCESS_CALENDAR_EXTRACTION,
-                SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+                PROCESS_EXTRACT_DATA_FUENTES,
             ]:
                 process_entity = platform_service.obtener_process(process_code)
                 if process_entity:

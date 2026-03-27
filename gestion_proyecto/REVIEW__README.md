@@ -1,5 +1,5 @@
 # TipsterByte FX - Backend
-
+# TODO: pendiente refactorizar con cline!
 ---
 
 ## 🏁 Introducción y Contexto

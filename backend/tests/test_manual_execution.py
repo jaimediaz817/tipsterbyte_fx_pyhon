@@ -16,6 +16,11 @@ import sys
 import time
 from loguru import logger
 
+from shared.constants.process.process_codes import (
+    PROCESS_EXTRACT_DATA_FUENTES,
+    PROCESS_STANDINGS_EXTRACTION,
+)
+
 
 async def run_manual_execution():
     """
@@ -36,10 +41,6 @@ async def run_manual_execution():
         )
         from core.config_semaphore import get_concurrency_for_robot_type
         from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
-        from shared.constants.process.process_codes import (
-            SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
-            PROCESS_STANDINGS_EXTRACTION,
-        )
 
         print("   ✅ Todos los módulos se importan correctamente")
     except Exception as e:

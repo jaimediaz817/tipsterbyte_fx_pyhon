@@ -2,27 +2,36 @@
 
 **Fecha**: 25 de marzo de 2026  
 **Objetivo**: Implementar funcionalidad de limpieza automática de logs  
-**Enfoque**: Implementación gradual y aislada
+**Enfoque**: Implementación gradual y aislada  
+**Estado**: ✅ **IMPLEMENTADO Y FUNCIONANDO**
 
 ---
 
 ## 📋 ESTADO ACTUAL
 
-### ❌ Problema Identificado
+### ✅ Implementación Completada
 
-La variable `AUTO_CLEANUP_ENABLED` existe en configuración pero **NO tiene implementación real**:
+La funcionalidad de limpieza automática de logs está **100% implementada y testeada**:
+
+| Componente            | Estado       | Tests            |
+| --------------------- | ------------ | ---------------- |
+| `LogCleanupService`   | ✅ Completado | 18/18            |
+| `CleanupHistory`      | ✅ Completado | Incluido         |
+| `log_cleanup_jobs.py` | ✅ Completado | 5/5              |
+| Endpoints FastAPI     | ✅ Completado | 4 endpoints      |
+| Seeder BD             | ✅ Completado | Listo            |
+| Logger POO            | ✅ Completado | Strategy Pattern |
+
+**Tests totales**: 40/40 pasaron
+
+### Variables Configuradas
 
 ```python
 # backend/core/config.py
-AUTO_CLEANUP_ENABLED: bool = Field(
-    False, description="Habilitar limpieza automática de logs"
-)
+LOG_RETENTION_DAYS = 3           # ✅ Usado
+LOG_ARCHIVE_RETENTION_DAYS = 30  # ✅ Usado
+LOG_ARCHIVE_DIR = "data/logs_archive"  # ✅ Usado
 ```
-
-**Variables relacionadas sin uso**:
-- `LOG_RETENTION_DAYS = 3`
-- `LOG_ARCHIVE_RETENTION_DAYS = 30`
-- `LOG_ARCHIVE_DIR = "data/logs_archive"`
 
 ---
 
@@ -263,4 +272,144 @@ python test_cleanup_manual.py
 
 ---
 
-*Documento generado para implementación gradual*
+## 🏗️ ANÁLISIS: ¿MOVER AL CORE?
+
+### ❌ Recomendación: **NO mover al core**
+
+| Criterio      | Core    | Services (Actual) | Veredicto  |
+| ------------- | ------- | ----------------- | ---------- |
+| Acoplamiento  | Alto    | Bajo              | ✅ Services |
+| Testeabilidad | Difícil | Fácil             | ✅ Services |
+| Mantenimiento | Difícil | Fácil             | ✅ Services |
+| Reutilización | Baja    | Alta              | ✅ Services |
+| Principio SRP | Violado | Cumplido          | ✅ Services |
+
+**Conclusión**: Mantener en `backend/services/` es la decisión correcta.
+
+---
+
+## 📊 ARQUITECTURA ACTUAL (Implementada)
+
+```
+backend/services/
+├── log_cleanup_service.py          # Servicio principal
+├── models/
+│   ├── __init__.py
+│   └── cleanup_history.py          # Historial de auditoría
+├── tests/
+│   ├── test_log_cleanup_service.py     # 18 tests unitarios
+│   └── test_log_cleanup_integration.py # 1 test integración
+├── README_LOG_CLEANUP.md
+└── PLAN_PRUEBA_SCHEDULER.md
+
+backend/core/scheduler/
+├── log_cleanup_jobs.py             # Job para scheduler
+├── jobs_loader.py                  # Registro de jobs
+└── tests/
+    ├── test_log_cleanup_scheduler.py           # 5 tests
+    └── test_log_cleanup_scheduler_integration.py # 3 tests
+
+backend/core/services/
+└── scheduler_service.py            # Control del job
+
+backend/core/routes/
+└── scheduler_routes.py             # Endpoints FastAPI
+```
+
+---
+
+## 🔄 FLUJO DE EJECUCIÓN
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           scheduled_process_config (BD)                 │
+│  process_name: PROCESS_LOG_CLEANUP                      │
+│  cron_expression: 0 3 * * *                            │
+│  enabled: true                                          │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│            jobs_loader.py                               │
+│  Lee configuración desde BD                             │
+│  Registra job en APScheduler                            │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│         log_cleanup_jobs.py                             │
+│  create_log_cleanup_job()                               │
+│  └── job_function()                                     │
+│      ├── LogCleanupService().run_cleanup()              │
+│      └── CleanupHistory.add_entry()                     │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│       LogCleanupService                                 │
+│  1. Analiza logs_dir                                    │
+│  2. Archiva logs > retention_days                       │
+│  3. Elimina archivados > archive_retention_days         │
+│  4. Retorna CleanupResult                               │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│         CleanupHistory (JSON)                           │
+│  Registra timestamp, archivos, espacio, errores         │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🧪 COMANDOS PARA PROBAR
+
+### Ejecutar tests
+```bash
+cd backend && python -m pytest backend/services/tests/ backend/core/scheduler/tests/ -v
+```
+
+### Ejecutar limpieza manual
+```python
+from services.log_cleanup_service import LogCleanupService
+service = LogCleanupService()
+result = service.run_cleanup()
+print(f"Archivados: {result.archived_files}, Liberado: {result.freed_space_mb:.2f} MB")
+```
+
+### Ejecutar seeder
+```bash
+python backend/manage.py sql seed PlatformConfigSeeder
+```
+
+### Probar endpoints (con servidor)
+```bash
+# Ver estado
+curl http://localhost:8000/scheduler/log-cleanup/status
+
+# Ejecutar inmediatamente
+curl -X POST http://localhost:8000/scheduler/log-cleanup/run-now
+
+# Pausar
+curl -X POST http://localhost:8000/scheduler/log-cleanup/pause
+
+# Reanudar
+curl -X POST http://localhost:8000/scheduler/log-cleanup/resume
+```
+
+---
+
+## 📈 PRÓXIMAS MEJORAS PROPUESTAS
+
+| Mejora            | Prioridad | Descripción                       |
+| ----------------- | --------- | --------------------------------- |
+| Limpieza por peso | Alta      | Ejecutar solo si logs > X MB      |
+| Dashboard         | Media     | Panel de control de limpiezas     |
+| Alertas           | Media     | Notificar cuando se libere > X MB |
+| Backup automático | Baja      | Backup antes de eliminar          |
+
+---
+
+*Documento actualizado: 25 de marzo de 2026*
+
+

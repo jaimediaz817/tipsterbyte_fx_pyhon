@@ -1,0 +1,50 @@
+# Cline Rules - TipsterByte FX
+# Este archivo contiene reglas e instrucciones que Cline debe seguir siempre
+
+## Información del Proyecto
+- **Nombre**: TipsterByte FX
+- **Tipo**: Backend Python con FastAPI
+- **Base de Datos**: PostgreSQL + MongoDB
+- **Arquitectura**: DDD (Domain-Driven Design) + Clean Architecture
+
+## Convenciones de Código
+1. **Lenguaje**: Python 3.11+
+2. **Framework**: FastAPI
+3. **ORM**: SQLAlchemy (SQL) + MongoEngine (NoSQL)
+4. **Logging**: Loguru
+5. **Testing**: Pytest
+
+## Estructura del Proyecto
+- `backend/apps/` - Aplicaciones por dominio (leagues_manager, platform_config)
+- `backend/core/` - Núcleo compartido (db, scheduler, monitoring, exceptions)
+- `backend/shared/` - Código compartido (repositorios, constantes)
+- `backend/scripts/` - Scripts de utilidad y diagnóstico
+- `backend/commands/` - Comandos CLI
+
+## Reglas de Comunicación
+1. **Idioma**: Español (es)
+2. **Formato de respuestas**: Directo y técnico
+3. **Prefijo de herramientas**: Usar formato XML para herramientas
+4. **Task Progress**: Incluir siempre checklist de progreso
+
+## Reglas de Desarrollo
+1. **SOLID**: Aplicar principios SOLID siempre
+2. **Type Hints**: Usar type hints en todas las funciones
+3. **Docstrings**: Documentar funciones públicas
+4. **Tests**: Crear tests para nueva funcionalidad
+5. **Migrations**: Usar Alembic para cambios en DB
+
+## Comandos Frecuentes
+- Ejecutar tests: `pytest backend/`
+- Iniciar servidor: `uvicorn backend.main:app --reload`
+- Diagnóstico: `python backend/scripts/diagnose_processes_visual.py`
+
+## Excepciones y Errores
+- Usar excepciones personalizadas de `backend/core/exceptions/`
+- Logging con Loguru para todos los errores
+- No exponer detalles internos en respuestas API
+
+## Configuración de Entorno
+- Desarrollo: `backend/.env`
+- Producción: `backend/.env.prod`
+- Variables críticas: DATABASE_URL, MONGO_URI, LOG_LEVEL

@@ -6,7 +6,7 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
 from shared.constants.process.process_codes import (
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACT_DATA_FUENTES,
     PROCESS_STANDINGS_EXTRACTION,
     PROCESS_ODDS_WPLAY_EXTRACTION,
     PROCESS_CALENDAR_EXTRACTION,
@@ -38,9 +38,7 @@ def create_job_function(process_code: str):
 
 # Mapa de procesos programables asociados a este paquete
 PROCESS_MAP = {
-    SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS: create_job_function(
-        SCHEDULER_PROCESS_EXTRACT_DATA_FUENTES_DEPORTIVAS
-    ),
+    PROCESS_EXTRACT_DATA_FUENTES: create_job_function(PROCESS_EXTRACT_DATA_FUENTES),
     PROCESS_STANDINGS_EXTRACTION: create_job_function(PROCESS_STANDINGS_EXTRACTION),
     PROCESS_ODDS_WPLAY_EXTRACTION: create_job_function(PROCESS_ODDS_WPLAY_EXTRACTION),
     PROCESS_CALENDAR_EXTRACTION: create_job_function(PROCESS_CALENDAR_EXTRACTION),

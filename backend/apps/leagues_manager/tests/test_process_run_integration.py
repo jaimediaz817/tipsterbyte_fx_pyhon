@@ -30,7 +30,7 @@ from core.db.sql.database_sql import SessionLocal
 from shared.repositories.scheduler_repos.process_run_repository import (
     ProcessRunRepository,
 )
-from shared.constants.process.process_codes import PROCESS_CUOTAS_WPLAY
+from shared.constants.process.process_codes import PROCESS_EXTRACT_DATA_FUENTES
 
 
 @pytest.fixture(scope="function")
@@ -104,7 +104,7 @@ def test_integration_create_run_y_write_logs(db_session, real_repo, run_id):
     db_session.add(fuente)
     db_session.flush()
 
-    unique_process_code = f"{PROCESS_CUOTAS_WPLAY}_{test_suffix}"
+    unique_process_code = f"{PROCESS_EXTRACT_DATA_FUENTES}_{test_suffix}"
     process_entity = Process(
         code=unique_process_code,
         name="Extracción Cuotas WPlay Test",

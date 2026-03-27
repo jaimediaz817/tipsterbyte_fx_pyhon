@@ -10,7 +10,7 @@ from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task imp
 
 async def main():
     print("=" * 70)
-    print("🧪 EJECUCIÓN MANUAL DEL PROCESO DE EXTRACCIÓN")
+    print("EJECUCION MANUAL DEL PROCESO DE EXTRACCION")
     print("=" * 70)
 
     try:

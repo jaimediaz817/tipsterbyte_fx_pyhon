@@ -3,6 +3,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apps.leagues_manager.scheduler.scheduled_jobs import (
     PROCESS_MAP as PROCESS_MAP_LEAGUES_MANAGER,
 )
+from core.scheduler.log_cleanup_jobs import LOG_CLEANUP_PROCESS_MAP
 from shared.repositories.scheduler_repos.scheduled_process_config_repository import (
     ScheduledProcessConfigRepository,
 )
@@ -18,6 +19,7 @@ from loguru import logger
 # TODO: PENDIENTE: Completar el mapeo de todos los procesos programados
 ALL_PROCESS_MAPS = {
     **PROCESS_MAP_LEAGUES_MANAGER,
+    **LOG_CLEANUP_PROCESS_MAP,
     # agregar otros process maps aquí
 }
 
