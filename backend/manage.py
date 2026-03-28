@@ -433,16 +433,32 @@ def db_migrate(
 
         use_shell = platform.system() == "Windows"
 
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, "-m", "alembic", "upgrade", "head"],
             check=True,
-            # capture_output=True,
+            capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
             shell=use_shell,
         )
         logger.success("✅ Migraciones aplicadas exitosamente.")
+
+        # Mostrar resumen de lo que se aplicó
+        output = result.stdout + result.stderr
+        if output.strip():
+            lines = output.strip().split("\n")
+            applied_count = 0
+            for line in lines:
+                if "Running upgrade" in line or "->" in line:
+                    applied_count += 1
+                    logger.info(f"  📋 {line.strip()}")
+            if applied_count > 0:
+                logger.info(f"  📊 Total de migraciones aplicadas: {applied_count}")
+            else:
+                logger.info("  ℹ️ No había migraciones pendientes por aplicar.")
+        else:
+            logger.info("  ℹ️ No había migraciones pendientes por aplicar.")
     except subprocess.CalledProcessError as e:
         stderr_output = e.stderr.strip() if e.stderr else "No stderr output."
         logger.error(
