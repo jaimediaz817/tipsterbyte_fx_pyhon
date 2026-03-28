@@ -143,6 +143,20 @@ class Settings(BaseSettings):
         description="Controla si se escriben logs en archivos. Consola SIEMPRE activa. Valores: true = ESCRIBE en archivos, false = NO escribe en archivos",
     )
 
+    # --- Variables de API-Football ---
+    API_FOOTBALL_KEY: str = Field(
+        "ddc44ff1c845c9c705b6f21d00926633",
+        description="API key para API-Football v3",
+    )
+    API_FOOTBALL_HOST: str = Field(
+        "v3.football.api-sports.io",
+        description="Host de API-Football",
+    )
+    API_FOOTBALL_BASE_URL: str = Field(
+        "https://v3.football.api-sports.io",
+        description="URL base de API-Football",
+    )
+
     # class Config:
     #     env_file = ".env"
     #     case_sensitive = True

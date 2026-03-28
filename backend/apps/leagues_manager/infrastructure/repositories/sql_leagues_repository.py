@@ -1,3 +1,4 @@
+from typing import cast
 from sqlalchemy.orm import Session
 
 from apps.leagues_manager.domain.entities.continente import Continente
@@ -343,3 +344,38 @@ class SQLLeaguesRepository(ILeaguesRepository):
         self.db.commit()
         self.db.refresh(obj)
         return self._to_detalle_fuente_extraccion(obj)
+
+    # --- Métodos para LigasSeeder ---
+
+    def get_all_paises(self) -> list[Pais]:
+        """Obtiene todos los países."""
+        ms = self.db.query(PaisModel).all()
+        return [self._to_pais(m) for m in ms]
+
+    def get_all_ligas(self) -> list[Liga]:
+        """Obtiene todas las ligas."""
+        ms = self.db.query(LigaModel).all()
+        return [self._to_liga(m) for m in ms]
+
+    def update_liga_api_fields(
+        self,
+        liga_id: int,
+        id_api_externa: int | None,
+        logo_url: str | None,
+        tipo_liga: str | None,
+    ) -> Liga:
+        """Actualiza los campos de API-Football de una liga."""
+        obj = self.db.query(LigaModel).filter(LigaModel.id == liga_id).first()
+        if not obj:
+            raise ValueError(f"Liga con ID {liga_id} no encontrada")
+
+        # Pylance confunde LigaModel con Liga (entidad de dominio)
+        # Usamos setattr para evitar el error de tipos
+        setattr(obj, "id_api_externa", id_api_externa)
+        setattr(obj, "logo_url", logo_url)
+        setattr(obj, "tipo_liga", tipo_liga)
+
+        self.db.add(obj)
+        self.db.commit()
+        self.db.refresh(obj)
+        return self._to_liga(obj)

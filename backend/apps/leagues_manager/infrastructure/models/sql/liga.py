@@ -25,6 +25,15 @@ class Liga(Base):
     )
     is_active = Column(Boolean, default=True, nullable=False)
 
+    # Campos nuevos para API-Football
+    id_api_externa = Column(
+        Integer, nullable=True, unique=True, comment="ID de la liga en API-Football"
+    )
+    logo_url = Column(String(500), nullable=True, comment="URL del logo de la liga")
+    tipo_liga = Column(
+        String(50), nullable=True, comment="Tipo de liga: 'League' o 'Cup'"
+    )
+
     pais = relationship("Pais", back_populates="ligas")
     torneos = relationship(
         "Torneo", back_populates="liga", cascade="all, delete-orphan"

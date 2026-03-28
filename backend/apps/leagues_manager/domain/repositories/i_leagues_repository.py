@@ -128,3 +128,21 @@ class ILeaguesRepository(ABC):
         self, detalle_id: int, data: dict
     ) -> DetalleFuenteExtraccion:
         pass
+
+    @abstractmethod
+    def get_all_paises(self) -> list[Pais]:
+        pass
+
+    @abstractmethod
+    def get_all_ligas(self) -> list[Liga]:
+        pass
+
+    @abstractmethod
+    def update_liga_api_fields(
+        self,
+        liga_id: int,
+        id_api_externa: int | None,
+        logo_url: str | None,
+        tipo_liga: str | None,
+    ) -> Liga:
+        pass

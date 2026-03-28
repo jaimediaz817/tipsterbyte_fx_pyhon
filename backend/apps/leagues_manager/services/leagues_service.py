@@ -34,6 +34,24 @@ class LeaguesService(ILeaguesService):
         continentes = self.repo.get_all_continentes()
         return [ContinenteDTO(**c.__dict__) for c in continentes]
 
+    def obtener_todos_los_paises(self) -> list[PaisDTO]:
+        """Obtiene todos los países."""
+        paises = self.repo.get_all_paises()
+        return [PaisDTO(**p.__dict__) for p in paises]
+
+    def actualizar_liga_api_football(
+        self,
+        liga_id: int,
+        id_api_externa: int | None,
+        logo_url: str | None,
+        tipo_liga: str | None,
+    ) -> LigaDTO:
+        """Actualiza los campos de API-Football de una liga."""
+        liga = self.repo.update_liga_api_fields(
+            liga_id, id_api_externa, logo_url, tipo_liga
+        )
+        return LigaDTO(**liga.__dict__)
+
     def obtener_continente_por_id(self, continente_id: int) -> ContinenteDTO | None:
         continentes = self.repo.get_all_continentes()
         for c in continentes:
