@@ -16,6 +16,11 @@ apscheduler               # Tareas programadas
 # Seguridad y cifrado
 # -------------------------------
 cryptography>=42.0        # Encriptación de credenciales sensibles
+python-jose[cryptography] # JWT tokens de autenticación
+argon2-cffi>=23.1.0       # Hash seguro de contraseñas (Argon2id - OWASP recomendado)
+bcrypt>=4.0.0             # Hash legacy (bcrypt) - importación directa para tests
+passlib[bcrypt]           # Hash legacy (bcrypt) wrapper - mantener para migración
+python-multipart          # Soporte para formularios multipart (login)
 
 # -------------------------------
 # Procesamiento de archivos

@@ -157,6 +157,24 @@ class Settings(BaseSettings):
         description="URL base de API-Football",
     )
 
+    # --- Variables de JWT (Autenticación) ---
+    JWT_SECRET_KEY: str = Field(
+        "your-super-secret-key-change-this-in-production-min-32-chars-long",
+        description="Clave secreta para firmar tokens JWT (CAMBIAR EN PRODUCCIÓN)",
+    )
+    JWT_ALGORITHM: str = Field(
+        "HS256",
+        description="Algoritmo de encriptación para JWT",
+    )
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        30,
+        description="Minutos de expiración del access token",
+    )
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
+        7,
+        description="Días de expiración del refresh token",
+    )
+
     # class Config:
     #     env_file = ".env"
     #     case_sensitive = True
