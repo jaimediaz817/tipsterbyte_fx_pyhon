@@ -12,6 +12,7 @@ from apps.platform_config.api.v1.routes.platform_config_routes import (
 # from core.scheduler import start_scheduler
 from core.db.sql.database_sql import create_db_and_tables
 from core.middleware import TraceIDMiddleware
+from core.middleware.audit_middleware import AuditMiddleware
 from core.logger import configure_logging
 from core.secrets import load_key
 from contextlib import asynccontextmanager
@@ -236,6 +237,7 @@ app = FastAPI(
 )
 
 app.add_middleware(TraceIDMiddleware)
+app.add_middleware(AuditMiddleware)
 
 # Registrar routers
 app.include_router(
