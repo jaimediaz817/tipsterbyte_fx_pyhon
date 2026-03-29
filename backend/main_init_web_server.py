@@ -2,8 +2,13 @@ from fastapi.routing import APIRoute
 import typer
 from core.scheduler import start_scheduler
 from core.routes.scheduler_routes import router as scheduler_router
-from apps.leagues_manager.api.v1.routes.soccer_league_routes import router as leagues_router
-from apps.platform_config.api.v1.routes.platform_config_routes import router as platform_config_router
+from apps.leagues_manager.api.v1.routes.soccer_league_routes import (
+    router as leagues_router,
+)
+from apps.platform_config.api.v1.routes.platform_config_routes import (
+    router as platform_config_router,
+)
+
 # from core.scheduler import start_scheduler
 from core.db.sql.database_sql import create_db_and_tables
 from core.middleware import TraceIDMiddleware
@@ -19,51 +24,64 @@ from core.routes.system_routes import router as system_router
 
 # --- CAMBIO CLAVE: Importamos el router del controlador instanciado ---
 from apps.auth.api.v1.authenticator_controller import router as auth_router
+from apps.auth.api.v1.routes.session_log_routes import router as session_log_router
 
 configure_logging()
 
+
 def _display_available_routes():
     """Muestra una tabla organizada de todas las rutas de la API en la consola."""
-    
+
     routes_by_version = {}
     print("\n--- Rutas Disponibles ---")
     for route in app.routes:
         if isinstance(route, APIRoute):
             # Extraer la versión del prefijo del path (ej. /api/v1/...)
-            path_parts = route.path.strip('/').split('/')
-            version = "v_base" # Versión por defecto para rutas sin prefijo de versión
-            
-            if len(path_parts) > 1 and path_parts[0] == 'api' and path_parts[1].startswith('v'):
+            path_parts = route.path.strip("/").split("/")
+            version = "v_base"  # Versión por defecto para rutas sin prefijo de versión
+
+            if (
+                len(path_parts) > 1
+                and path_parts[0] == "api"
+                and path_parts[1].startswith("v")
+            ):
                 version = path_parts[1]
-            elif path_parts[0] == 'system':
-                version = 'system'
+            elif path_parts[0] == "system":
+                version = "system"
 
             if version not in routes_by_version:
                 routes_by_version[version] = []
-            
-            routes_by_version[version].append({
-                "path": route.path,
-                "name": route.name,
-                "methods": ", ".join(route.methods)
-            })
 
-    typer.secho("\n--- API Endpoints Disponibles ---", fg=typer.colors.BRIGHT_GREEN, bold=True)
-    
+            routes_by_version[version].append(
+                {
+                    "path": route.path,
+                    "name": route.name,
+                    "methods": ", ".join(route.methods),
+                }
+            )
+
+    typer.secho(
+        "\n--- API Endpoints Disponibles ---", fg=typer.colors.BRIGHT_GREEN, bold=True
+    )
+
     for version, routes in sorted(routes_by_version.items()):
-        version_display = version.replace('_', ' ').title()
+        version_display = version.replace("_", " ").title()
         typer.secho(f"\n📦 Versión: {version_display}", fg=typer.colors.CYAN, bold=True)
-        
-        for route_info in sorted(routes, key=lambda r: r['path']):
-            methods_str = typer.style(f"[{route_info['methods']}]".ljust(18), fg=typer.colors.YELLOW)
-            path_str = typer.style(route_info['path'], fg=typer.colors.WHITE)
+
+        for route_info in sorted(routes, key=lambda r: r["path"]):
+            methods_str = typer.style(
+                f"[{route_info['methods']}]".ljust(18), fg=typer.colors.YELLOW
+            )
+            path_str = typer.style(route_info["path"], fg=typer.colors.WHITE)
             typer.echo(f"  {methods_str}{path_str}")
-            
+
     typer.echo("-" * 35 + "\n")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """ Handles application startup and shutdown events. """
-       # Validar que exista la clave Fernet
+    """Handles application startup and shutdown events."""
+    # Validar que exista la clave Fernet
     try:
         load_key()
     except FileNotFoundError as e:
@@ -73,7 +91,7 @@ async def lifespan(app: FastAPI):
     # ✅ Iniciar el scheduler
     try:
         logger.info("🚀 Iniciando scheduler de procesos programados...")
-        
+
         # TODO: EVALUAR PARA CREAR Y HABILITAR
         # tb-hu-refactor-tasks-runner-flujo_y_databases-01: start_scheduler en el _init__.py del scheduler
         start_scheduler()
@@ -88,16 +106,19 @@ async def lifespan(app: FastAPI):
         create_db_and_tables()
         logger.info("✅ Base de datos y tablas listas.")
     except Exception as e:
-        logger.error(f"❌ ERROR FATAL: No se pudo conectar o crear las tablas de la BD. {e}")
-        sys.exit(1) # La aplicación no puede funcionar sin BD
-        
+        logger.error(
+            f"❌ ERROR FATAL: No se pudo conectar o crear las tablas de la BD. {e}"
+        )
+        sys.exit(1)  # La aplicación no puede funcionar sin BD
+
     # --- CAMBIO CLAVE: Mostrar las rutas disponibles ---
     # Lo hacemos al final del inicio para asegurarnos de que todas las rutas ya están registradas.
-    _display_available_routes()        
+    _display_available_routes()
 
-    yield # La aplicación se ejecuta aquí
+    yield  # La aplicación se ejecuta aquí
 
     logger.info("👋 Apagando la aplicación...")
+
 
 # Instancia FastAPI
 
@@ -210,7 +231,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    openapi_tags=tags_metadata,    
+    openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
 
@@ -249,4 +270,8 @@ app.include_router(
 
 app.include_router(
     platform_config_router,
+)
+
+app.include_router(
+    session_log_router, prefix="/api/v1", tags=["Session Logs - Bitácora de Sesión"]
 )
