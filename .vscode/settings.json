@@ -5,7 +5,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
-    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
     "python.languageServer": "Pylance",
     "python.analysis.typeCheckingMode": "basic", // "basic" o "strict" para ser más exigente
     "python.analysis.autoSearchPaths": true,
