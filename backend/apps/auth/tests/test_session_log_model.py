@@ -1,7 +1,7 @@
 """Tests para SessionLog Model (sin inicialización de Beanie)"""
 
 import pytest
-from uuid import uuid4
+from uuid import uuid4, UUID
 from datetime import datetime, timezone
 from apps.auth.infrastructure.models.mongo.session_log_model import SessionLog
 
@@ -32,7 +32,7 @@ class TestSessionLogModel:
         fields = SessionLog.model_fields
 
         # Verificar tipos de campos
-        assert fields["user_id"].annotation.__name__ == "UUID"
+        assert fields["user_id"].annotation == UUID
         assert fields["session_id"].annotation == str
         assert fields["action"].annotation == str
         assert fields["ip_address"].annotation == str

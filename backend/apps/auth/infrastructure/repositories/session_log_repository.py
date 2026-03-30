@@ -6,9 +6,14 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-from pymongo import DESCENDING
+from loguru import logger
 
 from apps.auth.infrastructure.models.mongo.session_log_model import SessionLog
+from core.exceptions.database_exceptions import (
+    MongoDBWriteException,
+    MongoDBReadException,
+    MongoDBConnectionException,
+)
 
 
 class SessionLogRepository:
@@ -25,9 +30,25 @@ class SessionLogRepository:
 
         Returns:
             SessionLog guardado con ID asignado
+
+        Raises:
+            MongoDBWriteException: Error al escribir en MongoDB
+            MongoDBConnectionException: MongoDB no disponible
         """
-        await log.insert()
-        return log
+        try:
+            await log.insert()
+            return log
+        except Exception as e:
+            logger.error(
+                f"❌ Error al escribir session log en MongoDB: {e} | "
+                f"User: {log.user_id} | Session: {log.session_id} | Action: {log.action}"
+            )
+            # Re-lanzar como excepción de dominio
+            raise MongoDBWriteException(
+                message="Error al escribir session log",
+                details=str(e),
+                collection="session_logs",
+            )
 
     async def get_by_user(
         self,
@@ -51,22 +72,31 @@ class SessionLogRepository:
 
         Returns:
             Lista de SessionLog
+
+        Raises:
+            MongoDBReadException: Error al leer de MongoDB
         """
-        query = SessionLog.find(
-            SessionLog.user_id == user_id,
-            SessionLog.timestamp >= start_date,
-            SessionLog.timestamp <= end_date,
-        )
+        try:
+            query = SessionLog.find(
+                SessionLog.user_id == user_id,
+                SessionLog.timestamp >= start_date,
+                SessionLog.timestamp <= end_date,
+            )
 
-        if action:
-            query = query.find(SessionLog.action == action)
+            if action:
+                query = query.find(SessionLog.action == action)
 
-        return (
-            await query.sort(("timestamp", DESCENDING))
-            .skip(offset)
-            .limit(limit)
-            .to_list()
-        )
+            return await query.sort("-timestamp").skip(offset).limit(limit).to_list()
+        except Exception as e:
+            logger.error(
+                f"❌ Error al leer session logs por usuario: {e} | "
+                f"User: {user_id} | Period: {start_date} to {end_date}"
+            )
+            raise MongoDBReadException(
+                message="Error al leer session logs por usuario",
+                details=str(e),
+                collection="session_logs",
+            )
 
     async def count_by_user(
         self,
@@ -84,12 +114,26 @@ class SessionLogRepository:
 
         Returns:
             Número total de logs
+
+        Raises:
+            MongoDBReadException: Error al leer de MongoDB
         """
-        return await SessionLog.find(
-            SessionLog.user_id == user_id,
-            SessionLog.timestamp >= start_date,
-            SessionLog.timestamp <= end_date,
-        ).count()
+        try:
+            return await SessionLog.find(
+                SessionLog.user_id == user_id,
+                SessionLog.timestamp >= start_date,
+                SessionLog.timestamp <= end_date,
+            ).count()
+        except Exception as e:
+            logger.error(
+                f"❌ Error al contar session logs por usuario: {e} | "
+                f"User: {user_id} | Period: {start_date} to {end_date}"
+            )
+            raise MongoDBReadException(
+                message="Error al contar session logs por usuario",
+                details=str(e),
+                collection="session_logs",
+            )
 
     async def get_by_session_id(
         self,
@@ -107,14 +151,28 @@ class SessionLogRepository:
 
         Returns:
             Lista de SessionLog
+
+        Raises:
+            MongoDBReadException: Error al leer de MongoDB
         """
-        return (
-            await SessionLog.find(SessionLog.session_id == session_id)
-            .sort(("timestamp", DESCENDING))
-            .skip(offset)
-            .limit(limit)
-            .to_list()
-        )
+        try:
+            return (
+                await SessionLog.find(SessionLog.session_id == session_id)
+                .sort("-timestamp")
+                .skip(offset)
+                .limit(limit)
+                .to_list()
+            )
+        except Exception as e:
+            logger.error(
+                f"❌ Error al leer session logs por session_id: {e} | "
+                f"Session: {session_id}"
+            )
+            raise MongoDBReadException(
+                message="Error al leer session logs por session_id",
+                details=str(e),
+                collection="session_logs",
+            )
 
     async def delete_old_logs(self, days: int = 90) -> int:
         """
@@ -125,7 +183,23 @@ class SessionLogRepository:
 
         Returns:
             Número de documentos eliminados
+
+        Raises:
+            MongoDBWriteException: Error al eliminar de MongoDB
         """
-        cutoff_date = datetime.utcnow() - __import__("datetime").timedelta(days=days)
-        result = await SessionLog.find(SessionLog.timestamp < cutoff_date).delete()
-        return result.deleted_count if result else 0
+        try:
+            cutoff_date = datetime.utcnow() - __import__("datetime").timedelta(
+                days=days
+            )
+            result = await SessionLog.find(SessionLog.timestamp < cutoff_date).delete()
+            return result.deleted_count if result else 0
+        except Exception as e:
+            logger.error(
+                f"❌ Error al eliminar session logs antiguos: {e} | "
+                f"Retention: {days} días"
+            )
+            raise MongoDBWriteException(
+                message="Error al eliminar session logs antiguos",
+                details=str(e),
+                collection="session_logs",
+            )

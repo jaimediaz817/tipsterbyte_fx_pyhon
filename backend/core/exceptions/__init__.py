@@ -13,6 +13,18 @@ Categorías:
 """
 
 from core.exceptions.base import TipsterByteException
+from core.exceptions.database_exceptions import (
+    DatabaseException,
+    MongoDBException,
+    MongoDBConnectionException,
+    MongoDBWriteException,
+    MongoDBReadException,
+)
+from core.exceptions.session_log_exceptions import (
+    SessionLogException,
+    SessionLogWriteException,
+    SessionLogReadException,
+)
 from core.exceptions.process_exceptions import (
     ProcessException,
     ProcessNotFoundException,
@@ -42,6 +54,16 @@ from core.exceptions.concurrency_exceptions import (
 __all__ = [
     # Base
     "TipsterByteException",
+    # Database
+    "DatabaseException",
+    "MongoDBException",
+    "MongoDBConnectionException",
+    "MongoDBWriteException",
+    "MongoDBReadException",
+    # Session Log
+    "SessionLogException",
+    "SessionLogWriteException",
+    "SessionLogReadException",
     # Process
     "ProcessException",
     "ProcessNotFoundException",

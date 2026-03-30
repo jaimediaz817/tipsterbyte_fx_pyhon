@@ -14,6 +14,10 @@ from core.db.sql.database_sql import create_db_and_tables
 from core.middleware import TraceIDMiddleware
 from core.middleware.audit_middleware import AuditMiddleware
 from core.logger import configure_logging
+from apps.auth.application.services.session_log_service import SessionLogService
+from apps.auth.infrastructure.repositories.session_log_repository import (
+    SessionLogRepository,
+)
 from core.secrets import load_key
 from contextlib import asynccontextmanager
 import sys
@@ -236,8 +240,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Crear instancias para inyección de dependencias
+session_log_repository = SessionLogRepository()
+session_log_service = SessionLogService(session_log_repository)
+
 app.add_middleware(TraceIDMiddleware)
-app.add_middleware(AuditMiddleware)
+app.add_middleware(AuditMiddleware, session_log_service=session_log_service)
 
 # Registrar routers
 app.include_router(

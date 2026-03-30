@@ -133,6 +133,53 @@ class SessionLogService:
             "logs": [log.dict() for log in logs],
         }
 
+    async def log_api_call(
+        self,
+        user_id: str,
+        session_id: str,
+        ip_address: str,
+        user_agent: str,
+        endpoint: str,
+        method: str,
+        status_code: int,
+        response_time_ms: float,
+    ) -> SessionLog:
+        """
+        Registra una llamada a la API.
+
+        Método de conveniencia para el middleware de auditoría.
+        Encapsula la lógica de creación del log con action="api_call".
+
+        Args:
+            user_id: ID del usuario (string)
+            session_id: ID de la sesión
+            ip_address: Dirección IP del cliente
+            user_agent: User-Agent del navegador
+            endpoint: Endpoint de la API accedido
+            method: Método HTTP
+            status_code: Código de estado HTTP
+            response_time_ms: Tiempo de respuesta en milisegundos
+
+        Returns:
+            SessionLog creado
+        """
+        from uuid import UUID
+
+        # Convertir user_id de string a UUID si es necesario
+        user_id_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
+
+        return await self.log_action(
+            user_id=user_id_uuid,
+            session_id=session_id,
+            action="api_call",
+            ip_address=ip_address,
+            user_agent=user_agent,
+            endpoint=endpoint,
+            method=method,
+            status_code=status_code,
+            response_time_ms=response_time_ms,
+        )
+
     async def cleanup_old_logs(self, days: int = 90) -> int:
         """
         Elimina logs más antiguos que X días.

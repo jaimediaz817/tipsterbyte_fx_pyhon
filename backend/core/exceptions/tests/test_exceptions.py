@@ -5,6 +5,14 @@ Tests unitarios para excepciones personalizadas de TipsterByte FX.
 import pytest
 from core.exceptions import (
     TipsterByteException,
+    DatabaseException,
+    MongoDBException,
+    MongoDBConnectionException,
+    MongoDBWriteException,
+    MongoDBReadException,
+    SessionLogException,
+    SessionLogWriteException,
+    SessionLogReadException,
     ProcessException,
     ProcessNotFoundException,
     ProcessInactiveException,
@@ -295,7 +303,106 @@ def test_concurrency_exceptions_inherit_from_concurrency_exception():
 
 def test_all_exceptions_inherit_from_tipster_byte_exception():
     """✅ Todas las excepciones deben heredar de TipsterByteException."""
+    assert issubclass(DatabaseException, TipsterByteException)
+    assert issubclass(SessionLogException, TipsterByteException)
     assert issubclass(ProcessException, TipsterByteException)
     assert issubclass(FuenteException, TipsterByteException)
     assert issubclass(RobotException, TipsterByteException)
     assert issubclass(ConcurrencyException, TipsterByteException)
+
+
+# =====================================================
+# TESTS: Excepciones de MongoDB
+# =====================================================
+
+
+def test_mongodb_connection_exception():
+    """✅ MongoDBConnectionException debe tener contexto correcto."""
+    exc = MongoDBConnectionException(
+        host="localhost",
+        port=27017,
+    )
+
+    assert exc.error_code == "MONGODB_CONNECTION_ERROR"
+    assert exc.status_code == 500
+    assert exc.host == "localhost"
+    assert exc.port == 27017
+    assert "MongoDB no está disponible" in exc.message
+
+
+def test_mongodb_write_exception():
+    """✅ MongoDBWriteException debe tener contexto correcto."""
+    exc = MongoDBWriteException(
+        collection="session_logs",
+    )
+
+    assert exc.error_code == "MONGODB_WRITE_ERROR"
+    assert exc.status_code == 500
+    assert exc.collection == "session_logs"
+    assert "Error al escribir en MongoDB" in exc.message
+
+
+def test_mongodb_read_exception():
+    """✅ MongoDBReadException debe tener contexto correcto."""
+    exc = MongoDBReadException(
+        collection="session_logs",
+    )
+
+    assert exc.error_code == "MONGODB_READ_ERROR"
+    assert exc.status_code == 500
+    assert exc.collection == "session_logs"
+    assert "Error al leer de MongoDB" in exc.message
+
+
+def test_mongodb_exceptions_inherit_from_mongodb_exception():
+    """✅ Excepciones de MongoDB deben heredar de MongoDBException."""
+    assert issubclass(MongoDBConnectionException, MongoDBException)
+    assert issubclass(MongoDBWriteException, MongoDBException)
+    assert issubclass(MongoDBReadException, MongoDBException)
+
+
+def test_mongodb_exception_inherits_from_database_exception():
+    """✅ MongoDBException debe heredar de DatabaseException."""
+    assert issubclass(MongoDBException, DatabaseException)
+
+
+# =====================================================
+# TESTS: Excepciones de Session Log
+# =====================================================
+
+
+def test_session_log_write_exception():
+    """✅ SessionLogWriteException debe tener contexto correcto."""
+    exc = SessionLogWriteException(
+        user_id="user_123",
+        session_id="session_456",
+    )
+
+    assert exc.error_code == "SESSION_LOG_WRITE_ERROR"
+    assert exc.status_code == 500
+    assert exc.user_id == "user_123"
+    assert exc.session_id == "session_456"
+    assert "Error al escribir session log" in exc.message
+
+
+def test_session_log_read_exception():
+    """✅ SessionLogReadException debe tener contexto correcto."""
+    exc = SessionLogReadException(
+        user_id="user_123",
+    )
+
+    assert exc.error_code == "SESSION_LOG_READ_ERROR"
+    assert exc.status_code == 500
+    assert exc.user_id == "user_123"
+    assert "Error al leer session logs" in exc.message
+
+
+def test_session_log_exceptions_inherit_from_session_log_exception():
+    """✅ Excepciones de Session Log deben heredar de SessionLogException."""
+    assert issubclass(SessionLogWriteException, SessionLogException)
+    assert issubclass(SessionLogReadException, SessionLogException)
+
+
+def test_session_log_exception_inherits_from_tipster_byte_exception():
+    """✅ SessionLogException debe heredar de TipsterByteException."""
+    assert issubclass(SessionLogException, TipsterByteException)
