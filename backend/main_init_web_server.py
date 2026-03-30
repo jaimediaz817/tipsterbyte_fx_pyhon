@@ -10,7 +10,7 @@ from apps.platform_config.api.v1.routes.platform_config_routes import (
 )
 
 # from core.scheduler import start_scheduler
-from core.db.sql.database_sql import create_db_and_tables
+from core.db.sql.database_sql import verify_database_connection, run_startup_migrations
 from core.middleware import TraceIDMiddleware
 from core.middleware.audit_middleware import AuditMiddleware
 from core.logger import configure_logging
@@ -105,15 +105,21 @@ async def lifespan(app: FastAPI):
 
     logger.info("Startup complete. Metrics exposed.")
     # --- USO DE database.py ---
-    # Crear las tablas de la base de datos al arrancar
+    # Verificar conexión y ejecutar migraciones de Alembic al arrancar
     try:
-        logger.info("🗄️  Inicializando base de datos y creando tablas...")
-        create_db_and_tables()
-        logger.info("✅ Base de datos y tablas listas.")
+        logger.info("🗄️  Verificando conexión a base de datos...")
+        if not verify_database_connection():
+            logger.error("❌ ERROR FATAL: No se puede conectar a la BD PostgreSQL.")
+            sys.exit(1)
+
+        logger.info("🔄 Ejecutando migraciones pendientes...")
+        if not run_startup_migrations():
+            logger.error("❌ ERROR FATAL: Falló la ejecución de migraciones.")
+            sys.exit(1)
+
+        logger.info("✅ Base de datos y migraciones listas.")
     except Exception as e:
-        logger.error(
-            f"❌ ERROR FATAL: No se pudo conectar o crear las tablas de la BD. {e}"
-        )
+        logger.error(f"❌ ERROR FATAL: No se pudo conectar o ejecutar migraciones. {e}")
         sys.exit(1)  # La aplicación no puede funcionar sin BD
 
     # --- CAMBIO CLAVE: Mostrar las rutas disponibles ---

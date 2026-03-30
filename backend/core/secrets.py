@@ -16,6 +16,7 @@ print(f"DEBUG: >>>>>>>> FERNET_ENV_KEY = {FERNET_ENV_KEY}")
 
 _fernet_instance: Fernet | None = None
 
+
 def generate_key(force: bool = False):
     """
     Genera una nueva clave Fernet.
@@ -23,30 +24,53 @@ def generate_key(force: bool = False):
     - Si force=True, sobrescribe la clave existente (rotación).
     """
     if FERNET_ENV_KEY:
-        logger.warning("⚠️  Variable de entorno FERNET_KEY detectada. Se ignora la escritura de archivo.")
+        logger.warning(
+            "⚠️  Variable de entorno FERNET_KEY detectada. Se ignora la escritura de archivo."
+        )
         return
 
     if FERNET_SECRET_FILE.exists() and not force:
-        logger.info(f"🔐 Clave ya existe en {FERNET_SECRET_FILE}. Usa --force para rotarla.")
+        logger.info(
+            f"🔐 Clave ya existe en {FERNET_SECRET_FILE}. Usa --force para rotarla."
+        )
         return
 
     key = Fernet.generate_key()
     FERNET_SECRET_FILE.write_bytes(key)
     action = "rotada" if force else "generada"
-    logger.success(f"✅ Clave {action} y guardada exitosamente en: {FERNET_SECRET_FILE}")
+    logger.success(
+        f"✅ Clave {action} y guardada exitosamente en: {FERNET_SECRET_FILE}"
+    )
+
 
 def load_key() -> bytes:
     """Carga la clave desde la variable de entorno o desde el archivo .fernet.key."""
     if FERNET_ENV_KEY:
         return FERNET_ENV_KEY.encode()
-    
+
     if not FERNET_SECRET_FILE.exists():
-        raise FileNotFoundError("⚠️ Archivo .fernet.key no encontrado. Ejecuta: python manage.py secrets generate")
+        error_msg = (
+            "⚠️ Archivo .fernet.key no encontrado.\n"
+            "\n"
+            "Fernet es requerido para:\n"
+            "  - Cifrar/descifrar datos sensibles\n"
+            "  - JWT y autenticación\n"
+            "  - Configuraciones secretas\n"
+            "\n"
+            "COMANDOS PARA GENERAR LA CLAVE:\n"
+            "  python manage.py secrets generate\n"
+            "\n"
+            "O si prefieres usar variable de entorno:\n"
+            "  set FERNET_KEY=<tu_clave_fernet>\n"
+        )
+        raise FileNotFoundError(error_msg)
     return FERNET_SECRET_FILE.read_bytes()
+
 
 def key_exists() -> bool:
     """Verifica si la clave existe, ya sea en el entorno o en un archivo."""
     return bool(FERNET_ENV_KEY) or FERNET_SECRET_FILE.exists()
+
 
 def get_fernet() -> Fernet:
     global _fernet_instance
@@ -54,9 +78,11 @@ def get_fernet() -> Fernet:
         _fernet_instance = Fernet(load_key())
     return _fernet_instance
 
+
 def encrypt(value: str) -> str:
     """Cifra un valor usando Fernet."""
     return get_fernet().encrypt(value.encode()).decode()
+
 
 def decrypt(token: str) -> str:
     """Descifra un valor usando Fernet."""
