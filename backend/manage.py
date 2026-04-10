@@ -8,6 +8,10 @@ import subprocess
 import typer
 from loguru import logger
 
+# --- IMPORTACIÓN DE UTILS ---
+from utils import show_banner
+
+
 # --- 1. IMPORTACIONES DE MÓDULOS DEL PROYECTO ---
 # Se agrupan las importaciones por su origen para mayor claridad.
 
@@ -65,7 +69,6 @@ from core.secrets import (
 app = typer.Typer(
     name="TipsterByte FX Manager",
     help="Herramienta de gestión centralizada para el backend del proyecto.",
-    no_args_is_help=True,  # Muestra la ayuda si no se pasan argumentos
 )
 
 
@@ -83,7 +86,20 @@ app.add_typer(
 )
 
 
-db_app = typer.Typer(name="sql", help="Gestiona la base de datos SQL (PostgreSQL).")
+db_app = typer.Typer(
+    name="sql",
+    help="Gestiona la base de datos SQL (PostgreSQL).",
+    invoke_without_command=True,
+)
+
+
+@db_app.callback()
+def db_callback(ctx: typer.Context):
+    """Callback que muestra el banner cuando se invoca el grupo sql."""
+    if ctx.invoked_subcommand is None:
+        show_banner()
+
+
 app.add_typer(db_app)
 
 
@@ -504,7 +520,20 @@ db_app.add_typer(
 # --- 4. SECCIÓN DE COMANDOS PARA MONGODB (NOSQL) ---
 # Todos los comandos relacionados con la base de datos NoSQL viven aquí.
 # Se invocarán con: python manage.py mongo <comando>
-mongo_app = typer.Typer(name="nosql", help="Gestiona la base de datos NoSQL (MongoDB).")
+mongo_app = typer.Typer(
+    name="nosql",
+    help="Gestiona la base de datos NoSQL (MongoDB).",
+    invoke_without_command=True,
+)
+
+
+@mongo_app.callback()
+def mongo_callback(ctx: typer.Context):
+    """Callback que muestra el banner cuando se invoca el grupo nosql."""
+    if ctx.invoked_subcommand is None:
+        show_banner()
+
+
 app.add_typer(mongo_app)
 
 
@@ -599,7 +628,17 @@ def run_mongo_migrations():
 secrets_app = typer.Typer(
     name="secrets",
     help="Gestiona la clave de cifrado Fernet y operaciones relacionadas.",
+    invoke_without_command=True,
 )
+
+
+@secrets_app.callback()
+def secrets_callback(ctx: typer.Context):
+    """Callback que muestra el banner cuando se invoca el grupo secrets."""
+    if ctx.invoked_subcommand is None:
+        show_banner()
+
+
 app.add_typer(secrets_app)
 
 
@@ -667,7 +706,17 @@ server_app = typer.Typer(
     name="server",
     help="Grupo de comandos para gestionar el servidor web de desarrollo (Uvicorn).",
     no_args_is_help=True,
+    invoke_without_command=True,
 )
+
+
+@server_app.callback()
+def server_callback(ctx: typer.Context):
+    """Callback que muestra el banner cuando se invoca el grupo server."""
+    if ctx.invoked_subcommand is None:
+        show_banner()
+
+
 app.add_typer(server_app)
 # app.add_typer(server_app, name="server", help="Comandos para el servidor web.")
 
@@ -722,4 +771,6 @@ def truncate_sql_data(
 
 
 if __name__ == "__main__":
+    # Mostrar banner antes de procesar cualquier comando
+    show_banner()
     app()

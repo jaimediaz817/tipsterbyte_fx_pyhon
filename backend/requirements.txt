@@ -54,6 +54,7 @@ psutil                   # Información del sistema y procesos
 pydantic>=2.0             # Validación y modelos de datos
 pydantic-settings>=2.0    # Configuración vía .env y entorno
 python-dotenv             # Carga de variables desde archivos .env
+email-validator>=2.0      # Validación de emails para Pydantic EmailStr
 
 # -------------------------------
 # Configuración MongoDB

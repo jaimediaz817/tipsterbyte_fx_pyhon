@@ -23,7 +23,7 @@ class SessionLogService:
 
     async def log_action(
         self,
-        user_id: UUID,
+        user_id: int,
         session_id: str,
         action: str,
         ip_address: str,
@@ -72,7 +72,7 @@ class SessionLogService:
 
     async def get_user_logs(
         self,
-        user_id: UUID,
+        user_id: int,
         start_date: datetime,
         end_date: datetime,
         action: Optional[str] = None,
@@ -163,13 +163,11 @@ class SessionLogService:
         Returns:
             SessionLog creado
         """
-        from uuid import UUID
-
-        # Convertir user_id de string a UUID si es necesario
-        user_id_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
+        # Convertir user_id de string a int si es necesario
+        user_id_int = int(user_id) if isinstance(user_id, str) else user_id
 
         return await self.log_action(
-            user_id=user_id_uuid,
+            user_id=user_id_int,
             session_id=session_id,
             action="api_call",
             ip_address=ip_address,

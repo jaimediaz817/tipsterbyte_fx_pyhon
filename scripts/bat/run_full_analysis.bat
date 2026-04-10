@@ -6,7 +6,7 @@ REM ================================
 
 echo.
 echo ========================================
-echo  ANÁLISIS COMPLETO SONARQUBE
+echo  ANALISIS COMPLETO SONARQUBE
 echo ========================================
 echo.
 
@@ -102,7 +102,7 @@ echo [6/6] Abriendo dashboard...
 echo [OK] Análisis completado exitosamente
 echo.
 echo ========================================
-echo  ANÁLISIS COMPLETADO
+echo  ANALISIS COMPLETADO
 echo ========================================
 echo.
 echo [INFO] Dashboard: http://localhost:9000

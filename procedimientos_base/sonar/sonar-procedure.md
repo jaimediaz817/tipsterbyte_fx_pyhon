@@ -136,6 +136,19 @@ export SONAR_TOKEN="sqa_183a7e93d35f73d4a5a66a49a851c39c87115604"
 
 - verificar:
 echo $SONAR_TOKEN
+
+
+
+SONAR
+$env:SONAR_TOKEN="sqa_183a7e93d35f73d4a5a66a49a851c39c87115604"
+env:SONAR_TOKEN="sqa_183a7e93d35f73d4a5a66a49a851c39c87115604"
+
+C:\sonar-scanner\bin\sonar-scanner.bat "-Dsonar.login=" "-Dsonar.host.url=http://localhost:9000
+
+.\scripts\bat\run_full_analysis.bat
+
+
+
 -------------------------------------------------------------------------
 
 

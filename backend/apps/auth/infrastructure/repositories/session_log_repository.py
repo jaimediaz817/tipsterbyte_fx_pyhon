@@ -52,7 +52,7 @@ class SessionLogRepository:
 
     async def get_by_user(
         self,
-        user_id: UUID,
+        user_id: int,
         start_date: datetime,
         end_date: datetime,
         action: Optional[str] = None,
@@ -100,7 +100,7 @@ class SessionLogRepository:
 
     async def count_by_user(
         self,
-        user_id: UUID,
+        user_id: int,
         start_date: datetime,
         end_date: datetime,
     ) -> int:

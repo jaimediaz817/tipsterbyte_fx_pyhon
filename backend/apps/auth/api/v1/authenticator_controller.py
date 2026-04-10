@@ -32,61 +32,19 @@
 #     return {"status": "ok", "scope": "auth-controller", "version": "v1"}
 
 
-
-
-
+"""
+Controlador principal del módulo de autenticación (v1)
+Re-exporta las rutas definidas en authenticator_routes.py
+"""
 
 from fastapi import APIRouter
-from loguru import logger
 
-# --- PASO 1: Importar las rutas existentes de forma directa ---
-# Importamos el router que contiene la lógica de los endpoints (login, register, etc.)
-# Asumimos que este archivo existe y contiene un objeto APIRouter llamado 'router'.
-try:
-    from .routes.authenticator_routes import router as endpoints_router
-except ImportError:
-    logger.error("No se pudo encontrar 'authenticator_routes.py' en la carpeta 'routes'. Asegúrate de que el archivo existe.")
-    # Creamos un router vacío para evitar que la aplicación se rompa al iniciar.
-    endpoints_router = APIRouter()
+# Re-exportar el router de authenticator_routes directamente
+from .routes.authenticator_routes import router
 
 
-class AuthenticatorController:
-    """
-    Controlador basado en clases para el módulo de autenticación.
-    
-    Su responsabilidad es agrupar y exponer las rutas relacionadas con la autenticación.
-    En esta versión, incluye las rutas definidas en un archivo separado.
-    """
-    def __init__(self):
-        # El router principal de este controlador.
-        self.router = APIRouter()
-        
-        # Registramos las rutas al instanciar la clase.
-        self._register_routes()
-
-    def _register_routes(self):
-        """
-        Registra los endpoints en el router de esta instancia.
-        """
-        # --- PASO 2: Incluir el router con la lógica de los endpoints ---
-        # Aquí "absorbemos" todas las rutas (login, register) del otro archivo.
-        self.router.include_router(endpoints_router)
-
-        # También podemos añadir rutas específicas de este controlador si es necesario.
-        self.router.get("/test", summary="Auth controller health check")(self.controller_test)
-
-    async def controller_test(self):
-        """
-        Ruta de prueba para verificar que el controlador se ha cargado correctamente.
-        """
-        return {"status": "ok", "scope": "auth-controller-class", "version": "v1"}
-
-
-# --- PASO 3: Crear una única instancia y exponer su router ---
-
-# Creamos una instancia del controlador.
-auth_controller = AuthenticatorController()
-
-# Exponemos el router de la instancia para que pueda ser incluido en la app principal.
-# Este es el único objeto que `main_init_web_server.py` necesita importar.
-router = auth_controller.router
+# Agregar ruta de health check del controlador
+@router.get("/test", summary="Auth controller health check")
+async def controller_test():
+    """Verifica que el controlador de autenticación está funcionando."""
+    return {"status": "ok", "scope": "auth-controller", "version": "v1"}

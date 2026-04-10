@@ -1,0 +1,630 @@
+.cline-context.md:backend/
+.cline-context.md:- **Modelos**: `backend/apps/*/infrastructure/models/sql/`
+.cline-context.md:- **Colecciones**: Configuradas en `backend/core/db/no_sql/`
+.cline-context.md:- **Unit Tests**: `backend/apps/*/tests/`
+.cline-context.md:- **Integration Tests**: `backend/tests/`
+.cline-context.md:pytest backend/
+.cline-context.md:pytest backend/apps/leagues_manager/tests/
+.cline-context.md:pytest --cov=backend backend/
+.cline-conventions.md:# En archivo: backend/shared/constants/process/process_codes.py
+.cline-conventions.md:backend/apps/leagues_manager/tests/
+.cline-conventions.md:        "backend.core.config.ENABLE_PROCESS_RUN_LOGGING", 
+.cline-conventions.md:# backend/core/exceptions/base.py
+.cline-conventions.md:# backend/core/exceptions/process_exceptions.py
+.cline-instructions.md:5. Pruebo: python backend/scripts/diagnose_processes_visual.py
+.cline-instructions.md:1. Creo route en backend/apps/leagues_manager/api/v1/routes/stats_routes.py
+.cline-instructions.md:2. **Crear** en `backend/scripts/`
+.cline-instructions.md:2. **Revisar** `backend/shared/` para código reutilizable
+.cline-instructions.md:3. **Verificar** `backend/core/` para funcionalidades base
+.vscode\launch.json:            "program": "${workspaceFolder}/backend/main_init_scripts.py",
+.vscode\launch.json:            "cwd": "${workspaceFolder}/backend",
+.vscode\launch.json:            "program": "${workspaceFolder}/backend/manage.py",
+.vscode\launch.json:            "cwd": "${workspaceFolder}/backend",
+.vscode\launch.json:                "PYTHONPATH": "${workspaceFolder}/backend"
+.vscode\settings.json:        "backend"
+backend\alembic\env.py:# --- CAMBIO CLAVE: Lógica robusta para encontrar y añadir la raíz del backend al path ---
+backend\alembic\env.py:#     from core.paths import BACKEND_ROOT
+backend\alembic\env.py:#     backend_root_path = Path(__file__).resolve().parents[1]
+backend\alembic\env.py:#     if str(backend_root_path) not in sys.path:
+backend\alembic\env.py:#         sys.path.insert(0, str(backend_root_path))
+backend\alembic\env.py:#     from core.paths import BACKEND_ROOT
+backend\alembic\env.py:# --- CAMBIO CLAVE: Lógica robusta para encontrar y añadir la raíz del backend al path ---
+backend\alembic\env.py:    backend_root = Path(__file__).resolve().parents[1]
+backend\alembic\env.py:    print("FROM ENV.PY .parents[1] >>>>>>>>>>>>>>>>>> ", backend_root)
+backend\alembic\env.py:    if not (backend_root / "core").is_dir():
+backend\alembic\env.py:        backend_root = Path(__file__).resolve().parents[2]
+backend\alembic\env.py:        print("FROM ENV.PY >>>>>>>>>>>>>>>>>> Path(__file__).resolve().parents[2]: ", backend_root)
+backend\alembic\env.py:    if str(backend_root) not in sys.path:
+backend\alembic\env.py:        sys.path.insert(0, str(backend_root))
+backend\alembic\env.py:    print("Error: No se pudo determinar la ruta raíz del backend. Asegúrate de que la estructura del proyecto sea la esperada.")
+backend\alembic\env.py:# Asegurar que la ruta raíz del backend esté disponible
+backend\apps\auth\api\v1\authenticator_controller.py:# # file: backend/apps/auth/api/v1/authenticator_controller.py
+backend\apps\auth\infrastructure\models\mongo\access_log_model.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\apps\auth\infrastructure\models\mongo\access_log_model.py
+backend\apps\leagues_manager\application\dto\detalle_fuente_extraccion_create_dto.py:# filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\application\dto\detalle_fuente_extraccion_create_dto.py
+backend\apps\leagues_manager\application\dto\detalle_fuente_extraccion_dto.py:# filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\application\dto\detalle_fuente_extraccion_dto.py
+backend\apps\leagues_manager\application\dto\fuente_extraccion_create_dto.py:# filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\application\dto\fuente_extraccion_create_dto.py
+backend\apps\leagues_manager\application\dto\fuente_extraccion_dto.py:# filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\application\dto\fuente_extraccion_dto.py
+backend\apps\leagues_manager\domain\enums\robot_type_enum.py:# filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\domain\enums\robot_type_enum.py
+backend\apps\leagues_manager\tests\conftest.py:# Subimos tres niveles desde 'tests' para llegar a 'backend'
+backend\apps\leagues_manager\tests\conftest.py:# tests -> leagues_manager -> apps -> backend
+backend\apps\leagues_manager\tests\conftest.py:backend_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+backend\apps\leagues_manager\tests\conftest.py:if backend_root not in sys.path:
+backend\apps\leagues_manager\tests\conftest.py:    sys.path.insert(0, backend_root)
+backend\apps\leagues_manager\tests\DIAGNOSTICO_TEST_LIGAS_SEEDER.md:pytest backend/apps/leagues_manager/tests/test_ligas_seeder.py -v
+backend\apps\leagues_manager\tests\DIAGNOSTICO_TEST_LIGAS_SEEDER.md:pytest backend/apps/leagues_manager/tests/test_ligas_seeder.py --cov=scripts.db.seeders.sql.ligas_seeder
+backend\apps\leagues_manager\tests\DIAGNOSTICO_TEST_LIGAS_SEEDER.md:pytest backend/apps/leagues_manager/tests/test_*_seeder.py -v
+backend\apps\leagues_manager\tests\run_robot_logs_test.py:# Subimos tres niveles desde 'tests' para llegar a 'backend'
+backend\apps\leagues_manager\tests\run_robot_logs_test.py:# tests -> leagues_manager -> apps -> backend
+backend\apps\leagues_manager\tests\run_robot_logs_test.py:backend_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+backend\apps\leagues_manager\tests\run_robot_logs_test.py:if backend_root not in sys.path:
+backend\apps\leagues_manager\tests\run_robot_logs_test.py:    sys.path.insert(0, backend_root)
+backend\apps\leagues_manager\tests\test_process_run_integration.py:backend_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+backend\apps\leagues_manager\tests\test_process_run_integration.py:if backend_root not in sys.path:
+backend\apps\leagues_manager\tests\test_process_run_integration.py:    sys.path.insert(0, backend_root)
+backend\commands\db\admin\no_sql\mongo_state_manager.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\scripts\db\mongo_state_manager.py
+backend\commands\db\admin\no_sql\mongo_state_manager.py:# # Añadir la raíz (backend) al sys.path para que encuentre 'core'
+backend\commands\db\admin\no_sql\mongo_state_manager.py:from core.paths import PROJECT_ROOT, BACKEND_ROOT
+backend\commands\db\admin\no_sql\mongo_state_manager.py:# --- CAMBIO CLAVE: Usar BACKEND_ROOT para que coincida con el volumen de Docker ---
+backend\commands\db\admin\no_sql\mongo_state_manager.py:NOSQL_BACKUP_DIR_PATH = BACKEND_ROOT / "backups" / "mongo_backups"
+backend\commands\db\admin\sql\sql_state_manager.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\scripts\db\state_manager.py
+backend\commands\db\admin\sql\sql_state_manager.py:from core.paths import PROJECT_ROOT, BACKEND_ROOT
+backend\commands\db\admin\sql\sql_state_manager.py:project_root = BACKEND_ROOT
+backend\commands\db\admin\sql\sql_state_manager.py:SQL_BACKUP_DIR_PATH = BACKEND_ROOT / "backups" / "postgresql_backups"
+backend\commands\db\admin\sql\sql_state_manager.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\commands\db\admin\sql\sql_state_manager.py
+backend\commands\project_cli.py:    # Directorio raíz del backend
+backend\commands\project_cli.py:    backend_root = Path(__file__).resolve().parent.parent
+backend\core\config.py:from core.paths import BACKEND_ROOT, PROJECT_ROOT
+backend\core\config.py:env_path = BACKEND_ROOT / ".env"
+backend\core\config.py:print(f"DEBUG: >>>>>>>>BACKEND_ROOT = {BACKEND_ROOT}")
+backend\core\config.py:# --- CAMBIO CLAVE: Definir la raíz del backend para construir rutas ---
+backend\core\config.py:# BACKEND_ROOT = Path(__file__).resolve().parent.parent
+backend\core\config.py:    # ALEMBIC_VERSIONS_DIR: Path = BACKEND_ROOT / "alembic" / "versions"
+backend\core\config.py:    # --- ESTA LÍNEA DEBE USAR BACKEND_ROOT ---
+backend\core\config.py:    ALEMBIC_VERSIONS_DIR: Path = BACKEND_ROOT / "alembic" / "versions"
+backend\core\config.py:        env_file=f"{BACKEND_ROOT}/.env", env_file_encoding="utf-8", case_sensitive=True
+backend\core\config.py:    print(f"   📁 {BACKEND_ROOT / 'core' / 'config.py'}")
+backend\core\config.py:    print("   1. Abre el archivo: backend/core/config.py")
+backend\core\config.py:    print(f"📁 Ruta del .env: {BACKEND_ROOT / '.env'}")
+backend\core\config.py:    print(f"📁 Ruta del config.py: {BACKEND_ROOT / 'core' / 'config.py'}")
+backend\core\db\no_sql\database_no_sql.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\db\database_nosql.py
+backend\core\db\no_sql\schema_initializer.py:from core.paths import BACKEND_ROOT
+backend\core\db\no_sql\schema_initializer.py:    apps_dir = BACKEND_ROOT / "apps"
+backend\core\db\no_sql\schema_initializer.py:        module_path = ".".join(path.relative_to(BACKEND_ROOT).with_suffix("").parts)
+backend\core\db\sql\base_class.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\db\base_class.py
+backend\core\db\sql\database_sql.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\database.py
+backend\core\db\sql\init_sql_all_models.py:from core.paths import BACKEND_ROOT
+backend\core\db\sql\init_sql_all_models.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\all_models.py
+backend\core\db\sql\init_sql_all_models.py:# from backend.apps.leagues_manager.infrastructure.models.sql.some_model import SomeModel
+backend\core\db\sql\init_sql_all_models.py:    backend_root = BACKEND_ROOT
+backend\core\db\sql\init_sql_all_models.py:    apps_dir = backend_root / "apps"
+backend\core\db\sql\init_sql_all_models.py:        # Ejemplo: backend/apps/auth/infrastructure[otra ubicación dentro del subsistema]/models/sql/user_model.py
+backend\core\db\sql\init_sql_all_models.py:        # se convierte en: backend.apps.auth.infrastructure.models.sql.user_model
+backend\core\db\sql\init_sql_all_models.py:        # Obtenemos la ruta relativa desde la raíz del proyecto 'backend'
+backend\core\logger.py:from core.paths import BACKEND_ROOT, LOGS_ROOT
+backend\core\logger.py:    - Sinks dinámicos por cada módulo en 'backend/apps' (excluyendo robots).
+backend\core\logger.py:        apps_dir = BACKEND_ROOT / "apps"
+backend\core\paths.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\paths.py
+backend\core\paths.py:    # Esta es la ruta que contiene 'backend/', 'pyproject.toml', etc.
+backend\core\paths.py:    # BACKEND_ROOT es la carpeta 'backend' dentro del proyecto.
+backend\core\paths.py:    BACKEND_ROOT = PROJECT_ROOT / "backend"
+backend\core\paths.py:    CORE_ROOT    = BACKEND_ROOT / "core"
+backend\core\paths.py:    ALEMBIC_ROOT = BACKEND_ROOT / "alembic"
+backend\core\paths.py:    LOGS_ROOT    = BACKEND_ROOT / "logs"
+backend\core\paths.py:    print(f"DEBUG: BACKEND_ROOT = {BACKEND_ROOT}")    
+backend\core\scheduler\tests\test_log_cleanup_scheduler_integration.py:backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+backend\core\scheduler\tests\test_log_cleanup_scheduler_integration.py:if str(backend_dir) not in sys.path:
+backend\core\scheduler\tests\test_log_cleanup_scheduler_integration.py:    sys.path.insert(0, str(backend_dir))
+backend\core\tests\conftest.py:# Subimos dos niveles desde 'tests' para llegar a 'backend'
+backend\core\tests\conftest.py:# tests -> core -> backend
+backend\core\tests\conftest.py:backend_root = os.path.abspath(os.path.join(current_dir, "..", ".."))
+backend\core\tests\conftest.py:if backend_root not in sys.path:
+backend\core\tests\conftest.py:    sys.path.insert(0, backend_root)
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| AuditMiddleware       | `backend/core/middleware/audit_middleware.py`                             | ✅ CORREGIDO |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| SessionLogService     | `backend/apps/auth/application/services/session_log_service.py`           | ✅ COMPLETO  |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| SessionLogRepository  | `backend/apps/auth/infrastructure/repositories/session_log_repository.py` | ✅ COMPLETO  |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| SessionLog Model      | `backend/apps/auth/infrastructure/models/mongo/session_log_model.py`      | ✅ EXISTENTE |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| AccessLog Model       | `backend/apps/auth/infrastructure/models/mongo/access_log_model.py`       | ✅ CORREGIDO |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| Database Exceptions   | `backend/core/exceptions/database_exceptions.py`                          | ✅ CREADO    |
+backend\docs\DIAGNOSTICO_ARQUITECTONICO_FINAL.md:| SessionLog Exceptions | `backend/core/exceptions/session_log_exceptions.py`                       | ✅ CREADO    |
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:**Archivo**: `backend/core/middleware/audit_middleware.py`
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:**Archivo**: `backend/apps/auth/application/services/session_log_service.py`
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:**Ubicación**: `backend/core/middleware/audit_middleware.py` líneas 52-71
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:**Ubicación**: `backend/core/middleware/audit_middleware.py` líneas 68-71
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:**Excepciones existentes** (ver `backend/core/exceptions/__init__.py`):
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:# backend/core/exceptions/database_exceptions.py
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:# backend/core/exceptions/session_log_exceptions.py
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:1. **`backend/core/exceptions/database_exceptions.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:2. **`backend/core/exceptions/session_log_exceptions.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:1. **`backend/core/exceptions/__init__.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:2. **`backend/core/middleware/audit_middleware.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:3. **`backend/apps/auth/application/services/session_log_service.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:4. **`backend/apps/auth/infrastructure/repositories/session_log_repository.py`**
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:# backend/core/middleware/audit_middleware.py (VERSIÓN CORRECTA)
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:# backend/apps/auth/application/services/session_log_service.py
+backend\docs\DIAGNOSTICO_EXCEPCIONES_MONGODB.md:# backend/main_init_web_server.py
+backend\docs\DIAGNOSTICO_IMPACTO_BASE_DATOS.md:**Archivo**: `backend/core/scheduler/__init__.py`
+backend\docs\DIAGNOSTICO_IMPACTO_BASE_DATOS.md:**Archivo**: `backend/main_init_web_server.py`
+backend\docs\DIAGNOSTICO_IMPACTO_BASE_DATOS.md:backend/apps/auth/infrastructure/models/mongo/access_log_model.py
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/application/dto/login_dto.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/application/dto/register_dto.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/application/dto/token_dto.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/infrastructure/models/sql/user.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/infrastructure/models/sql/role.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/infrastructure/security/password_handler.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/infrastructure/security/jwt_handler.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/application/services/session_log_service.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/core/middleware/audit_middleware.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Ubicación necesaria**: `backend/apps/auth/infrastructure/repositories/user_repository.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Ubicación necesaria**: `backend/apps/auth/application/services/auth_service.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Ubicación necesaria**: `backend/apps/auth/api/v1/routes/authenticator_routes.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/infrastructure/repositories/user_repository.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/application/services/auth_service.py`
+backend\docs\DIAGNOSTICO_SUBSISTEMA_AUTH.md:**Archivo**: `backend/apps/auth/api/v1/routes/authenticator_routes.py`
+backend\docs\GUIA_INICIO_RAPIDO.md:# Verificar que existe backend/.env con:
+backend\docs\GUIA_INICIO_RAPIDO.md:cd backend
+backend\docs\GUIA_INICIO_RAPIDO.md:✅ Clave generada y guardada exitosamente en: backend/core/.fernet.key
+backend\docs\GUIA_INICIO_RAPIDO.md:cd backend
+backend\docs\GUIA_INICIO_RAPIDO.md:cd backend
+backend\docs\GUIA_INICIO_RAPIDO.md:cd backend
+backend\docs\GUIA_INICIO_RAPIDO.md:cd backend
+backend\docs\MANUAL_FUNCIONAL.md:cd backend
+backend\docs\MANUAL_FUNCIONAL.md:cd backend
+backend\docs\MANUAL_FUNCIONAL.md:uvicorn backend.main_init_web_server:app --reload --host 127.0.0.1 --port 8000
+backend\docs\MANUAL_FUNCIONAL.md:cd backend
+backend\docs\MANUAL_FUNCIONAL.md:uvicorn backend.main_init_web_server:app --host 0.0.0.0 --port 8000
+backend\docs\README_DOCS.md:# 🚀 Proyecto Backend: Cruce Cartera Sura
+backend\docs\README_DOCS.md:Sistema backend con estructura por capas y procesos para la automatización de cruce de cartera con Sura.  
+backend\docs\README_DOCS.md:acceder a: cd `backend/`
+backend\docs\README_DOCS.md:Desde la raíz de `backend/`:
+backend\docs\README_DOCS.md:Desde la raíz de `backend/`:
+backend\docs\README_DOCS.md:pytest backend/apps/cartera_sura/domain/tests/test_cruce_cartera.py
+backend\docs\README_DOCS.md:python backend/main_init_scripts.py --process cruce_cartera_sura
+backend\docs\TESTING_GUIDE.md:Verifica que el archivo `backend/.env` tenga la configuración correcta.
+backend\docs\TESTING_GUIDE.md:pip install -r backend/requirements.txt
+backend\docs\TESTING_GUIDE.md:cd backend
+backend\docs\TESTING_GUIDE.md:python backend/manage.py server run --host 127.0.0.1 --port 8000
+backend\docs\TESTING_GUIDE.md:uvicorn backend.main_init_web_server:app --host 127.0.0.1 --port 8000 --reload
+backend\main_init_web_server.py:API central para procesos programados, ingestión y administración del backend.
+backend\manage.py:from core.paths import BACKEND_ROOT
+backend\manage.py:    help="Herramienta de gestión centralizada para el backend del proyecto.",
+backend\manage.py:    versions_dir = BACKEND_ROOT / "alembic" / "versions"
+backend\monitor_log_cleanup.py:# Agregar directorio backend al path
+backend\monitor_log_cleanup.py:backend_dir = Path(__file__).resolve().parent
+backend\monitor_log_cleanup.py:if str(backend_dir) not in sys.path:
+backend\monitor_log_cleanup.py:    sys.path.insert(0, str(backend_dir))
+backend\README.md:Sigue estos pasos **desde la carpeta `backend`**.
+backend\README.md:    # Desde la raíz del proyecto (fuera de 'backend/')
+backend\README.md:    # Desde la carpeta 'backend/'
+backend\README.md:    # Desde la carpeta 'backend/'
+backend\README.md:    # Desde la carpeta 'backend/'
+backend\README.md:# Desde la carpeta 'backend'
+backend\README.md:- Nos ubicamos en la raíz de backend del proyecto y ejecutamos el comando:
+backend\README.md:backend/
+backend\README.md:backend/
+backend\README.md:    # Desde la raíz del proyecto (fuera de 'backend/')
+backend\README.md:    # Desde la carpeta 'backend/'
+backend\README.md:    *Se guardará en `backend/backups/postgresql_backups/`*
+backend\README.md:    *Se guardará en `backend/backups/mongo_backups/`*
+backend\README.md:# Desde la carpeta 'backend/'
+backend\README.md:# Desde la carpeta 'backend/'
+backend\README.md:# Desde la carpeta 'backend/'
+backend\README.md:# Después de generar el reporte HTML, navega a la carpeta 'backend/'
+backend\requirements.txt:# Core backend stack
+backend\scripts\check_process_run_tables.py:# Add backend directory to path
+backend\scripts\check_process_run_tables.py:backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+backend\scripts\check_process_run_tables.py:sys.path.insert(0, backend_dir)
+backend\scripts\db\seeders\sql\seed_database_sql.py:# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\scripts\db\seeders\seed_database.py
+backend\scripts\diagnose_leagues_status.py:    cache_file = Path("backend/data/leagues_cache.json")
+backend\scripts\diagnose_leagues_status.py:       - Script creado: backend/scripts/diagnose_leagues_status.py
+backend\scripts\diagnose_processes.py:# Agregar el directorio backend al path
+backend\scripts\generate_jwt_key.py:Uso: python backend/scripts/generate_jwt_key.py
+backend\scripts\generate_jwt_key.py:    print("  2. Abre el archivo: backend/.env")
+backend\services\log_cleanup_service.py:# Agregar directorio backend al path para imports
+backend\services\log_cleanup_service.py:backend_dir = Path(__file__).resolve().parent.parent
+backend\services\log_cleanup_service.py:if str(backend_dir) not in sys.path:
+backend\services\log_cleanup_service.py:    sys.path.insert(0, str(backend_dir))
+backend\services\models\cleanup_history.py:        self.history_file = history_file or Path("backend/logs/cleanup_history.json")
+backend\services\PLAN_PRUEBA_SCHEDULER.md:cd backend && python -m pytest backend/services/tests/ backend/core/scheduler/tests/test_log_cleanup_scheduler.py -v
+backend\services\PLAN_PRUEBA_SCHEDULER.md:python -m pytest backend/core/scheduler/tests/test_log_cleanup_scheduler.py -v
+backend\services\PLAN_PRUEBA_SCHEDULER.md:cd backend && python manage.py sql seed PlatformConfigSeeder
+backend\services\PLAN_PRUEBA_SCHEDULER.md:cd backend && python manage.py sql seed PlatformConfigSeeder --update
+backend\services\PLAN_PRUEBA_SCHEDULER.md:backend/
+backend\services\PLAN_PRUEBA_SCHEDULER.md:cd backend && python -m pytest backend/services/tests/ backend/core/scheduler/tests/test_log_cleanup_scheduler.py -v --tb=short
+backend\services\PLAN_PRUEBA_SCHEDULER.md:backend/services/tests/test_log_cleanup_integration.py::TestLogCleanupIntegration::test_simulate_years_of_logs PASSED
+backend\services\PLAN_PRUEBA_SCHEDULER.md:backend/services/tests/test_log_cleanup_service.py::TestCleanupResult::test_default_values PASSED
+backend\services\PLAN_PRUEBA_SCHEDULER.md:backend/services/tests/test_log_cleanup_service.py::TestCleanupResult::test_to_dict PASSED
+backend\services\PLAN_PRUEBA_SCHEDULER.md:backend/core/scheduler/tests/test_log_cleanup_scheduler.py::TestLogCleanupScheduler::test_cron_expression_is_correct PASSED
+backend\services\PLAN_PRUEBA_SCHEDULER.md:1. Revisar logs en `backend/logs/`
+backend\services\PLAN_PRUEBA_SCHEDULER.md:2. Verificar historial en `backend/logs/cleanup_history.json`
+backend\services\PLAN_PRUEBA_SCHEDULER.md:3. Ejecutar tests unitarios: `python -m pytest backend/services/tests/test_log_cleanup_service.py -v`
+backend\services\PLAN_PRUEBA_SCHEDULER.md:4. Ejecutar tests de scheduler: `python -m pytest backend/core/scheduler/tests/test_log_cleanup_scheduler.py -v`backend\services\README_LOG_CLEANUP.md:backend/services/
+backend\services\README_LOG_CLEANUP.md:cd backend && python -m pytest backend/services/tests/ -v
+backend\services\README_LOG_CLEANUP.md:python -m pytest backend/services/tests/test_log_cleanup_service.py -v
+backend\services\README_LOG_CLEANUP.md:python -m pytest backend/services/tests/test_log_cleanup_integration.py -v -s
+backend\services\README_LOG_CLEANUP.md:El historial se guarda en `backend/logs/cleanup_history.json` y contiene:
+backend\services\README_LOG_CLEANUP.md:# backend/core/scheduler/log_cleanup_jobs.py
+backend\services\README_LOG_CLEANUP.md:# backend/shared/constants/process/process_codes.py
+backend\services\README_LOG_CLEANUP.md:# backend/core/scheduler/jobs_loader.py
+backend\services\README_LOG_CLEANUP.md:cd backend && python manage.py sql seed PlatformConfigSeeder
+backend\services\README_LOG_CLEANUP.md:cd backend && python manage.py sql seed PlatformConfigSeeder --update
+backend\services\README_LOG_CLEANUP.md:cd backend && python manage.py migrate --app services
+backend\services\README_LOG_CLEANUP.md:python -m pytest backend/services/tests/ -v
+backend\services\tests\test_log_cleanup_integration.py:backend_dir = Path(__file__).resolve().parent.parent.parent
+backend\services\tests\test_log_cleanup_integration.py:if str(backend_dir) not in sys.path:
+backend\services\tests\test_log_cleanup_integration.py:    sys.path.insert(0, str(backend_dir))
+backend\services\tests\test_log_cleanup_service.py:# Agregar directorio backend al path
+backend\services\tests\test_log_cleanup_service.py:backend_dir = Path(__file__).resolve().parent.parent.parent
+backend\services\tests\test_log_cleanup_service.py:if str(backend_dir) not in sys.path:
+backend\services\tests\test_log_cleanup_service.py:    sys.path.insert(0, str(backend_dir))
+backend\services\tests\test_log_growth_analyzer.py:    pytest backend/services/tests/test_log_growth_analyzer.py -v -s
+backend\services\tests\test_log_growth_analyzer.py:# Agregar directorio backend al path
+backend\services\tests\test_log_growth_analyzer.py:backend_dir = Path(__file__).resolve().parent.parent.parent
+backend\services\tests\test_log_growth_analyzer.py:if str(backend_dir) not in sys.path:
+backend\services\tests\test_log_growth_analyzer.py:    sys.path.insert(0, str(backend_dir))
+backend\tests\test_concurrent_processes.py:    python backend/test_concurrent_processes.py
+backend\tests\test_desk_scheduler_flow.py:    python backend/test_desk_scheduler_flow.py
+backend\tests\test_manual_execution.py:    python backend/test_manual_execution.py
+backend\test_log_cleanup_manual.py:# Agregar directorio backend al path
+backend\test_log_cleanup_manual.py:backend_dir = Path(__file__).resolve().parent
+backend\test_log_cleanup_manual.py:if str(backend_dir) not in sys.path:
+backend\test_log_cleanup_manual.py:    sys.path.insert(0, str(backend_dir))
+backend\test_progreso_simple.py:# Agregar el directorio backend al path
+bodega_src\docker\docker-compose-bck.yml:      - ./backend/.env
+bodega_src\docker\docker-compose-bck.yml:      - ./backend/backups/postgresql_backups:/backups
+bodega_src\docker\docker-compose-bck.yml:      - ./backend/.env
+bodega_src\docker\docker-compose-bck.yml:      - ./backend/backups/mongo_backups:/backups
+docker-compose.yml:      - ./backend/.env.dev
+docker-compose.yml:      - ./backend/backups/postgresql_backups:/backups
+docker-compose.yml:      - ./backend/.env.prod
+docker-compose.yml:      - ./backend/backups/postgresql_backups:/backups
+docker-compose.yml:      - ./backend/.env.dev
+docker-compose.yml:      - ./backend/backups/mongo_backups:/backups
+docker-compose.yml:      - ./backend/.env.prod
+docker-compose.yml:      - ./backend/backups/mongo_backups:/backups
+gestion_proyecto\ANALISIS_AUTO_CLEANUP_ENABLED.md:**Ubicación**: `backend/core/config.py`
+gestion_proyecto\ANALISIS_AUTO_CLEANUP_ENABLED.md:- Archivo: `backend/core/config.py`
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:# 🔐 DIAGNÓSTICO Y PLAN: BACKEND PARA JWT Y FRONTEND - TipsterByte FX
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:- ✅ **Backend FastAPI** sólido con arquitectura DDD
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:Preparar el backend para que **cualquier frontend** (Angular, React, Vue, Mobile) pueda:
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:## 🔍 ANÁLISIS DEL BACKEND ACTUAL
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:backend/
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### User Model (backend/apps/auth/infrastructure/models/sql/user.py):
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### Role Model (backend/apps/auth/infrastructure/models/sql/role.py):
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:# ✅ Backend stack
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:### FASE 1: Backend JWT (2-3 días) 🔴 CRÍTICO
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:backend/apps/auth/
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:backend/core/
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.1 JWT Handler (backend/apps/auth/infrastructure/security/jwt_handler.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.2 Password Handler (backend/apps/auth/infrastructure/security/password_handler.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.3 Auth Service (backend/apps/auth/application/services/auth_service.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.4 Endpoints de Auth (backend/apps/auth/api/v1/routes/authenticator_routes.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.5 Middleware de Autenticación (backend/core/middleware/auth_middleware.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:#### 2.6 Configuración JWT (backend/core/config.py)
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:# backend/apps/platform_config/api/v1/routes/platform_config_routes.py
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:# backend/apps/leagues_manager/api/v1/routes/soccer_league_routes.py
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:backend/apps/auth/tests/
+gestion_proyecto\diagnosticos\BACKEND_JWT_PLAN.md:### Backend JWT:
+gestion_proyecto\diagnosticos\DECISION_TECNICA_PASSWORD_HASHING.md:| `backend/requirements.txt`                                      | Agregado `argon2-cffi>=23.1.0` |
+gestion_proyecto\diagnosticos\DECISION_TECNICA_PASSWORD_HASHING.md:| `backend/apps/auth/infrastructure/security/password_handler.py` | Reescrito con Argon2id         |
+gestion_proyecto\diagnosticos\DECISION_TECNICA_PASSWORD_HASHING.md:| `backend/apps/auth/tests/test_password_handler.py`              | Tests actualizados             |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_BITACORA_Y_MODELO.md:backend/apps/auth/infrastructure/models/mongo/access_log_model.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_BITACORA_Y_MODELO.md:# backend/apps/auth/infrastructure/repositories/session_log_repository.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_BITACORA_Y_MODELO.md:# backend/apps/auth/application/services/session_log_service.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_BITACORA_Y_MODELO.md:# backend/apps/auth/api/v1/routes/session_log_routes.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:2. ✅ **Backend ya existe** - FastAPI (Python) con endpoints REST
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:4. ✅ **Arquitectura DDD** - Backend bien estructurado
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:| Framework        | npm/pub packages  | UI Libraries          | Backend Integration | Score |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:- [ ] Integrar con backend FastAPI
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:#### Semanas 5-6: Backend y Deploy
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:2. ✅ Backend FastAPI existente
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:│                        BACKEND (FastAPI)                        │
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:│  │  - Recibe notificación push del backend                │   │
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:│  │  - Guarda endpoint en backend                          │   │
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:### Implementación Backend (FastAPI)
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# backend/apps/notifications/services/notification_service.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# backend/apps/notifications/domain/entities/notification.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# backend/apps/notifications/api/v1/routes/notification_routes.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:      // 3. Enviar suscripción al backend
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# Backend: Cuando el robot detecta un parley con alta probabilidad
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# Backend: Cuando el robot detecta un parley en riesgo
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# Backend: Cuando el robot extrae una noticia importante
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:# Backend: Cuando termina un partido importante
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_MOBILE.md:- ✅ **Backend FastAPI** - Servicio de notificaciones
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:1. ✅ **Backend sólido** con FastAPI, arquitectura DDD y Clean Architecture
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:## 🏗️ ARQUITECTURA BACKEND ACTUAL
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:backend/
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:2. **TypeScript nativo** - Compatibilidad perfecta con backend Python tipado
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:### Fase 1: Backend JWT (2-3 días)
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:backend/apps/auth/
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:# backend/core/middleware/auth_middleware.py
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:#### 3.1 Conectar frontend con backend:
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:### Sprint 1 (1 semana): Backend JWT
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:### Backend:
+gestion_proyecto\diagnosticos\DIAGNOSTICO_FRONTEND_Y_AUTH.md:3. **Implementar Fase 1** (Backend JWT) - 2-3 días
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:| `.env`        | `backend/` | 🔴 CRÍTICO | ✅ Ignorado        |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:| `.env.dev`    | `backend/` | 🟡 ALTO    | ✅ Ignorado        |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:| `.env.prod`   | `backend/` | 🔴 CRÍTICO | ✅ Ignorado        |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:| `.fernet.key` | `backend/` | 🔴 CRÍTICO | ✅ Ignorado        |
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:3. **Eliminar `.env` de `backend/` del tracking**
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:   cd backend
+gestion_proyecto\diagnosticos\DIAGNOSTICO_GITIGNORE.md:   cd backend
+gestion_proyecto\diagnosticos\DIAGNOSTICO_PASSWORD_HASHING.md:- **Ubicación**: `backend/apps/auth/infrastructure/security/password_handler.py`
+gestion_proyecto\diagnosticos\DIAGNOSTICO_PASSWORD_HASHING.md:- **Tests**: 5 tests unitarios en `backend/apps/auth/tests/test_password_handler.py`
+gestion_proyecto\diagnosticos\DIAGNOSTICO_PASSWORD_HASHING.md:│  Backends de Hashing                                         │
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:**¿Dónde ubicar el proyecto frontend Angular para que no esté mezclado con el backend?**
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── backend/                       ← Backend FastAPI (Python)
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── backend/                       ← Backend FastAPI
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:- **Separación clara** - Backend y frontend en carpetas hermanas
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:│   ├── backend/                   ← Backend FastAPI
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:- Reorganizar backend existente (mover de `backend/` a `apps/backend/`)
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── backend/                       ← Backend FastAPI
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:tipsterbyte-backend/               ← Repo separado
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── backend/
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── backend/                       ← Backend FastAPI (Python)
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:├── docker-compose.yml              ← Servicios backend + frontend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:### **Backend (FastAPI)**
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:cd backend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:  backend:
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:    build: ./backend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:      - backend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:### **Backend (FastAPI)**
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:# backend/main_init_web_server.py
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:### **Backend (requirements.txt)**
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:# Terminal 1: Backend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:cd backend
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:1. **Separación clara** - Backend y frontend al mismo nivel
+gestion_proyecto\diagnosticos\UBICACION_FRONTEND.md:3. Configurar CORS en backend
+gestion_proyecto\DIAGNOSTICO_SCRIPTS_RAIZ.md:- ✅ Consistente con estructura `backend/commands/`
+gestion_proyecto\DIAGNOSTICO_SCRIPTS_RAIZ.md:1. **Consistencia**: Similar a `backend/commands/` organizado por grupos
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:# backend/core/config.py
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:2. **Estructura de logs existe**: `backend/logs/` ya está organizado
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:backend/
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:1. **Crear servicio aislado** `backend/services/log_cleanup_service.py`
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:# backend/test_cleanup_manual.py
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:cd backend
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:**Conclusión**: Mantener en `backend/services/` es la decisión correcta.
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:backend/services/
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:backend/core/scheduler/
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:backend/core/services/
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:backend/core/routes/
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:cd backend && python -m pytest backend/services/tests/ backend/core/scheduler/tests/ -v
+gestion_proyecto\IMPLEMENTACION_AUTO_CLEANUP_ANALISIS.md:python backend/manage.py sql seed PlatformConfigSeeder
+gestion_proyecto\REVIEW__README.md:# TipsterByte FX - Backend
+gestion_proyecto\REVIEW__README.md:Bienvenido al backend de TipsterByte FX. Este documento te guiará paso a paso para configurar el entorno, gestionar las bases de datos, levantar los servicios y ejecutar los comandos principales del proyecto.
+gestion_proyecto\REVIEW__README.md:backend/
+htmlcov\status.json:{"note":"This file is an internal implementation detail to speed up HTML report generation. Its format can change at any time. You might be looking for the JSON report: https://coverage.rtfd.io/cmd.html#cmd-json","format":5,"version":"7.13.5","globals":"a6c4e05bad89b4cb09451bbacb2a992d","files":{"z_d96aa6c41e048f46_role_py":{"hash":"b43f59cb9a40864f8ebc1078bb38520a","index":{"url":"z_d96aa6c41e048f46_role_py.html","file":"backend\\apps\\auth\\infrastructure\\models\\sql\\role.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":9,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d96aa6c41e048f46_test_py":{"hash":"12406c8d03090db6f4b9daefafa7f0f9","index":{"url":"z_d96aa6c41e048f46_test_py.html","file":"backend\\apps\\auth\\infrastructure\\models\\sql\\test.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":7,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d96aa6c41e048f46_user_py":{"hash":"7cda0e1431c51c9321c3c1cd47cc7bad","index":{"url":"z_d96aa6c41e048f46_user_py.html","file":"backend\\apps\\auth\\infrastructure\\models\\sql\\user.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":14,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d96aa6c41e048f46_user_roles_py":{"hash":"2cc499c6e41d474d6ea47d04cb891733","index":{"url":"z_d96aa6c41e048f46_user_roles_py.html","file":"backend\\apps\\auth\\infrastructure\\models\\sql\\user_roles.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":6,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_9ae21067d464e6d6_job_runner_application_py":{"hash":"b01bbe05771999a9a078502b7f0553a2","index":{"url":"z_9ae21067d464e6d6_job_runner_application_py.html","file":"backend\\apps\\leagues_manager\\application\\job_runner_application.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":36,"n_excluded":0,"n_missing":13,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_9ae21067d464e6d6_robot_registry_py":{"hash":"8d8a7e9295b95d5a989dbbb35d024dc4","index":{"url":"z_9ae21067d464e6d6_robot_registry_py.html","file":"backend\\apps\\leagues_manager\\application\\robot_registry.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":15,"n_excluded":2,"n_missing":1,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_057a6716ea568e4f_categoria_liga_enum_py":{"hash":"e4e98e13d81fd8a870871ddb3862f330","index":{"url":"z_057a6716ea568e4f_categoria_liga_enum_py.html","file":"backend\\apps\\leagues_manager\\domain\\enums\\categoria_liga_enum.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":6,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_057a6716ea568e4f_robot_type_enum_py":{"hash":"0f1eccee727c4355a1931444a10df8f1","index":{"url":"z_057a6716ea568e4f_robot_type_enum_py.html","file":"backend\\apps\\leagues_manager\\domain\\enums\\robot_type_enum.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":5,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_a00c26884b16f9be_base_robot_py":{"hash":"b972f65cb77be55d32671569b6b3bdf9","index":{"url":"z_a00c26884b16f9be_base_robot_py.html","file":"backend\\apps\\leagues_manager\\domain\\robots\\base_robot.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":48,"n_excluded":2,"n_missing":16,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_continente_py":{"hash":"91398b6013738301cccd71ba4643b336","index":{"url":"z_d2ea5b27ccf0f8c3_continente_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\continente.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":9,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_detalle_fuente_extraccion_py":{"hash":"0f5f12c66b4ede034cf6b1b804a91666","index":{"url":"z_d2ea5b27ccf0f8c3_detalle_fuente_extraccion_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\detalle_fuente_extraccion.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":18,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_fuente_extraccion_py":{"hash":"2414d0d994c68d1e7bbd2cd69b5c5eef","index":{"url":"z_d2ea5b27ccf0f8c3_fuente_extraccion_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\fuente_extraccion.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":15,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_liga_py":{"hash":"c4e001c73950673b43ba5d1f16481b2e","index":{"url":"z_d2ea5b27ccf0f8c3_liga_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\liga.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":14,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_pais_py":{"hash":"53a6ceadfe2df719969d1e545a123b06","index":{"url":"z_d2ea5b27ccf0f8c3_pais_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\pais.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":12,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d2ea5b27ccf0f8c3_torneo_py":{"hash":"24e335f7d23e7d366c03d4073fb9eba5","index":{"url":"z_d2ea5b27ccf0f8c3_torneo_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\models\\sql\\torneo.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":14,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_585af24504a13932_sql_platform_repository_py":{"hash":"2e85367f7e380feb5ef22575201cc05e","index":{"url":"z_585af24504a13932_sql_platform_repository_py.html","file":"backend\\apps\\leagues_manager\\infrastructure\\repositories\\sql_platform_repository.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":11,"n_excluded":0,"n_missing":3,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5ac09aefdcc2f3a1_calendar_robot_py":{"hash":"53bbc51c6dc3f302207d3cc393908e15","index":{"url":"z_5ac09aefdcc2f3a1_calendar_robot_py.html","file":"backend\\apps\\leagues_manager\\robots\\calendar_robot.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":11,"n_excluded":0,"n_missing":3,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5ac09aefdcc2f3a1_odds_wplay_robot_py":{"hash":"ebcd09aa246e34d7fc551d36cf9b9da2","index":{"url":"z_5ac09aefdcc2f3a1_odds_wplay_robot_py.html","file":"backend\\apps\\leagues_manager\\robots\\odds_wplay_robot.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":12,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5ac09aefdcc2f3a1_standings_robot_py":{"hash":"bc68bf5263e31f999dfdd4e58270c2d7","index":{"url":"z_5ac09aefdcc2f3a1_standings_robot_py.html","file":"backend\\apps\\leagues_manager\\robots\\standings_robot.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":11,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_fe228e3ba12fcb80_scheduled_jobs_py":{"hash":"3f144fb47b80b2d6b7fa9055b0e9e415","index":{"url":"z_fe228e3ba12fcb80_scheduled_jobs_py.html","file":"backend\\apps\\leagues_manager\\scheduler\\scheduled_jobs.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":14,"n_excluded":0,"n_missing":5,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_4109756e48348f50_process_rastreo_data_fuentes_deportivas_task_py":{"hash":"190480c36a0a2cd59d030a2b69782a14","index":{"url":"z_4109756e48348f50_process_rastreo_data_fuentes_deportivas_task_py.html","file":"backend\\apps\\leagues_manager\\tasks\\process_rastreo_data_fuentes_deportivas_task.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":121,"n_excluded":0,"n_missing":99,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_4109756e48348f50_utils_py":{"hash":"b27a13019b41417be1aeeef5cd46bbcc","index":{"url":"z_4109756e48348f50_utils_py.html","file":"backend\\apps\\leagues_manager\\tasks\\utils.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":5,"n_excluded":0,"n_missing":2,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_b6a228215f49af85_process_py":{"hash":"32820f4ba9b554fe1d3068f205cc5188","index":{"url":"z_b6a228215f49af85_process_py.html","file":"backend\\apps\\platform_config\\domain\\entities\\process.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":8,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_b6a228215f49af85_scheduler_process_config_py":{"hash":"1b2a39e1bf55c629c5a076dc20f71b31","index":{"url":"z_b6a228215f49af85_scheduler_process_config_py.html","file":"backend\\apps\\platform_config\\domain\\entities\\scheduler_process_config.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":8,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_364848be393ab68f_i_platform_config_repository_py":{"hash":"f0771c221dda20aad92a11edeff95a4b","index":{"url":"z_364848be393ab68f_i_platform_config_repository_py.html","file":"backend\\apps\\platform_config\\domain\\repositories\\i_platform_config_repository.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":21,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_85cb2638dfd1cca0_process_py":{"hash":"46de39ce224c60c8766220aca5cafb6b","index":{"url":"z_85cb2638dfd1cca0_process_py.html","file":"backend\\apps\\platform_config\\infrastructure\\models\\sql\\process.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":16,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_85cb2638dfd1cca0_process_run_py":{"hash":"d275aa719b8a18a17b3678b45428c7f4","index":{"url":"z_85cb2638dfd1cca0_process_run_py.html","file":"backend\\apps\\platform_config\\infrastructure\\models\\sql\\process_run.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":15,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_85cb2638dfd1cca0_process_run_log_py":{"hash":"858afb6c36d95899823690264adb4101","index":{"url":"z_85cb2638dfd1cca0_process_run_log_py.html","file":"backend\\apps\\platform_config\\infrastructure\\models\\sql\\process_run_log.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":15,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_85cb2638dfd1cca0_scheduled_process_config_py":{"hash":"1b849bf4c8c9627c7eb6b1af49801cfd","index":{"url":"z_85cb2638dfd1cca0_scheduled_process_config_py.html","file":"backend\\apps\\platform_config\\infrastructure\\models\\sql\\scheduled_process_config.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":11,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_668dfc06f46fda2f_sql_platform_config_repository_py":{"hash":"7234c50b30a31c02ab0619196b37d328","index":{"url":"z_668dfc06f46fda2f_sql_platform_config_repository_py.html","file":"backend\\apps\\platform_config\\infrastructure\\repositories\\sql_platform_config_repository.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":63,"n_excluded":0,"n_missing":43,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_config_py":{"hash":"0e49675754e443580e90c1e0c49fbe0d","index":{"url":"z_0e4eac886f4f74d7_config_py.html","file":"backend\\core\\config.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":101,"n_excluded":0,"n_missing":33,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_config_semaphore_py":{"hash":"dbe9ecb8488b18de13641f1c9f7bba3f","index":{"url":"z_0e4eac886f4f74d7_config_semaphore_py.html","file":"backend\\core\\config_semaphore.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":11,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_560875a2efd48a81_base_class_py":{"hash":"ff58880b1215f4240724729ae1835d0c","index":{"url":"z_560875a2efd48a81_base_class_py.html","file":"backend\\core\\db\\sql\\base_class.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":2,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_560875a2efd48a81_database_sql_py":{"hash":"84f84724f7b91183dff46154a871d55c","index":{"url":"z_560875a2efd48a81_database_sql_py.html","file":"backend\\core\\db\\sql\\database_sql.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":27,"n_excluded":0,"n_missing":13,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_560875a2efd48a81_init_sql_all_models_py":{"hash":"87ef41d57fe34d28a7f411f653418b9d","index":{"url":"z_560875a2efd48a81_init_sql_all_models_py.html","file":"backend\\core\\db\\sql\\init_sql_all_models.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":24,"n_excluded":0,"n_missing":2,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5c3cae7969ddc81b_base_py":{"hash":"8df06c60fb799886965d304558203a66","index":{"url":"z_5c3cae7969ddc81b_base_py.html","file":"backend\\core\\exceptions\\base.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":19,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5c3cae7969ddc81b_concurrency_exceptions_py":{"hash":"bc10ae77311da7c697f58c956efaadf0","index":{"url":"z_5c3cae7969ddc81b_concurrency_exceptions_py.html","file":"backend\\core\\exceptions\\concurrency_exceptions.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":9,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5c3cae7969ddc81b_fuente_exceptions_py":{"hash":"ea9c7040755fc63f23a2d1c40c716e81","index":{"url":"z_5c3cae7969ddc81b_fuente_exceptions_py.html","file":"backend\\core\\exceptions\\fuente_exceptions.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":12,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5c3cae7969ddc81b_process_exceptions_py":{"hash":"3f9ec68c9cfae411bf95aafe239b4ce4","index":{"url":"z_5c3cae7969ddc81b_process_exceptions_py.html","file":"backend\\core\\exceptions\\process_exceptions.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":15,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5c3cae7969ddc81b_robot_exceptions_py":{"hash":"ed28b98f37a6ff2b98aae5e68bfb46ca","index":{"url":"z_5c3cae7969ddc81b_robot_exceptions_py.html","file":"backend\\core\\exceptions\\robot_exceptions.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":20,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_logger_py":{"hash":"c1b257b7162b5312a169749b987e64d9","index":{"url":"z_0e4eac886f4f74d7_logger_py.html","file":"backend\\core\\logger.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":75,"n_excluded":0,"n_missing":5,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_middleware_py":{"hash":"77e9f22ffc5fb102e26238081b9268d5","index":{"url":"z_0e4eac886f4f74d7_middleware_py.html","file":"backend\\core\\middleware.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":21,"n_excluded":0,"n_missing":21,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_paths_py":{"hash":"bf013d610691e2512384a6332bb4bc9e","index":{"url":"z_0e4eac886f4f74d7_paths_py.html","file":"backend\\core\\paths.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":22,"n_excluded":0,"n_missing":4,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_robot_logging_py":{"hash":"0613aa9219dfff03f3e307a1cfbf675e","index":{"url":"z_0e4eac886f4f74d7_robot_logging_py.html","file":"backend\\core\\robot_logging.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":62,"n_excluded":0,"n_missing":1,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d41a88c248802e5c_jobs_loader_py":{"hash":"6db49db82be359bce004995f8d0a8cf2","index":{"url":"z_d41a88c248802e5c_jobs_loader_py.html","file":"backend\\core\\scheduler\\jobs_loader.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":35,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_d41a88c248802e5c_utils_py":{"hash":"873ca9459f7c47c853a1beeb87b6c363","index":{"url":"z_d41a88c248802e5c_utils_py.html","file":"backend\\core\\scheduler\\utils.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":10,"n_excluded":0,"n_missing":7,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_secrets_py":{"hash":"b2cb4e2d825721d5c85cfaa30c1a04f7","index":{"url":"z_0e4eac886f4f74d7_secrets_py.html","file":"backend\\core\\secrets.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":36,"n_excluded":0,"n_missing":36,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_ff90eff64d9c93aa_scheduler_service_py":{"hash":"19889ca95ccea929c51f147f494e0619","index":{"url":"z_ff90eff64d9c93aa_scheduler_service_py.html","file":"backend\\core\\services\\scheduler_service.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":29,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_0e4eac886f4f74d7_telemetry_py":{"hash":"1d1e8d5a7e3beafadcf654e47ab3be27","index":{"url":"z_0e4eac886f4f74d7_telemetry_py.html","file":"backend\\core\\telemetry.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":0,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_5a7061e542898dcb_database_config_app_py":{"hash":"e7a4a3188faa030beb4ff046fdd77c78","index":{"url":"z_5a7061e542898dcb_database_config_app_py.html","file":"backend\\shared\\constants\\database_config\\database_config_app.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":1,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_1e4bf3b693a2aa0e_process_codes_py":{"hash":"a1477b27e689e6031fcd7be5926d65d9","index":{"url":"z_1e4bf3b693a2aa0e_process_codes_py.html","file":"backend\\shared\\constants\\process\\process_codes.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":5,"n_excluded":0,"n_missing":0,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_ab4f1b1bcfa4b2c1_process_run_repository_py":{"hash":"b80818a872c84b8dcf0b0312754071df","index":{"url":"z_ab4f1b1bcfa4b2c1_process_run_repository_py.html","file":"backend\\shared\\repositories\\scheduler_repos\\process_run_repository.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":31,"n_excluded":0,"n_missing":8,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_ab4f1b1bcfa4b2c1_scheduled_process_config_repository_py":{"hash":"b4d4e029ef448fd4644aa5e5bb5a2803","index":{"url":"z_ab4f1b1bcfa4b2c1_scheduled_process_config_repository_py.html","file":"backend\\shared\\repositories\\scheduler_repos\\scheduled_process_config_repository.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":10,"n_excluded":0,"n_missing":4,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}},"z_8b02f4e15f28b94b_sqlalchemy_utils_py":{"hash":"b07b1522a700cc81f6054a67fa6ef14b","index":{"url":"z_8b02f4e15f28b94b_sqlalchemy_utils_py.html","file":"backend\\shared\\utils\\db\\sql\\sqlalchemy_utils.py","description":"","nums":{"precision":0,"n_files":1,"n_statements":10,"n_excluded":0,"n_missing":8,"n_branches":0,"n_partial_branches":0,"n_missing_branches":0}}}}}procedimientos_base\analisis\analisis-comando-config-diagnostico.md:| `FILE_LOGGING_ENABLED`        | config.py | `true`  | Archivos en `backend/logs/`              |
+procedimientos_base\analisis\analisis-comando-config-diagnostico.md:**Ubicación**: `backend/commands/project_cli.py`
+procedimientos_base\analisis\analisis-comando-config-diagnostico.md:| `backend/commands/project_cli.py` | Añadir comando `config` | Bajo    |
+procedimientos_base\analisis\analisis-comando-config-diagnostico.md:| `backend/manage.py`               | No requiere cambios     | Ninguno |
+procedimientos_base\analisis\analisis-comando-config-diagnostico.md:- `backend/commands/project_cli.py` → Añadir comando `config`
+procedimientos_base\analisis\analisis-core-poo-patrones.md:El directorio `backend/core` tiene una estructura funcional pero presenta oportunidades de mejora en:
+procedimientos_base\analisis\analisis-core-poo-patrones.md:**Archivo**: `backend/core/services/scheduler_service.py`
+procedimientos_base\analisis\analisis-core-poo-patrones.md:**Archivo**: `backend/core/logger.py`
+procedimientos_base\analisis\analisis-core-poo-patrones.md:**Archivo**: `backend/core/scheduler/observers.py`
+procedimientos_base\analisis\analisis-core-poo-patrones.md:**Archivo**: `backend/core/exceptions/base.py`
+procedimientos_base\analisis\analisis-core-poo-patrones.md:**Archivo**: `backend/core/repositories/base_repository.py`
+procedimientos_base\analisis\analisis-file-logging.md:El sistema de logging actual usa **Loguru** con múltiples sinks (destinos) configurados en `backend/core/logger.py`. Los logs se escriben SIEMPRE en archivos, sin ningún mecanismo de control para deshabilitarlos. Este análisis propone una solución para controlar la escritura de archivos de logs de manera similar a como se implementó para `process_run`.
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/core/logger.py` línea ~95
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/logs/system.log`
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/logs/scheduler/scheduler.log`
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/logs/robots.log`
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/logs/{module_name}.log`
+procedimientos_base\analisis\analisis-file-logging.md:- **Ubicación**: `backend/logs/general_app.log`
+procedimientos_base\analisis\analisis-file-logging.md:# backend/core/config.py
+procedimientos_base\analisis\analisis-file-logging.md:1. **`backend/core/tests/test_logger.py`**
+procedimientos_base\analisis\analisis-file-logging.md:2. **`backend/core/tests/test_robot_logging.py`**
+procedimientos_base\analisis\analisis-file-logging.md:# backend/apps/leagues_manager/tests/conftest.py
+procedimientos_base\analisis\analisis-file-logging.md:1. **`backend/core/config.py`**
+procedimientos_base\analisis\analisis-file-logging.md:2. **`backend/core/logger.py`**
+procedimientos_base\analisis\analisis-file-logging.md:3. **`backend/.env`**
+procedimientos_base\analisis\analisis-file-logging.md:4. **`backend/apps/leagues_manager/tests/conftest.py`**
+procedimientos_base\analisis\analisis-file-logging.md:# backend/core/logger.py - configure_logging()
+procedimientos_base\analisis\analisis-file-logging.md:1. `backend/core/config.py` - Variable `FILE_LOGGING_ENABLED` añadida
+procedimientos_base\analisis\analisis-file-logging.md:2. `backend/.env` - Variable configurada como `true`
+procedimientos_base\analisis\analisis-file-logging.md:3. `backend/core/logger.py` - Verificación de variable antes de agregar sinks
+procedimientos_base\analisis\analisis-file-logging.md:4. `backend/apps/leagues_manager/tests/conftest.py` - Fixture `disable_file_logging` (autouse=True)
+procedimientos_base\analisis\analisis-process-run-logging.md:- **Archivo**: `backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py`
+procedimientos_base\analisis\analisis-process-run-logging.md:- **Archivo**: `backend/apps/leagues_manager/tests/conftest.py`
+procedimientos_base\analisis\analisis-process-run-logging.md:- La variable `PROCESS_RUN_LOGGING_ENABLED` **YA está definida** en `backend/.env`
+procedimientos_base\analisis\analisis-process-run-logging.md:- La variable `PROCESS_RUN_LOGGING_ENABLED` **YA está definida** en `backend/core/config.py`
+procedimientos_base\analisis\analisis-process-run-logging.md:1. `backend/shared/repositories/scheduler_repos/process_run_repository_factory.py` - Factory
+procedimientos_base\analisis\analisis-process-run-logging.md:2. `backend/shared/repositories/scheduler_repos/process_run_repository.py` - Implementación real
+procedimientos_base\analisis\analisis-process-run-logging.md:3. `backend/shared/repositories/scheduler_repos/noop_process_run_repository.py` - Implementación NoOp
+procedimientos_base\analisis\analisis-process-run-logging.md:4. `backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py` - Uso principal
+procedimientos_base\analisis\analisis-process-run-logging.md:5. `backend/apps/leagues_manager/tests/conftest.py` - Configuración de tests
+procedimientos_base\config\conf-entorno-local.md:cd backend
+procedimientos_base\config\conf-entorno-local.md:cd backend
+procedimientos_base\config\conf-entorno-local.md:cd backend
+procedimientos_base\config\conf-entorno-local.md:PS C:\...\backend> python test_manual_execution.py
+procedimientos_base\config\ejemplos-configuracion-logging.md:| `FILE_LOGGING_ENABLED`        | Archivos de logs en `backend/logs/`            | `true`                   |
+procedimientos_base\config\ejemplos-configuracion-logging.md:- ✅ Archivos: Escribe en `backend/logs/*.log`
+procedimientos_base\config\ejemplos-configuracion-logging.md:- ✅ Archivos: Escribe en `backend/logs/*.log`
+procedimientos_base\config\ejemplos-configuracion-logging.md:# backend/.env
+procedimientos_base\config\ejemplos-configuracion-logging.md:# backend/.env
+procedimientos_base\config\ejemplos-configuracion-logging.md:# backend/.env
+procedimientos_base\config\ejemplos-configuracion-logging.md:# backend/.env
+procedimientos_base\config\ejemplos-configuracion-logging.md:cd backend
+procedimientos_base\config\ejemplos-configuracion-logging.md:ls -la backend/logs/
+procedimientos_base\config\ejemplos-configuracion-logging.md:tail -f backend/logs/general_app.log
+procedimientos_base\config\ejemplos-configuracion-logging.md:cd backend
+procedimientos_base\db\no-sql.md:cd backend; python manage.py nosql state restore --help
+procedimientos_base\db\no-sql.md:cd backend; python manage.py nosql state backup
+procedimientos_base\db\no-sql.md:cd backend; python manage.py nosql state restore --file backups\mongo_backups\backup_tipsterbyte_fx_nosql_db_20260323_153500.gz
+procedimientos_base\db\no-sql.md:cd backend; python manage.py nosql state restore
+procedimientos_base\dudas_frecuentes-arquitectura\preguntadas-en-cline\dudas_database.md:Mirando el archivo `backend/alembic/env.py`, esta es la clave:
+procedimientos_base\dudas_frecuentes-arquitectura\preguntadas-en-cline\dudas_database.md:cd backend
+procedimientos_base\production\proc-docker-general.md:backend/
+procedimientos_base\production\proc-docker-general.md:      - ./backend/backups/postgresql_backups:/backups
+procedimientos_base\production\proc-docker-general.md:      - ./backend/backups/mongo_backups:/backups
+procedimientos_base\referencias\sonarqube-setup.md:│  │   Backend    │      │   SonarQube  │                │
+procedimientos_base\referencias\sonarqube-setup.md:cd backend
+procedimientos_base\referencias\sonarqube-setup.md:sonar.sources=backend/apps,backend/core,backend/shared
+procedimientos_base\referencias\sonarqube-setup.md:sonar.tests=backend/apps,backend/core/tests
+procedimientos_base\referencias\sonarqube-setup.md:sonar.python.coverage.reportPaths=backend/coverage.xml
+procedimientos_base\referencias\sonarqube-setup.md:cd backend
+procedimientos_base\referencias\sonarqube-setup.md:cd backend
+procedimientos_base\referencias\sonarqube-setup.md:# Abrir: backend/htmlcov/index.html
+procedimientos_base\referencias\sonarqube-setup.md:        cd backend
+procedimientos_base\sonar\sonar-procedure.md:| `backend/requirements.txt`               | ✅ Modificado | Dependencias `pytest-cov` y `pytest-xdist` agregadas |
+procedimientos_base\startup\architecture-analysis.md:env_path = BACKEND_ROOT / ".env"  # ← Hardcodeado
+procedimientos_base\startup\architecture-analysis.md:env_path = BACKEND_ROOT / ".env"  # ← No flexible
+procedimientos_base\startup\architecture-analysis.md:# backend/core/environment_config.py
+procedimientos_base\startup\architecture-analysis.md:        backend_root = Path(__file__).parent.parent
+procedimientos_base\startup\architecture-analysis.md:            Environment.LOCAL: backend_root / ".env.dev",
+procedimientos_base\startup\architecture-analysis.md:            Environment.STAGING: backend_root / ".env.staging",
+procedimientos_base\startup\architecture-analysis.md:            Environment.PRODUCTION: backend_root / ".env.prod",
+procedimientos_base\startup\architecture-analysis.md:        return env_files.get(environment, backend_root / ".env")
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config_provider.py
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config.py (ANTES)
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config.py (DESPUÉS)
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config.py (ANTES)
+procedimientos_base\startup\architecture-analysis.md:env_path = BACKEND_ROOT / ".env"  # ← Hardcodeado
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config.py (DESPUÉS)
+procedimientos_base\startup\architecture-analysis.md:env_path = BACKEND_ROOT / env_file_name
+procedimientos_base\startup\architecture-analysis.md:# backend/core/config.py
+procedimientos_base\startup\architecture-analysis.md:1. Crear `backend/core/environment_config.py`
+procedimientos_base\startup\architecture-analysis.md:2. Modificar `backend/core/config.py` para usar detección automática
+procedimientos_base\startup\architecture-analysis.md:1. Crear `backend/core/config_provider.py`
+procedimientos_base\startup\architecture-analysis.md:cp backend/.env.dev backend/.env
+procedimientos_base\startup\architecture-analysis.md:cd backend
+procedimientos_base\startup\architecture-analysis.md:- [ ] Crear `backend/core/environment_config.py`
+procedimientos_base\startup\architecture-analysis.md:- [ ] Modificar `backend/core/config.py`
+procedimientos_base\startup\architecture-analysis.md:- [ ] Crear `backend/core/config_provider.py`
+procedimientos_base\startup\control-cambios-llm.md:- **Archivo**: `backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py`
+procedimientos_base\startup\control-cambios-llm.md:- **Archivo**: `backend/apps/platform_config/api/v1/routes/platform_config_routes.py`
+procedimientos_base\startup\control-cambios-llm.md:- **Archivo**: `backend/apps/leagues_manager/api/v1/routes/soccer_league_routes.py`
+procedimientos_base\startup\control-cambios-llm.md:- `backend/apps/leagues_manager/scheduler/scheduled_jobs.py`
+procedimientos_base\startup\control-cambios-llm.md:- `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\control-cambios-llm.md:- `backend/apps/leagues_manager/domain/robots/base_robot.py`
+procedimientos_base\startup\control-cambios-llm.md:- `backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py`
+procedimientos_base\startup\control-cambios-llm.md:- `backend/core/scheduler/jobs_loader.py`
+procedimientos_base\startup\deployment-guide.md:# Desde el directorio backend
+procedimientos_base\startup\deployment-guide.md:├── backend/
+procedimientos_base\startup\deployment-guide.md:cp backend/.env.prod backend/.env
+procedimientos_base\startup\deployment-guide.md:nano backend/.env
+procedimientos_base\startup\deployment-guide.md:cat backend/.env | grep POSTGRES
+procedimientos_base\startup\deployment-guide.md:cat backend/.env | grep MONGO
+procedimientos_base\startup\deployment-guide.md:1. ✅ `backend/commands/db/admin/diagnose_db.py` - Comando de diagnóstico
+procedimientos_base\startup\deployment-guide.md:3. ✅ `backend/.env.dev` - Configuración desarrollo
+procedimientos_base\startup\deployment-guide.md:4. ✅ `backend/.env.prod` - Configuración producción
+procedimientos_base\startup\deployment-guide.md:1. ✅ `backend/commands/db/admin/diagnose_db.py` - Corregido para SQLAlchemy 2.0
+procedimientos_base\startup\docker-migration-procedure.md:**SOLUCIÓN:** Usar el docker-compose ANTIGUO (que apunta a `./backend/.env`) para hacer el down -v:
+procedimientos_base\startup\docker-migration-procedure.md:| App local (tu PC) | `backend/.env`      | Python directamente           |
+procedimientos_base\startup\docker-migration-procedure.md:| Docker Dev        | `backend/.env.dev`  | docker-compose --profile dev  |
+procedimientos_base\startup\docker-migration-procedure.md:| Docker Prod       | `backend/.env.prod` | docker-compose --profile prod |
+procedimientos_base\startup\docker-migration-procedure.md:**El sistema (backend/core/config.py) SOLO lee `backend/.env` cuando corres la app localmente.**
+procedimientos_base\startup\docker-migration-procedure.md:cp backend/.env.dev backend/.env
+procedimientos_base\startup\docker-migration-procedure.md:cat backend/.env.dev
+procedimientos_base\startup\docker-migration-procedure.md:cat backend/.env
+procedimientos_base\startup\docker-migration-procedure.md:**Variables que DEBEN existir en backend/.env:**
+procedimientos_base\startup\docker-migration-procedure.md:cat backend/.env.dev
+procedimientos_base\startup\docker-migration-procedure.md:cat backend/.env.prod
+procedimientos_base\startup\docker-migration-procedure.md:cat backend/.env
+procedimientos_base\startup\docker-migration-procedure.md:- backend/.env.dev tiene credenciales de desarrollo
+procedimientos_base\startup\docker-migration-procedure.md:- backend/.env.prod tiene credenciales de producción
+procedimientos_base\startup\docker-migration-procedure.md:- backend/.env tiene las mismas variables que .env.dev (para uso local)
+procedimientos_base\startup\docker-migration-procedure.md:# 11. Desde tu backend, probar conexión a BD
+procedimientos_base\startup\docker-migration-procedure.md:cd backend
+procedimientos_base\startup\docker-migration-procedure.md:3. **Backups:** Los backups se guardan en ./backend/backups/
+procedimientos_base\startup\explicacion_flujo_trabnajo.md:- **Archivo**: `backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py`
+procedimientos_base\startup\explicacion_flujo_trabnajo.md:- **Archivo**: `backend/apps/platform_config/api/v1/routes/platform_config_routes.py`
+procedimientos_base\startup\explicacion_flujo_trabnajo.md:- **Archivo**: `backend/apps/leagues_manager/api/v1/routes/soccer_league_routes.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/apps/leagues_manager/scheduler/scheduled_jobs.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivos:** `backend/core/exceptions/` (5 archivos)
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivos:** `backend/core/robot_logging.py`, `backend/apps/leagues_manager/domain/robots/base_robot.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/commands/db/admin/diagnose_db.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivos:** `backend/.env.dev`, `backend/.env.prod`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/apps/leagues_manager/tests/test_semaphore_differentiation.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivo:** `backend/core/tests/test_robot_logging.py`
+procedimientos_base\startup\MASTER-PLAN.md:- **Archivos:** `backend/tests/test_*.py`
+procedimientos_base\startup\MASTER-PLAN.md:- `backend/core/services/log_csv_exporter.py`
+procedimientos_base\startup\MASTER-PLAN.md:- `backend/core/services/log_csv_importer.py`
+procedimientos_base\startup\MASTER-PLAN.md:- `backend/core/services/log_archive_manager.py`
+procedimientos_base\startup\MASTER-PLAN.md:- `backend/core/services/log_retention_service.py`
+procedimientos_base\startup\MASTER-PLAN.md:- `backend/commands/db/admin/manage_logs.py`
+procedimientos_base\startup\MASTER-PLAN.md:cp backend/.env.dev backend/.env
+procedimientos_base\startup\MASTER-PLAN.md:cd backend
+procedimientos_base\startup\MASTER-PLAN.md:backend/
+procedimientos_base\startup\MASTER-PLAN.md:cp backend/.env.dev backend/.env
+procedimientos_base\startup\MASTER-PLAN.md:cd backend
+procedimientos_base\startup\mejora-arquitectura-logging.md:backend/logs/
+procedimientos_base\startup\mejora-arquitectura-logging.md:**Archivo:** `backend/logs/application.log`
+procedimientos_base\startup\mejora-arquitectura-logging.md:# backend/core/logger.py - NUEVA VERSIÓN
+procedimientos_base\startup\mejora-arquitectura-logging.md:# backend/core/middleware.py - AGREGAR TRACE ID
+procedimientos_base\startup\mejora-arquitectura-logging.md:# backend/core/exceptions.py - NUEVO ARCHIVO
+procedimientos_base\startup\mejora-arquitectura-logging.md:# backend/apps/leagues_manager/tasks/process_rastreo_data_fuentes_deportivas_task.py
+procedimientos_base\startup\mejora-arquitectura-logging.md:backend/logs/
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep "req_abc123def456" backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"level":"ERROR"' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"level":"WARNING"' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"logger":"core.scheduler' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"logger":"apps.leagues_manager' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"is_active":false' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"process_code":"PROCESS_STANDINGS_EXTRACTION"' backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"level":"ERROR"' backend/logs/application.log | jq '.exception.type, .context, .suggestion'
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep "req_abc123def456" backend/logs/application.log
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"level":"ERROR"' backend/logs/application.log | jq -r '.exception.type' | sort | uniq -c
+procedimientos_base\startup\mejora-arquitectura-logging.md:grep '"message":"Iniciando orquestador"' backend/logs/application.log | \
+procedimientos_base\startup\mejora-incorporacion-telemetria.md:# backend/main_init_web_server.py
+procedimientos_base\startup\mejora-incorporacion-telemetria.md:# backend/core/scheduler/metrics.py
+procedimientos_base\startup\mejora-incorporacion-telemetria.md:# backend/apps/leagues_manager/metrics.py
+procedimientos_base\startup\plan-fases-completo.md:- **Archivo:** `backend/apps/leagues_manager/scheduler/scheduled_jobs.py`
+procedimientos_base\startup\plan-fases-completo.md:- **Archivo:** `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\plan-fases-completo.md:- **Archivos nuevos:** `backend/core/exceptions/` (5 archivos)
+procedimientos_base\startup\plan-fases-completo.md:- **Archivo:** `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\plan-fases-completo.md:- **Archivos:** `backend/core/logger.py`, `backend/core/middleware.py`
+procedimientos_base\startup\plan-fases-pre-6.md:backend/data/logs_archive/
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/services/log_csv_exporter.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/services/log_csv_importer.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/services/log_archive_manager.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/services/log_retention_service.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/commands/db/admin/manage_logs.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/tests/test_log_retention.py
+procedimientos_base\startup\plan-fases-pre-6.md:# backend/core/services/retention_metrics.py
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:Ubicación: backend/apps/leagues_manager/scheduler/scheduled_jobs.py
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:Ubicación: backend/apps/leagues_manager/scheduler/scheduled_jobs.py
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:cd backend; python -c "from apps.leagues_manager.application.job_runner_application import get_registered_robots; robots = get_registered_robots(); print(f'✅ Robots registrados: {len(robots)}'); print(f'Claves: {list(robots.keys())}')"
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/apps/leagues_manager/domain/enums/robot_type_enum.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/apps/leagues_manager/robots/news_robot.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/apps/leagues_manager/application/job_runner_application.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/scripts/db/seeders/sql/platform_config_seeder.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/shared/constants/process/process_codes.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:**Archivo:** `backend/apps/leagues_manager/scheduler/scheduled_jobs.py`
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:cd backend; python -c "from apps.leagues_manager.application.job_runner_application import get_registered_robots; robots = get_registered_robots(); print(f'✅ Robots registrados: {len(robots)}'); print(f'Claves: {list(robots.keys())}')"
+procedimientos_base\startup\pruebas-escritorio-fase1-2.md:cd backend; python -m pytest apps/leagues_manager/tests/test_process_fuente_robot_association.py -v
+procedimientos_base\startup\run-project.md:# Desde la carpeta backend/
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:**Archivo de entrada:** `backend/main_init_scripts.py`
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:**Archivo de entrada:** `backend/main_init_web_server.py`
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\startup\run-project.md:cd backend
+procedimientos_base\tests\tests.md:cd backend
+procedimientos_base\tests\tests.md:pytest backend/apps/leagues_manager/tests/test_process_run_integration.py -v
+procedimientos_base\tests\tests.md:pytest backend/apps/leagues_manager/tests/test_process_run_flow.py -v -s
+procedimientos_base\tests\tests.md:cd cd "backend\apps\leagues_manager\tests"
+pyproject.toml:description = "Backend service for the TipsterByte FX project."
+scripts\bat\clean_sonarqube.bat:docker exec db_pg_tipsterbyte_fx_dev psql -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'sonarqube';" >nul 2>&1
+scripts\bat\coverage_report.bat:if not exist "backend\coverage.xml" (
+scripts\bat\coverage_report.bat:    echo [ERROR] No se encontro backend\coverage.xml
+scripts\bat\coverage_report.bat:python scripts\generate_coverage_report.py backend\coverage.xml
+scripts\bat\run_full_analysis.bat:cd backend
+scripts\bat\run_sonar_analysis.bat:cd backend
+scripts\python\generate_coverage_report.py:    coverage_file: str, base_path: str = "backend", threshold: float = 1.0
+scripts\python\generate_coverage_report.py:            os.path.join("backend", filename),
+scripts\python\generate_coverage_report.py:            os.path.join("backend", "apps", filename),
+scripts\python\generate_coverage_report.py:            os.path.join("backend", "core", filename),
+scripts\python\generate_coverage_report.py:            os.path.join("backend", "shared", filename),
+scripts\python\generate_coverage_report.py:        default="backend/coverage.xml",
+scripts\python\generate_coverage_report.py:        help="Ruta al archivo coverage.xml (default: backend/coverage.xml)",
+scripts\sh\run_sonar_analysis.sh:cd backend

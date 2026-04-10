@@ -270,7 +270,6 @@ app.include_router(
 # NOTE: Router autenticación - usuarios y login
 app.include_router(
     auth_router,
-    prefix="/api/v1/auth",
     # tags=["auth"]
 )
 

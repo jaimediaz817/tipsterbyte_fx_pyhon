@@ -17,7 +17,7 @@ class SessionLog(Document):
     a través del campo 'user_id'.
     """
 
-    user_id: UUID = Field(description="ID del usuario en PostgreSQL")
+    user_id: int = Field(description="ID del usuario en PostgreSQL")
     session_id: str = Field(description="Identificador único de la sesión")
     action: str = Field(
         description="Tipo de acción realizada (login, logout, api_call, etc.)"

@@ -32,7 +32,7 @@ class TestSessionLogModel:
         fields = SessionLog.model_fields
 
         # Verificar tipos de campos
-        assert fields["user_id"].annotation == UUID
+        assert fields["user_id"].annotation == int
         assert fields["session_id"].annotation == str
         assert fields["action"].annotation == str
         assert fields["ip_address"].annotation == str

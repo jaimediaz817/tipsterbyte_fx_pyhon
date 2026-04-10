@@ -3,7 +3,6 @@ Rutas para bitácora de sesión.
 """
 
 from typing import Optional
-from uuid import UUID
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, status
@@ -33,7 +32,7 @@ def get_session_log_service() -> SessionLogService:
     summary="Obtener bitácora de accesos de un usuario",
 )
 async def get_user_logs(
-    user_id: UUID,
+    user_id: int,
     start_date: datetime = Query(..., description="Fecha de inicio (ISO 8601)"),
     end_date: datetime = Query(..., description="Fecha de fin (ISO 8601)"),
     action: Optional[str] = Query(None, description="Filtrar por tipo de acción"),
@@ -44,7 +43,7 @@ async def get_user_logs(
     """
     Obtiene la bitácora de accesos de un usuario con paginación y filtros.
 
-    - **user_id**: ID del usuario (UUID)
+    - **user_id**: ID del usuario (int)
     - **start_date**: Fecha de inicio en formato ISO 8601
     - **end_date**: Fecha de fin en formato ISO 8601
     - **action**: Filtrar por tipo de acción (opcional)
