@@ -14,10 +14,10 @@ from apps.leagues_manager.application.dto.fuente_extraccion_create_dto import (
 from apps.leagues_manager.application.dto.fuente_extraccion_dto import (
     FuenteExtraccionDTO,
 )
+from apps.leagues_manager.application.dto.geografia.pais_dto import PaisDTO
 from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
 from apps.leagues_manager.application.dto.liga_dto import LigaDTO
 from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
-from apps.leagues_manager.application.dto.pais_dto import PaisDTO
 from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
 from apps.leagues_manager.application.dto.torneo_dto import TorneoDTO
 from apps.leagues_manager.domain.repositories.i_leagues_repository import (
@@ -115,8 +115,9 @@ class LeaguesService(ILeaguesService):
                 # Convierte el Enum a su valor de string para la actualización si es necesario
                 data_to_update = dto.model_dump()
                 data_to_update["type"] = data_to_update["type"].value
+                assert existing.id is not None
                 updated = self.repo.update_fuente_extraccion(
-                    existing.id.scalar(), data_to_update
+                    existing.id, data_to_update
                 )
                 return FuenteExtraccionDTO(**updated.__dict__)
             return FuenteExtraccionDTO(**existing.__dict__)
@@ -137,8 +138,9 @@ class LeaguesService(ILeaguesService):
         if existing:
             if update:
                 # .model_dump() de Pydantic 2.x ya maneja HttpUrl a string por defecto
+                assert existing.id is not None
                 updated = self.repo.update_detalle_fuente_extraccion(
-                    existing.id.scalar(), dto.model_dump()
+                    existing.id, dto.model_dump()
                 )
                 return DetalleFuenteExtraccionDTO(**updated.__dict__)
             return DetalleFuenteExtraccionDTO(**existing.__dict__)

@@ -48,3 +48,12 @@
 - Desarrollo: `backend/.env`
 - Producción: `backend/.env.prod`
 - Variables críticas: DATABASE_URL, MONGO_URI, LOG_LEVEL
+
+## Reglas DDD y Tipado
+1. **Conflicto de Nombres**: Cuando exista misma clase en Entidad Dominio y Modelo SQL:
+   - Importar modelo SQL con sufijo `Model` (ej: `FuenteExtraccion as FuenteExtraccionModel`)
+   - Usar `from __future__ import annotations` en la primera línea
+   - Usar imports condicionales `TYPE_CHECKING` para entidades de dominio
+2. **Métodos Create/Update**: Usar `cast()` para indicar que el valor de retorno NO es None
+3. **Repositorios**: Siempre retornar entidades de dominio, NUNCA modelos de SQL
+4. **Forward References**: Usar comillas dobles para tipos en declaraciones de métodos

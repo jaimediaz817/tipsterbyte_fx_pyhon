@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
@@ -5,15 +6,17 @@ from apps.leagues_manager.domain.entities.continente import Continente
 from apps.leagues_manager.domain.entities.liga import Liga
 from apps.leagues_manager.domain.entities.pais import Pais
 from apps.leagues_manager.domain.entities.torneo import Torneo
-from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
+from apps.leagues_manager.domain.entities.fuente_extraccion import FuenteExtraccion
+from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
     DetalleFuenteExtraccion,
 )
-from apps.leagues_manager.infrastructure.models.sql.fuente_extraccion import (
-    FuenteExtraccion,
+
+from apps.leagues_manager.domain.repositories.i_repositorio_fuente_extraccion import (
+    IRepositorioFuenteExtraccion,
 )
 
 
-class ILeaguesRepository(ABC):
+class ILeaguesRepository(IRepositorioFuenteExtraccion, ABC):
     # Continente
     @abstractmethod
     def get_all_continentes(self) -> List[Continente]:
@@ -88,7 +91,7 @@ class ILeaguesRepository(ABC):
     def update_torneo(self, torneo_id: int, data: dict) -> Torneo:
         pass
 
-    # --- FuenteExtraccion (¡NUEVO!) ---
+    # --- FuenteExtraccion (sobreescritura para forward reference) ---
     @abstractmethod
     def get_fuente_extraccion_by_name(self, name: str) -> FuenteExtraccion | None:
         pass

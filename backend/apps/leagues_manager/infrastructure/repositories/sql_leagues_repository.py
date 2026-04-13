@@ -1,5 +1,12 @@
-from typing import cast
+from __future__ import annotations
+from typing import cast, TYPE_CHECKING
 from sqlalchemy.orm import Session
+
+if TYPE_CHECKING:
+    from apps.leagues_manager.domain.entities.fuente_extraccion import FuenteExtraccion
+    from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
+        DetalleFuenteExtraccion,
+    )
 
 from apps.leagues_manager.domain.entities.continente import Continente
 from apps.leagues_manager.domain.entities.liga import Liga
@@ -14,14 +21,22 @@ from apps.leagues_manager.infrastructure.models.sql.continente import (
     Continente,
 )
 from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
-    DetalleFuenteExtraccion,
+    DetalleFuenteExtraccion as DetalleFuenteExtraccionModel,
 )
 from apps.leagues_manager.infrastructure.models.sql.fuente_extraccion import (
-    FuenteExtraccion,
+    FuenteExtraccion as FuenteExtraccionModel,
 )
 from apps.leagues_manager.infrastructure.models.sql.pais import Pais as PaisModel
 from apps.leagues_manager.infrastructure.models.sql.liga import Liga as LigaModel
 from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo as TorneoModel
+from apps.leagues_manager.infrastructure.mappers import (
+    map_continente_from_model,
+    map_pais_from_model,
+    map_liga_from_model,
+    map_torneo_from_model,
+    map_fuente_extraccion_from_model,
+    map_detalle_fuente_extraccion_from_model,
+)
 from shared.utils.db.sql.sqlalchemy_utils import update_from_dict
 
 
@@ -29,106 +44,30 @@ class SQLLeaguesRepository(ILeaguesRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    # --- mappers ---
+    # --- [DEPRECADO] Mappers movidos a /mappers/ - mantener por retrocompatibilidad ---
     def _to_continente(self, continente_model: Continente | None) -> Continente | None:
-        if not continente_model:
-            return None
-        return Continente(
-            id=getattr(continente_model, "id", 0),
-            nombre=getattr(continente_model, "nombre", "") or "",
-            codigo=getattr(continente_model, "codigo", None),
-        )
+        return map_continente_from_model(continente_model)
 
     def _to_pais(self, pais_model: PaisModel) -> Pais:
-        return Pais(
-            id=(
-                getattr(pais_model, "id", 0)
-                if getattr(pais_model, "id", None) is not None
-                else 0
-            ),
-            nombre=getattr(pais_model, "nombre", "") or "",
-            continente_id=(
-                getattr(pais_model, "continente_id", 0)
-                if getattr(pais_model, "continente_id", None) is not None
-                else 0
-            ),
-            codigo_iso=getattr(pais_model, "codigo_iso", None),
-        )
+        return map_pais_from_model(pais_model)
 
     def _to_liga(self, liga_model: LigaModel) -> Liga:
-        from apps.leagues_manager.domain.entities.liga import CategoriaLigaEnum
-
-        nombre_categoria_value = getattr(liga_model, "nombre_categoria", None)
-        if nombre_categoria_value is not None and nombre_categoria_value != "":
-            try:
-                nombre_categoria_enum = CategoriaLigaEnum(nombre_categoria_value)
-            except ValueError:
-                nombre_categoria_enum = None
-        else:
-            nombre_categoria_enum = None
-
-        return Liga(
-            id=(
-                getattr(liga_model, "id", 0)
-                if getattr(liga_model, "id", None) is not None
-                else 0
-            ),
-            nombre=getattr(liga_model, "nombre", "") or "",
-            pais_id=(
-                getattr(liga_model, "pais_id", 0)
-                if getattr(liga_model, "pais_id", None) is not None
-                else 0
-            ),
-            nombre_categoria=nombre_categoria_enum,
-        )
+        return map_liga_from_model(liga_model)
 
     def _to_torneo(self, torneo_model: TorneoModel) -> Torneo:
-        return Torneo(
-            id=(
-                getattr(torneo_model, "id", 0)
-                if getattr(torneo_model, "id", None) is not None
-                else 0
-            ),
-            nombre=getattr(torneo_model, "nombre", "") or "",
-            liga_id=(
-                getattr(torneo_model, "liga_id", 0)
-                if getattr(torneo_model, "liga_id", None) is not None
-                else 0
-            ),
-            fecha_inicio=getattr(torneo_model, "fecha_inicio", None),
-            fecha_fin=getattr(torneo_model, "fecha_fin", None),
-        )
+        return map_torneo_from_model(torneo_model)
 
-    # --- Mappers para FuenteExtraccion y DetalleFuenteExtraccion (¡NUEVOS!) ---
     def _to_fuente_extraccion(
-        self, m: FuenteExtraccion | None
-    ) -> FuenteExtraccion | None:
-        if not m:
-            return None
-        return FuenteExtraccion(
-            id=m.id,
-            name=m.name,
-            type=m.type,  # El Enum ya se maneja aquí gracias a SQLAlchemy
-            descripcion=m.descripcion,
-            is_active=m.is_active,
-            created_at=m.created_at,
-            updated_at=m.updated_at,
-        )
+        self, fuente_model: FuenteExtraccionModel | None
+    ) -> "FuenteExtraccion | None":
+        return cast(FuenteExtraccion, map_fuente_extraccion_from_model(fuente_model))
 
     def _to_detalle_fuente_extraccion(
-        self, m: DetalleFuenteExtraccion | None
-    ) -> DetalleFuenteExtraccion | None:
-        if not m:
-            return None
-        return DetalleFuenteExtraccion(
-            id=m.id,
-            torneo_id=m.torneo_id,
-            fuente_id=m.fuente_id,
-            url=m.url,
-            is_active=m.is_active,
-            process_id=m.process_id,  # Mapeo del nuevo campo
-            created_at=m.created_at,
-            updated_at=m.updated_at,
+        self, detalle_model: DetalleFuenteExtraccionModel | None
+    ) -> "DetalleFuenteExtraccion | None":
+        return cast(
+            DetalleFuenteExtraccion,
+            map_detalle_fuente_extraccion_from_model(detalle_model),
         )
 
     # --- Continente ---
@@ -257,30 +196,32 @@ class SQLLeaguesRepository(ILeaguesRepository):
         self.db.refresh(obj)
         return self._to_torneo(obj)
 
-    # --- FuenteExtraccion (¡NUEVO!) ---
-    def get_fuente_extraccion_by_name(self, name: str) -> FuenteExtraccion | None:
+    # --- FuenteExtraccion ---
+    def get_fuente_extraccion_by_name(self, name: str) -> "FuenteExtraccion | None":
         m = (
-            self.db.query(FuenteExtraccion)
-            .filter(FuenteExtraccion.name == name)
+            self.db.query(FuenteExtraccionModel)
+            .filter(FuenteExtraccionModel.name == name)
             .first()
         )
         return self._to_fuente_extraccion(m)
 
     def create_fuente_extraccion(
         self, name: str, type: str, descripcion: str | None, is_active: bool
-    ) -> FuenteExtraccion:
-        m = FuenteExtraccion(
+    ) -> "FuenteExtraccion":
+        m = FuenteExtraccionModel(
             name=name, type=type, descripcion=descripcion, is_active=is_active
         )
         self.db.add(m)
         self.db.commit()
         self.db.refresh(m)
-        return self._to_fuente_extraccion(m)
+        return cast(FuenteExtraccion, self._to_fuente_extraccion(m))
 
-    def update_fuente_extraccion(self, fuente_id: int, data: dict) -> FuenteExtraccion:
+    def update_fuente_extraccion(
+        self, fuente_id: int, data: dict
+    ) -> "FuenteExtraccion":
         obj = (
-            self.db.query(FuenteExtraccion)
-            .filter(FuenteExtraccion.id == fuente_id)
+            self.db.query(FuenteExtraccionModel)
+            .filter(FuenteExtraccionModel.id == fuente_id)
             .first()
         )
         if not obj:
@@ -289,17 +230,17 @@ class SQLLeaguesRepository(ILeaguesRepository):
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
-        return self._to_fuente_extraccion(obj)
+        return cast(FuenteExtraccion, self._to_fuente_extraccion(obj))
 
-    # --- DetalleFuenteExtraccion (¡NUEVO!) ---
+    # --- DetalleFuenteExtraccion ---
     def get_detalle_fuente_extraccion_by_torneo_and_fuente(
         self, torneo_id: int, fuente_id: int
-    ) -> DetalleFuenteExtraccion | None:
+    ) -> "DetalleFuenteExtraccion | None":
         m = (
-            self.db.query(DetalleFuenteExtraccion)
+            self.db.query(DetalleFuenteExtraccionModel)
             .filter(
-                DetalleFuenteExtraccion.torneo_id == torneo_id,
-                DetalleFuenteExtraccion.fuente_id == fuente_id,
+                DetalleFuenteExtraccionModel.torneo_id == torneo_id,
+                DetalleFuenteExtraccionModel.fuente_id == fuente_id,
             )
             .first()
         )
@@ -311,26 +252,26 @@ class SQLLeaguesRepository(ILeaguesRepository):
         fuente_id: int,
         url: str,
         is_active: bool,
-        process_id: int,  # ¡Nuevo parámetro!
-    ) -> DetalleFuenteExtraccion:
-        m = DetalleFuenteExtraccion(
+        process_id: int,
+    ) -> "DetalleFuenteExtraccion":
+        m = DetalleFuenteExtraccionModel(
             torneo_id=torneo_id,
             fuente_id=fuente_id,
             url=url,
             is_active=is_active,
-            process_id=process_id,  # Asignación del nuevo campo
+            process_id=process_id,
         )
         self.db.add(m)
         self.db.commit()
         self.db.refresh(m)
-        return self._to_detalle_fuente_extraccion(m)
+        return cast(DetalleFuenteExtraccion, self._to_detalle_fuente_extraccion(m))
 
     def update_detalle_fuente_extraccion(
         self, detalle_id: int, data: dict
-    ) -> DetalleFuenteExtraccion:
+    ) -> "DetalleFuenteExtraccion":
         obj = (
-            self.db.query(DetalleFuenteExtraccion)
-            .filter(DetalleFuenteExtraccion.id == detalle_id)
+            self.db.query(DetalleFuenteExtraccionModel)
+            .filter(DetalleFuenteExtraccionModel.id == detalle_id)
             .first()
         )
         if not obj:
@@ -338,12 +279,12 @@ class SQLLeaguesRepository(ILeaguesRepository):
                 f"DetalleFuenteExtraccion con ID {detalle_id} no encontrado"
             )
         update_from_dict(obj, data)
-        if "process_id" in data:  # Aseguramos que se actualice si se pasa
+        if "process_id" in data:
             obj.process_id = data["process_id"]
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
-        return self._to_detalle_fuente_extraccion(obj)
+        return cast(DetalleFuenteExtraccion, self._to_detalle_fuente_extraccion(obj))
 
     # --- Métodos para LigasSeeder ---
 

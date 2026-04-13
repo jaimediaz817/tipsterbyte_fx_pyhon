@@ -99,6 +99,73 @@ chmod +x scripts/sh/install_sonar_scanner.sh
 
 ---
 
+### `vps_health_check.sh`
+**Descripción**: Agente de Health Check STANDALONE para VPS. ✅ SIN DEPENDENCIAS, NO NECESITA NADA INSTALADO. Funciona en cualquier Ubuntu/Debian. Verifica recursos basicos del servidor: SO, RAM, CPU, Disco, Red.
+
+**Caracteristicas**:
+- No requiere Python ni librerias
+- No modifica nada en el servidor
+- Solo lectura, no deja rastro ni logs
+- Codigos de color por nivel de riesgo
+
+**Uso**:
+```bash
+# Subir al servidor
+scp scripts/linux/vps_health_check.sh root@tu-ip-vps:/root/
+
+# Dar permisos y ejecutar
+chmod +x vps_health_check.sh
+./vps_health_check.sh
+```
+
+**✅ Flujo completo de guardado**:
+1.  Ejecuta el script en la VPS
+2.  Copia TODO el texto de salida completo
+3.  Envia el reporte al endpoint:
+    ```http
+    POST /api/v1/platform-config/vps/health-check
+    Content-Type: text/plain
+
+    [PEGAS AQUI TODO EL TEXTO DEL REPORTE]
+    ```
+
+✅ El sistema automaticamente:
+- Parsea todos los valores del reporte
+- Valida y normaliza las metricas
+- Guarda el historial completo en MongoDB
+- Genera alertas si hay valores criticos
+- Calcula tendencias y estadisticas historicas
+
+📊 Coleccion MongoDB: `vps_health_checks`
+
+---
+
+### `tipsterbyte_control_agent.py`
+**Descripción**: Agente de Control y Diagnostico completo. Chequea conectividad a Bases de Datos, PostgreSQL, MongoDB, recursos del sistema y estado general de la instalacion.
+
+**Caracteristicas**:
+- Standalone o compilable a binario
+- Carga automaticamente variables de entorno
+- Verifica conexiones reales a las bases de datos
+- Genera informe detallado con recomendaciones
+- Indica acciones requeridas inmediatamente
+
+---
+
+### `run_control_agent.sh`
+**Descripción**: Script wrapper de ejecucion automatica para el Control Agent. Busca automaticamente el archivo .env, detecta si hay Python instalado, y descarga el agente automaticamente si no existe.
+
+**Uso**:
+```bash
+chmod +x scripts/linux/run_control_agent.sh
+./run_control_agent.sh
+
+# O especificando ruta al .env
+./run_control_agent.sh /ruta/a/tu/.env
+```
+
+---
+
 ## Scripts PowerShell (.ps1)
 
 ### `download_sonar.ps1`

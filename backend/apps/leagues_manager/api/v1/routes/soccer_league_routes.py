@@ -1,22 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from apps.leagues_manager.services.leagues_service import LeaguesService
 from apps.leagues_manager.application.dto.continente_create_dto import (
     ContinenteCreateDTO,
 )
 from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
-from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
-from apps.leagues_manager.application.dto.liga_dto import LigaDTO
-from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
-from apps.leagues_manager.application.dto.pais_dto import PaisDTO
-from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
-from apps.leagues_manager.application.dto.torneo_dto import TorneoDTO
-from apps.leagues_manager.application.dto.fuente_extraccion_dto import (
-    FuenteExtraccionDTO,
-)
 from apps.leagues_manager.application.dto.detalle_fuente_extraccion_dto import (
     DetalleFuenteExtraccionDTO,
 )
+from apps.leagues_manager.application.dto.fuente_extraccion_dto import (
+    FuenteExtraccionDTO,
+)
+from apps.leagues_manager.application.dto.geografia.pais_dto import PaisDTO
+from apps.leagues_manager.application.dto.liga_create_dto import LigaCreateDTO
+from apps.leagues_manager.application.dto.liga_dto import LigaDTO
+from apps.leagues_manager.application.dto.pais_create_dto import PaisCreateDTO
+from apps.leagues_manager.application.dto.torneo_create_dto import TorneoCreateDTO
+from apps.leagues_manager.application.dto.torneo_dto import TorneoDTO
+from apps.leagues_manager.services.leagues_service import LeaguesService
+
 from core.db.sql.database_sql import get_db_session
 from typing import List
 from apps.leagues_manager.infrastructure.repositories.sql_leagues_repository import (

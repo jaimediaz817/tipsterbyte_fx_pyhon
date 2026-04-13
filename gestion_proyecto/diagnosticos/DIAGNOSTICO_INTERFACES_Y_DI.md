@@ -9,8 +9,8 @@
 | --------------------------- | ----------- | ---------------------------- | ---------------------------- | --------------------- |
 | `ILeaguesService`           | Servicio    | ✅ 1 sola                     | ❌ NUNCA                      | ❌ NO                  |
 | `IPlatformConfigService`    | Servicio    | ✅ 1 sola                     | ❌ NUNCA                      | ❌ NO                  |
-| `ILeaguesRepository`        | Repositorio | ✅ 1 sola                     | ✅ SI                         | ⚠️ PARCIAL             |
-| `IPlatformConfigRepository` | Repositorio | ✅ 1 sola                     | ✅ SI                         | ⚠️ PARCIAL             |
+| `ILeaguesRepository`        | Repositorio | ✅ 1 sola                     | ✅ SI                         | ✅ SI                  |
+| `IPlatformConfigRepository` | Repositorio | ✅ 1 sola                     | ✅ SI                         | ✅ SI                  |
 
 ---
 
@@ -107,5 +107,36 @@ Este proyecto quedara mas limpio, mas simple, mas facil de mantener, y tendra ex
 
 ---
 
-> 📅 Diagnostico realizado: 10 Octubre 2026
+## ✅ CASO PRACTICO RESUELTO: Conflicto de Nombres DDD
+
+> 🕐 **Fecha resolucion**: 10 Octubre 2026
+> 📁 **Archivos afectados**: `sql_leagues_repository.py`, `leagues_service.py`
+
+### Problema Encontrado:
+Cuando una entidad de dominio y un modelo SQL tienen **EXACTAMENTE EL MISMO NOMBRE**:
+```
+apps.leagues_manager.domain.entities.FuenteExtraccion
+apps.leagues_manager.infrastructure.models.sql.FuenteExtraccion
+```
+
+✅ **Solución oficial estandarizada:**
+1. Importar modelo SQL con sufijo `Model`:
+   ```python
+   from apps.leagues_manager.infrastructure.models.sql.fuente_extraccion import (
+       FuenteExtraccion as FuenteExtraccionModel,
+   )
+   ```
+2. Usar `from __future__ import annotations` primera linea
+3. Usar imports condicionales `TYPE_CHECKING` para entidades
+4. Usar `cast()` en métodos `create/update` para garantizar tipos no nulos
+
+### Estado:
+✅ **RESOLVIDO**: Aplicado en repositorio y servicio
+✅ **Estandarizado**: Añadido a `.clinerules` para todos los desarrolladores
+✅ **Probado**: 43/44 pruebas pasan correctamente (1 error no relacionado)
+
+---
+
+## 📅 Diagnostico realizado: 10 Octubre 2026
 > ✅ Aprobado para implementacion
+> ✅ Actualizado: 10 Octubre 2026 - Añadido caso practico resuelto

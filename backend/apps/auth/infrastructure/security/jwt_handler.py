@@ -3,7 +3,7 @@ JWT Handler para autenticación y autorización
 Maneja la creación, verificación y refresh de tokens JWT
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from loguru import logger
@@ -52,14 +52,14 @@ class JWTHandler:
 
         # Calcular tiempo de expiración
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(
+            expire = datetime.now(UTC) + timedelta(
                 minutes=JWTHandler.ACCESS_TOKEN_EXPIRE_MINUTES
             )
 
         # Agregar claims estándar
-        to_encode.update({"exp": expire, "iat": datetime.utcnow(), "type": "access"})
+        to_encode.update({"exp": expire, "iat": datetime.now(UTC), "type": "access"})
 
         # Codificar token
         encoded_jwt = jwt.encode(
@@ -85,12 +85,12 @@ class JWTHandler:
         to_encode = data.copy()
 
         # Calcular tiempo de expiración (más largo)
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.now(UTC) + timedelta(
             days=JWTHandler.REFRESH_TOKEN_EXPIRE_DAYS
         )
 
         # Agregar claims estándar
-        to_encode.update({"exp": expire, "iat": datetime.utcnow(), "type": "refresh"})
+        to_encode.update({"exp": expire, "iat": datetime.now(UTC), "type": "refresh"})
 
         # Codificar token
         encoded_jwt = jwt.encode(
@@ -196,7 +196,7 @@ class JWTHandler:
         if not exp:
             return True
 
-        return datetime.utcnow() > datetime.fromtimestamp(exp)
+        return datetime.now(UTC) > datetime.fromtimestamp(exp, UTC)
 
     @staticmethod
     def get_token_type(token: str) -> Optional[str]:

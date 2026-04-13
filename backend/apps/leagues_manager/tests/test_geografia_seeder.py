@@ -68,7 +68,7 @@ class TestGeografiaSeeder:
         # Arrange
         from scripts.db.seeders.sql.geografia_seeder import GeografiaSeeder
         from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
-        from apps.leagues_manager.application.dto.pais_dto import PaisDTO
+        from apps.leagues_manager.application.dto.geografia.pais_dto import PaisDTO
 
         mock_response = Mock()
         mock_response.json.return_value = MOCK_API_RESPONSE
@@ -151,7 +151,7 @@ class TestGeografiaSeeder:
         # Arrange
         from scripts.db.seeders.sql.geografia_seeder import GeografiaSeeder
         from apps.leagues_manager.application.dto.continente_dto import ContinenteDTO
-        from apps.leagues_manager.application.dto.pais_dto import PaisDTO
+        from apps.leagues_manager.application.dto.geografia.pais_dto import PaisDTO
 
         mock_response = Mock()
         mock_response.json.return_value = MOCK_API_RESPONSE

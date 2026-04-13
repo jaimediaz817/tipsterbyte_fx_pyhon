@@ -429,17 +429,40 @@ def _check_docker() -> bool:
     try:
         assert docker is not None
         client = docker.from_env()
-        pg_container = client.containers.get("db_pg_tipsterbyte_fx")
-        mongo_container = client.containers.get("db_mongo_tipsterbyte_fx")
+
+        # Buscar contenedores por patrón (compatibilidad con _dev y _prod)
+        todos_contenedores = client.containers.list(all=True)
+
+        pg_container = None
+        mongo_container = None
+
+        for contenedor in todos_contenedores:
+            nombre: str | None = getattr(contenedor, "name", None)
+            if nombre and nombre.startswith("db_pg_tipsterbyte_fx"):
+                pg_container = contenedor
+            if nombre and nombre.startswith("db_mongo_tipsterbyte_fx"):
+                mongo_container = contenedor
+
+        if not pg_container or not mongo_container:
+            print_styled("Docker: No se encontraron los contenedores.", "error")
+            logger.error(
+                "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
+            )
+            return False
 
         containers_running = (
             pg_container.status == "running" and mongo_container.status == "running"
         )
 
         if containers_running:
-            print_styled(
-                "Docker: Contenedores PostgreSQL y MongoDB están en ejecución.", "ok"
+            nombre_pg: str | None = getattr(pg_container, "name", None)
+            entorno = (
+                "DESARROLLO"
+                if nombre_pg and "dev" in nombre_pg
+                else "PRODUCCION" if nombre_pg and "prod" in nombre_pg else ""
             )
+            mensaje = f"Docker: Contenedores PostgreSQL y MongoDB están en ejecución. ({entorno})"
+            print_styled(mensaje, "ok")
             return True
 
         print_styled("Docker: Algunos contenedores no están en ejecución.", "warn")
@@ -448,8 +471,8 @@ def _check_docker() -> bool:
         )
         return False
 
-    except (NotFound, Exception):
-        print_styled("Docker: No se encontraron los contenedores.", "error")
+    except (NotFound, Exception) as e:
+        print_styled(f"Docker: Error al verificar contenedores: {str(e)}", "error")
         logger.error(
             "❌ Problema crítico. Ejecuta: docker-compose up -d (raíz del proyecto)"
         )
@@ -511,20 +534,44 @@ def _check_sql_seeders(is_migrated: bool, sql_status: dict) -> None:
         logger.warning("⏭️  Saltando seeders SQL: las tablas no están migradas.")
         return
 
-    tables_with_data = sum(
-        1 for count in sql_status.get("table_counts", {}).values() if count > 0
+    # Tablas que NO contienen datos de negocio inicial (se generan automaticamente)
+    TABLAS_AUTOGENERADAS = {
+        "process_run",
+        "process_run_log",
+        "alembic_version",
+        "access_log",
+        "session_log",
+        "audit_log",
+    }
+
+    # Contar cuantas tablas tienen datos en total
+    total_tablas_con_datos = sum(
+        1 for conteo in sql_status.get("table_counts", {}).values() if conteo > 0
     )
 
-    if tables_with_data > 0:
-        print_styled(f"PostgreSQL: Hay datos en {tables_with_data} tabla(s).", "ok")
+    # Contar solo tablas de negocio que deberian tener datos de seed
+    tablas_negocio_con_datos = sum(
+        1
+        for nombre, conteo in sql_status.get("table_counts", {}).items()
+        if nombre not in TABLAS_AUTOGENERADAS and conteo > 0
+    )
+
+    # Si NO HAY DATOS en NINGUNA tabla (o solo en tablas autogeneradas)
+    if total_tablas_con_datos == 0 or tablas_negocio_con_datos == 0:
+        print_styled(
+            "PostgreSQL: No hay datos iniciales cargados.",
+            "warn",
+        )
+        ask_and_execute(
+            "¿Deseas ejecutar los seeders SQL ahora? (python manage.py sql seed)",
+            ["sql", "seed"],
+        )
         return
 
+    # Si ya hay datos
     print_styled(
-        "PostgreSQL: La base de datos está vacía (sin datos iniciales).", "warn"
-    )
-    ask_and_execute(
-        "¿Deseas ejecutar los seeders SQL ahora? (python manage.py sql seed)",
-        ["sql", "seed"],
+        f"PostgreSQL: Hay datos en {total_tablas_con_datos} tabla(s).",
+        "ok",
     )
 
 
@@ -544,10 +591,36 @@ def _check_mongo_schema() -> tuple[bool, dict]:
 
     if mongo_status.get("collections_exist"):
         collections = mongo_status.get("collections", [])
+        total_documentos = 0
+        conteo_por_coleccion = {}
+
+        # Obtener conteo de documentos por coleccion
+        try:
+            from pymongo import MongoClient
+            from core.config import settings
+
+            client = MongoClient(str(settings.MONGO_URI), serverSelectionTimeoutMS=2000)
+            db = client[settings.MONGO_DB]
+
+            for collection_name in collections:
+                conteo = db[collection_name].count_documents({})
+                conteo_por_coleccion[collection_name] = conteo
+                total_documentos += conteo
+
+            client.close()
+        except Exception:
+            pass
+
         print_styled(
-            f"MongoDB: Esquema inicializado. {len(collections)} colección(es) encontrada(s).",
+            f"MongoDB: Esquema inicializado. {len(collections)} colección(es) | {total_documentos} documentos totales.",
             "ok",
         )
+
+        # Mostrar detalle de cada coleccion si hay pocas
+        if len(collections) <= 10:
+            for nombre, conteo in conteo_por_coleccion.items():
+                logger.info(f"  📋 {nombre:<30} → {conteo:>6} documentos")
+
         return True, mongo_status
 
     print_styled(

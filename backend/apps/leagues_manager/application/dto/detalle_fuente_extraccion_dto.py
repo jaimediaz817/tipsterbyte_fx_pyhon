@@ -1,6 +1,6 @@
 # filepath: c:\Users\jdiaz\Documents\JDiaz-PC-DESKTOP-2\proyectos_jdiaz_pc_local\TIPSTERBYTE\tipsterByte_fx\backend\apps\leagues_manager\application\dto\detalle_fuente_extraccion_dto.py
 from datetime import datetime
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, HttpUrl, Field, ConfigDict
 
 
 class DetalleFuenteExtraccionDTO(BaseModel):
@@ -25,8 +25,7 @@ class DetalleFuenteExtraccionDTO(BaseModel):
     # fuente: Optional[FuenteExtraccionDTO] = None
     # process: Optional[ProcessDTO] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     # Puedes añadir campos para representar la 'fuente' o el 'torneo'
     # si necesitas datos anidados en este DTO. Por ejemplo:

@@ -1,7 +1,8 @@
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 from core.config import settings
 from core.db.sql.base_class import Base
 from core.db.sql.init_sql_all_models import load_all_models
+
 
 def get_sql_db_status():
     """
@@ -9,18 +10,32 @@ def get_sql_db_status():
     """
     load_all_models()
     models_in_code = set(Base.metadata.tables.keys())
-    
+
     engine = create_engine(str(settings.DATABASE_URL))
     inspector = inspect(engine)
     tables_in_db = set(inspector.get_table_names())
+
+    # Conteo de registros por tabla
+    table_counts = {}
+    with engine.connect() as conn:
+        for table_name in tables_in_db:
+            try:
+                result = conn.execute(
+                    text(f"SELECT COUNT(*) FROM {table_name} LIMIT 1")
+                )
+                table_counts[table_name] = result.scalar()
+            except Exception:
+                table_counts[table_name] = 0
+
     engine.dispose()
-    
+
     synced_models = models_in_code.intersection(tables_in_db)
     code_only_models = models_in_code.difference(tables_in_db)
     db_only_tables = tables_in_db.difference(models_in_code)
-    
+
     return {
         "synced": sorted(list(synced_models)),
         "code_only": sorted(list(code_only_models)),
         "db_only": sorted(list(db_only_tables)),
+        "table_counts": table_counts,
     }
