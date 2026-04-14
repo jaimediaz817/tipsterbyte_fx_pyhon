@@ -130,3 +130,39 @@ class MongoDBReadException(MongoDBException):
     ):
         super().__init__(message, error_code, details)
         self.collection = collection
+
+
+class MongoCollectionNotInitializedException(MongoDBException):
+    """
+    Excepción lanzada cuando un modelo de Beanie existe pero la colección no ha sido inicializada.
+
+    Esta excepción ocurre cuando:
+    - El modelo está definido correctamente en código
+    - Pero NUNCA se ejecutó `nosql init-schema`
+    - La colección no existe fisicamente en MongoDB
+
+    Attributes:
+        message: Descripción del error
+        collection: Nombre de la colección faltante
+        model_name: Nombre de la clase del modelo
+        suggested_command: Comando que resuelve el problema
+    """
+
+    def __init__(
+        self,
+        collection: str,
+        model_name: str,
+        message: Optional[str] = None,
+        details: Optional[str] = None,
+    ):
+        if message is None:
+            message = f"La colección '{collection}' para el modelo '{model_name}' no existe en MongoDB"
+
+        super().__init__(
+            message=message,
+            error_code="MONGODB_COLLECTION_NOT_INITIALIZED",
+            details=details,
+        )
+        self.collection = collection
+        self.model_name = model_name
+        self.suggested_command = "python backend/manage.py nosql init-schema"

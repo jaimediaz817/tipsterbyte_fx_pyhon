@@ -157,6 +157,18 @@ class Settings(BaseSettings):
         description="URL base de API-Football",
     )
 
+    # -------------------------------------------------------------------------
+    # 🖥️  CONFIGURACION SSH VPS PRINCIPAL
+    # -------------------------------------------------------------------------
+    VPS_MAIN_HOST: str = Field("", description="IP VPS principal TipsterByte")
+    VPS_MAIN_PORT: int = Field(22, description="Puerto SSH")
+    VPS_MAIN_USER: str = Field("", description="Usuario SSH")
+    VPS_MAIN_PASSWORD: str = Field("", description="Contraseña SSH")
+    VPS_MAIN_PRIVATE_KEY: str = Field(
+        "",
+        description="Ruta clave privada SSH",
+    )
+
     # --- Variables de JWT (Autenticación) ---
     JWT_SECRET_KEY: str = Field(
         "your-super-secret-key-change-this-in-production-min-32-chars-long",

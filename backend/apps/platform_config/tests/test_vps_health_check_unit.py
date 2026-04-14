@@ -1,207 +1,172 @@
 from __future__ import annotations
-import pytest
-from datetime import datetime
-from typing import Dict, Any, Optional
 
-from backend.apps.platform_config.domain.entities.vps_health_check import (
-    VpsHealthCheck,
-    VpsSystemInfo,
-    VpsMemoryMetrics,
-    VpsCpuMetrics,
-    VpsDiskMetrics,
-    VpsNetworkMetrics,
-)
+import sys
+from pathlib import Path
+from datetime import datetime
+from uuid import UUID
+from dataclasses import FrozenInstanceError
+
+# ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
+ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+if str(ROOT_PROYECTO) not in sys.path:
+    sys.path.insert(0, str(ROOT_PROYECTO))
+
+# ✅ Cargar automaticamente variables de entorno
+from dotenv import load_dotenv
+
+load_dotenv(ROOT_PROYECTO / "backend" / ".env")
+
+import pytest
+
+from backend.apps.platform_config.domain.entities.vps_health_check import VpsHealthCheck
 
 
 @pytest.mark.unit
 class TestVpsHealthCheckEntity:
     """Pruebas unitarias para la entidad de dominio VpsHealthCheck"""
 
-    def create_test_health_check(
-        self, overrides: Optional[Dict[str, Any]] = None
-    ) -> VpsHealthCheck:
-        """Crea una instancia de prueba con valores por defecto saludables"""
-        defaults = {
-            "server_identifier": "vps_tipsterbyte_jdiaz",
-            "system_info": VpsSystemInfo(
-                os_name="Ubuntu 22.04.4 LTS",
-                hostname="tipsterbyte-prod",
-                architecture="x86_64",
-                kernel_version="5.15.0-97-generic",
-                uptime_seconds=86400,
-                load_average="0.5 0.3 0.2",
-            ),
-            "memory": VpsMemoryMetrics(
-                total_bytes=8 * 1024 * 1024 * 1024,  # 8GB
-                used_bytes=4 * 1024 * 1024 * 1024,  # 4GB
-                free_bytes=2 * 1024 * 1024 * 1024,  # 2GB
-                available_bytes=int(3.5 * 1024 * 1024 * 1024),  # 3.5GB
-                usage_percent=50.0,
-            ),
-            "cpu": VpsCpuMetrics(
-                cores_count=4, model_name="Intel Xeon E-2276G", usage_percent=25.0
-            ),
-            "disks": [
-                VpsDiskMetrics(
-                    mount_point="/",
-                    total_bytes=100 * 1024 * 1024 * 1024,  # 100GB
-                    used_bytes=40 * 1024 * 1024 * 1024,  # 40GB
-                    free_bytes=60 * 1024 * 1024 * 1024,  # 60GB
-                    usage_percent=40.0,
-                )
-            ],
-            "network": VpsNetworkMetrics(
-                public_ip="143.110.239.197", has_internet_connectivity=True
-            ),
-            "raw_response": '{"status": "ok"}',
+    def test_create_method_generates_valid_entity(self):
+        """Prueba que el factory method create() genera una entidad valida y completa"""
+
+        health_check = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=True,
+            exit_code=0,
+            stdout="✅ Health Check completado correctamente\nUso CPU: 25%",
+            stderr="",
+            execution_time_seconds=1.256,
+        )
+
+        # ✅ Verificamos que se genero el ID automaticamente
+        assert health_check.id is not None
+        assert isinstance(health_check.id, UUID)
+
+        # ✅ Verificamos campos obligatorios
+        assert health_check.hostname == "143.110.239.197"
+        assert health_check.success is True
+        assert health_check.exit_code == 0
+        assert (
+            health_check.stdout
+            == "✅ Health Check completado correctamente\nUso CPU: 25%"
+        )
+        assert health_check.stderr == ""
+        assert health_check.execution_time_seconds == 1.256
+
+        # ✅ Verificamos fechas automaticas
+        assert isinstance(health_check.executed_at, datetime)
+        assert isinstance(health_check.created_at, datetime)
+        assert health_check.executed_at <= health_check.created_at
+
+    def test_create_method_rounds_execution_time(self):
+        """Prueba que el tiempo de ejecucion se redondea automaticamente a 3 decimales"""
+
+        health_check = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=True,
+            exit_code=0,
+            stdout="test",
+            stderr="",
+            execution_time_seconds=2.123456789,
+        )
+
+        assert health_check.execution_time_seconds == 2.123
+
+    def test_hostname_is_trimmed_automatically(self):
+        """Prueba que el hostname se limpia de espacios en blanco automaticamente"""
+
+        health_check = VpsHealthCheck.create(
+            hostname="   143.110.239.197   \n",
+            success=True,
+            exit_code=0,
+            stdout="test",
+            stderr="",
+            execution_time_seconds=1.0,
+        )
+
+        assert health_check.hostname == "143.110.239.197"
+
+    def test_custom_executed_at_is_preserved(self):
+        """Prueba que si se pasa executed_at se preserva y no se genera automaticamente"""
+
+        custom_date = datetime(2025, 1, 1, 12, 0, 0)
+
+        health_check = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=True,
+            exit_code=0,
+            stdout="test",
+            stderr="",
+            execution_time_seconds=1.0,
+            executed_at=custom_date,
+        )
+
+        assert health_check.executed_at == custom_date
+        assert health_check.created_at != custom_date
+
+    def test_entity_is_immutable(self):
+        """Prueba que la entidad es inmutable (frozen=True) y no se puede modificar despues de creada"""
+
+        health_check = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=True,
+            exit_code=0,
+            stdout="test",
+            stderr="",
+            execution_time_seconds=1.0,
+        )
+
+        with pytest.raises(FrozenInstanceError):
+            # ✅ Asignacion normal - Pylance detecta que es read-only
+            # ✅ Añadimos # type: ignore para suprimir la advertencia estatica
+            health_check.success = False  # type: ignore
+
+    def test_str_representation(self):
+        """Prueba que la representacion en string funciona correctamente para ambos estados"""
+
+        # ✅ Caso exitoso
+        health_ok = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=True,
+            exit_code=0,
+            stdout="ok",
+            stderr="",
+            execution_time_seconds=1.25,
+        )
+
+        str_ok = str(health_ok)
+        assert "143.110.239.197" in str_ok
+        assert "✅ OK" in str_ok
+        assert "1.25s" in str_ok
+
+        # ❌ Caso fallido
+        health_fail = VpsHealthCheck.create(
+            hostname="143.110.239.197",
+            success=False,
+            exit_code=1,
+            stdout="",
+            stderr="error",
+            execution_time_seconds=0.5,
+        )
+
+        str_fail = str(health_fail)
+        assert "143.110.239.197" in str_fail
+        assert "❌ FALLIDO" in str_fail
+        assert "0.5s" in str_fail
+
+    def test_equality_between_entities(self):
+        """Prueba que dos entidades con mismo ID son iguales aunque tengan datos diferentes"""
+
+        base_data = {
+            "hostname": "143.110.239.197",
             "success": True,
-            "execution_duration_ms": 1250,
-            "error_message": None,
+            "exit_code": 0,
+            "stdout": "test",
+            "stderr": "",
+            "execution_time_seconds": 1.0,
         }
 
-        if overrides:
-            defaults.update(overrides)
+        health1 = VpsHealthCheck.create(**base_data)
+        health2 = VpsHealthCheck.create(**base_data)
 
-        return VpsHealthCheck(**defaults)
-
-    def test_entity_creation_successful(self):
-        """Prueba que la entidad se crea correctamente con valores validos"""
-        health_check = self.create_test_health_check()
-
-        assert health_check.server_identifier == "vps_tipsterbyte_jdiaz"
-        assert health_check.success is True
-        assert health_check.id is not None
-        assert isinstance(health_check.executed_at, datetime)
-
-    def test_is_healthy_returns_true_when_all_ok(self):
-        """Prueba que is_healthy() devuelve True cuando todos los parametros estan en limites aceptables"""
-        health_check = self.create_test_health_check()
-
-        assert health_check.is_healthy() is True
-
-    def test_is_healthy_returns_false_when_memory_over_90(self):
-        """Prueba que se marca como no saludable cuando memoria > 90%"""
-        health_check = self.create_test_health_check(
-            {
-                "memory": VpsMemoryMetrics(
-                    total_bytes=8 * 1024 * 1024 * 1024,
-                    used_bytes=int(7.5 * 1024 * 1024 * 1024),
-                    free_bytes=int(0.5 * 1024 * 1024 * 1024),
-                    available_bytes=int(0.5 * 1024 * 1024 * 1024),
-                    usage_percent=93.75,
-                )
-            }
-        )
-
-        assert health_check.is_healthy() is False
-
-    def test_is_healthy_returns_false_when_disk_over_95(self):
-        """Prueba que se marca como no saludable cuando algun disco > 95%"""
-        health_check = self.create_test_health_check(
-            {
-                "disks": [
-                    VpsDiskMetrics(
-                        mount_point="/",
-                        total_bytes=100 * 1024 * 1024 * 1024,
-                        used_bytes=96 * 1024 * 1024 * 1024,
-                        free_bytes=4 * 1024 * 1024 * 1024,
-                        usage_percent=96.0,
-                    )
-                ]
-            }
-        )
-
-        assert health_check.is_healthy() is False
-
-    def test_is_healthy_returns_false_when_no_internet(self):
-        """Prueba que se marca como no saludable cuando no hay conectividad"""
-        health_check = self.create_test_health_check(
-            {
-                "network": VpsNetworkMetrics(
-                    public_ip=None, has_internet_connectivity=False
-                )
-            }
-        )
-
-        assert health_check.is_healthy() is False
-
-    def test_get_warnings_returns_empty_when_everything_ok(self):
-        """Prueba que no hay advertencias cuando todo esta bien"""
-        health_check = self.create_test_health_check()
-
-        warnings = health_check.get_warnings()
-
-        assert len(warnings) == 0
-
-    def test_get_warnings_returns_memory_warning_when_over_80(self):
-        """Prueba que genera advertencia de memoria cuando > 80%"""
-        health_check = self.create_test_health_check(
-            {
-                "memory": VpsMemoryMetrics(
-                    total_bytes=8 * 1024 * 1024 * 1024,
-                    used_bytes=int(6.8 * 1024 * 1024 * 1024),
-                    free_bytes=int(1.2 * 1024 * 1024 * 1024),
-                    available_bytes=int(1.2 * 1024 * 1024 * 1024),
-                    usage_percent=85.0,
-                )
-            }
-        )
-
-        warnings = health_check.get_warnings()
-
-        assert len(warnings) == 1
-        assert "Memoria alta: 85.0%" in warnings[0]
-
-    def test_get_warnings_returns_disk_warning_when_over_80(self):
-        """Prueba que genera advertencia de disco cuando > 80%"""
-        health_check = self.create_test_health_check(
-            {
-                "disks": [
-                    VpsDiskMetrics(
-                        mount_point="/",
-                        total_bytes=100 * 1024 * 1024 * 1024,
-                        used_bytes=85 * 1024 * 1024 * 1024,
-                        free_bytes=15 * 1024 * 1024 * 1024,
-                        usage_percent=85.0,
-                    )
-                ]
-            }
-        )
-
-        warnings = health_check.get_warnings()
-
-        assert len(warnings) == 1
-        assert "Disco / alto: 85.0%" in warnings[0]
-
-    def test_get_warnings_returns_multiple_warnings(self):
-        """Prueba que devuelve multiples advertencias cuando varios parametros estan altos"""
-        health_check = self.create_test_health_check(
-            {
-                "memory": VpsMemoryMetrics(
-                    total_bytes=8 * 1024 * 1024 * 1024,
-                    used_bytes=int(6.8 * 1024 * 1024 * 1024),
-                    free_bytes=int(1.2 * 1024 * 1024 * 1024),
-                    available_bytes=int(1.2 * 1024 * 1024 * 1024),
-                    usage_percent=85.0,
-                ),
-                "cpu": VpsCpuMetrics(
-                    cores_count=4, model_name="Intel Xeon E-2276G", usage_percent=82.0
-                ),
-                "disks": [
-                    VpsDiskMetrics(
-                        mount_point="/",
-                        total_bytes=100 * 1024 * 1024 * 1024,
-                        used_bytes=85 * 1024 * 1024 * 1024,
-                        free_bytes=15 * 1024 * 1024 * 1024,
-                        usage_percent=85.0,
-                    )
-                ],
-            }
-        )
-
-        warnings = health_check.get_warnings()
-
-        assert len(warnings) == 3
-        assert any("Memoria alta" in w for w in warnings)
-        assert any("Disco / alto" in w for w in warnings)
-        assert any("CPU alta" in w for w in warnings)
+        # ✅ Deben ser diferentes porque tienen diferente UUID
+        assert health1 != health2

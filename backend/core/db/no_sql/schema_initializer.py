@@ -11,6 +11,7 @@ from beanie import init_beanie
 
 from core.config import settings
 from core.paths import BACKEND_ROOT
+from core.exceptions.database_exceptions import MongoCollectionNotInitializedException
 
 
 # --- 1. FUNCIÓN PARA VALIDAR LA CONEXIÓN ---
@@ -150,6 +151,81 @@ def _find_beanie_models() -> List[Type[Document]]:
         f"Búsqueda completada. Se procesaron {file_count} archivos y se encontraron {len(models)} modelos."
     )
     return models
+
+
+def _get_collection_name(model: Type[Document]) -> str:
+    """
+    ✅ SRP: Funcion única responsabilidad: Obtener nombre de coleccion desde un modelo Beanie
+    """
+    model_settings = getattr(model, "Settings", None)
+    return (
+        model_settings.name
+        if model_settings and hasattr(model_settings, "name")
+        else model.__name__.lower()
+    )
+
+
+async def validate_collections_existence() -> None:
+    """
+    ✅ SRP: Valida que TODOS los modelos tengan su coleccion creada fisicamente en MongoDB
+    Lanza MongoCollectionNotInitializedException si alguna coleccion falta
+    Muestra tabla ASCII con estado completo
+    """
+    client = AsyncIOMotorClient(settings.MONGO_URI)
+    db = client.get_database(settings.MONGO_DB)
+
+    document_models = _find_beanie_models()
+    existing_collections = await db.list_collection_names()
+
+    missing_collections = []
+    status_table = []
+
+    logger.info("\n" + "=" * 80)
+    logger.info("📊 ESTADO DE COLECCIONES MONGODB")
+    logger.info("=" * 80)
+
+    print(f"\n{'N°':<3} {'MODELO':<30} {'COLECCION':<30} {'ESTADO':<10}")
+    print(f"{'-'*3} {'-'*30} {'-'*30} {'-'*10}")
+
+    for idx, model in enumerate(document_models, 1):
+        collection_name = _get_collection_name(model)
+        exists = collection_name in existing_collections
+
+        status = "✅ OK" if exists else "❌ FALTANTE"
+        print(f"{idx:<3} {model.__name__:<30} {collection_name:<30} {status:<10}")
+
+        if not exists:
+            missing_collections.append(
+                {"model": model.__name__, "collection": collection_name}
+            )
+
+    print("\n" + "-" * 80)
+
+    if missing_collections:
+        total_missing = len(missing_collections)
+        logger.error(
+            f"\n❌ SE ENCONTRARON {total_missing} COLECCIONES NO INICIALIZADAS"
+        )
+        logger.error("=============================================================")
+        logger.error("⚠️  CAUSA: NUNCA SE EJECUTO COMANDO DE INICIALIZACION")
+        logger.error("")
+        logger.error("💡 SOLUCION: Ejecuta este comando:")
+        logger.error("")
+        logger.error("   python backend/manage.py nosql init-schema")
+        logger.error("")
+        logger.error("📌 Este comando crea automaticamente todas las colecciones")
+        logger.error("=============================================================\n")
+
+        # Lanzar excepcion personalizada con la primera coleccion faltante
+        first_missing = missing_collections[0]
+        raise MongoCollectionNotInitializedException(
+            collection=first_missing["collection"],
+            model_name=first_missing["model"],
+            details=f"Faltan {total_missing} colecciones en total",
+        )
+    else:
+        logger.success("\n✅ TODAS LAS COLECCIONES ESTAN INICIALIZADAS CORRECTAMENTE")
+        logger.success(f"Total modelos validados: {len(document_models)}")
 
 
 async def initialize_mongo_schema():

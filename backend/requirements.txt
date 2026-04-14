@@ -47,6 +47,7 @@ loguru                    # Logging estructurado
 tenacity                  # Reintentos automáticos con backoff
 prometheus-fastapi-instrumentator # Instrumentación de métricas para FastAPI
 psutil                   # Información del sistema y procesos
+paramiko                 # Cliente SSH nativo Python para ejecuciones remotas
 
 # -------------------------------
 # Configuración y entorno
@@ -59,7 +60,7 @@ email-validator>=2.0      # Validación de emails para Pydantic EmailStr
 # -------------------------------
 # Configuración MongoDB
 # -------------------------------
-beanie                   # ODM para MongoDB basado en Pydantic y motor
+beanie==1.28.0            # ODM para MongoDB - VERSION FIJA (bug con Pydantic > 2.9)
 motor                    # Driver asíncrono para MongoDB
 
 # -------------------------------

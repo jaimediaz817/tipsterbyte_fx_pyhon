@@ -1,110 +1,324 @@
-from __future__ import annotations
+"""
+✅ ENTIDAD DE DOMINIO VPS HEALTH CHECK
+✅ INMUTABLE
+✅ VALIDADA
+✅ SIN DEPENDENCIAS EXTERNAS
+"""
+
+from loguru import logger
+from dataclasses import dataclass
 from datetime import datetime
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
-from uuid import uuid4
+from typing import Optional
+from uuid import UUID, uuid4
 
 
-@dataclass
-class VpsMemoryMetrics:
-    """Metricas de memoria RAM de la VPS"""
+@dataclass(frozen=True)
+class RamMetrics:
+    """Value Object inmutable para métricas de Memoria RAM"""
 
-    total_bytes: int
-    used_bytes: int
-    free_bytes: int
-    available_bytes: int
-    usage_percent: float
-
-
-@dataclass
-class VpsDiskMetrics:
-    """Metricas de disco de la VPS"""
-
-    mount_point: str
-    total_bytes: int
-    used_bytes: int
-    free_bytes: int
-    usage_percent: float
+    total_mb: Optional[int] = None
+    used_mb: Optional[int] = None
+    usage_percent: Optional[float] = None
+    total_unit: Optional[str] = None
+    used_unit: Optional[str] = None
 
 
-@dataclass
-class VpsCpuMetrics:
-    """Metricas de CPU de la VPS"""
+@dataclass(frozen=True)
+class DiskMetrics:
+    """Value Object inmutable para métricas de Disco"""
 
-    cores_count: int
-    model_name: str
-    usage_percent: float
-
-
-@dataclass
-class VpsNetworkMetrics:
-    """Metricas de red de la VPS"""
-
-    public_ip: Optional[str]
-    has_internet_connectivity: bool
+    total_gb: Optional[float] = None
+    used_gb: Optional[float] = None
+    usage_percent: Optional[float] = None
+    total_unit: Optional[str] = None
+    used_unit: Optional[str] = None
 
 
-@dataclass
-class VpsSystemInfo:
-    """Informacion basica del sistema operativo"""
+@dataclass(frozen=True)
+class CpuMetrics:
+    """Value Object inmutable para métricas de CPU"""
 
-    os_name: str
-    hostname: str
-    architecture: str
-    kernel_version: str
-    uptime_seconds: int
-    load_average: str
+    usage_percent: Optional[float] = None
 
 
-@dataclass
+@dataclass(frozen=True)
+class SystemLoadMetrics:
+    """Value Object inmutable para carga del sistema"""
+
+    load_1min: Optional[float] = None
+    load_5min: Optional[float] = None
+    load_15min: Optional[float] = None
+
+
+@dataclass(frozen=True)
 class VpsHealthCheck:
-    """Entidad de Dominio - Resultado completo de chequeo de salud de VPS"""
+    """
+    Entidad de dominio que representa un resultado completo
+    de health check ejecutado sobre un servidor remoto.
 
-    # Campos obligatorios sin default primero
-    server_identifier: str
-    system_info: VpsSystemInfo
-    memory: VpsMemoryMetrics
-    cpu: VpsCpuMetrics
-    disks: list[VpsDiskMetrics]
-    network: VpsNetworkMetrics
-    raw_response: str
+    ✅ Esta entidad es la unica fuente de verdad.
+    ✅ Nunca se modifica despues de creada.
+    ✅ Es agnostica a cualquier tecnologia de persistencia.
+    """
+
+    id: UUID
+    hostname: str
     success: bool
-    execution_duration_ms: int
+    exit_code: int
+    stdout: str
+    stderr: str
+    execution_time_seconds: float
+    executed_at: datetime
+    created_at: datetime
 
-    # Campos con default al final
-    id: str = field(default_factory=lambda: str(uuid4()))
-    executed_at: datetime = field(default_factory=datetime.utcnow)
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    # ✅ METRICAS ESTRUCTURADAS POR DOMINIO
+    ram: RamMetrics
+    disk: DiskMetrics
+    cpu: CpuMetrics
+    system_load: SystemLoadMetrics
 
-    def is_healthy(self) -> bool:
-        """Indica si la VPS esta en estado saludable"""
-        if not self.success:
-            return False
+    process_count: Optional[int] = None
+    uptime_seconds: Optional[int] = None
 
-        if self.memory.usage_percent > 90:
-            return False
+    # ---------------------------------------------------
+    # ✅ COMPATIBILIDAD HACIA ATRAS (DEPRECATED)
+    # Mantenemos propiedades antiguas para no romper codigo existente
+    # ---------------------------------------------------
+    @property
+    def ram_total_mb(self) -> Optional[int]:
+        return self.ram.total_mb
 
-        if any(disk.usage_percent > 95 for disk in self.disks):
-            return False
+    @property
+    def ram_used_mb(self) -> Optional[int]:
+        return self.ram.used_mb
 
-        if not self.network.has_internet_connectivity:
-            return False
+    @property
+    def ram_usage_percent(self) -> Optional[float]:
+        return self.ram.usage_percent
 
-        return True
+    @property
+    def ram_total_unit(self) -> Optional[str]:
+        return self.ram.total_unit
 
-    def get_warnings(self) -> list[str]:
-        """Devuelve lista de advertencias encontradas"""
-        warnings = []
+    @property
+    def ram_used_unit(self) -> Optional[str]:
+        return self.ram.used_unit
 
-        if self.memory.usage_percent > 80:
-            warnings.append(f"Memoria alta: {self.memory.usage_percent}%")
+    @property
+    def disk_total_gb(self) -> Optional[float]:
+        return self.disk.total_gb
 
-        for disk in self.disks:
-            if disk.usage_percent > 80:
-                warnings.append(f"Disco {disk.mount_point} alto: {disk.usage_percent}%")
+    @property
+    def disk_used_gb(self) -> Optional[float]:
+        return self.disk.used_gb
 
-        if self.cpu.usage_percent > 75:
-            warnings.append(f"CPU alta: {self.cpu.usage_percent}%")
+    @property
+    def disk_usage_percent(self) -> Optional[float]:
+        return self.disk.usage_percent
 
-        return warnings
+    @property
+    def disk_total_unit(self) -> Optional[str]:
+        return self.disk.total_unit
+
+    @property
+    def disk_used_unit(self) -> Optional[str]:
+        return self.disk.used_unit
+
+    @property
+    def cpu_usage_percent(self) -> Optional[float]:
+        return self.cpu.usage_percent
+
+    @property
+    def load_1min(self) -> Optional[float]:
+        return self.system_load.load_1min
+
+    @property
+    def load_5min(self) -> Optional[float]:
+        return self.system_load.load_5min
+
+    @property
+    def load_15min(self) -> Optional[float]:
+        return self.system_load.load_15min
+
+    @classmethod
+    def create(
+        cls,
+        hostname: str,
+        success: bool,
+        exit_code: int,
+        stdout: str,
+        stderr: str,
+        execution_time_seconds: float,
+        executed_at: Optional[datetime] = None,
+    ) -> "VpsHealthCheck":
+        """
+        Factory method para crear nuevas instancias validas
+
+        Args:
+            hostname: IP o dominio del servidor monitoreado
+            success: True si la ejecucion termino correctamente
+            exit_code: Codigo de salida nativo del proceso
+            stdout: Salida estandar completa
+            stderr: Salida de error completa
+            execution_time_seconds: Tiempo total de ejecucion
+            executed_at: Momento exacto cuando se lanzo la ejecucion
+
+        Returns:
+            Instancia valida y lista para usar
+        """
+        now = datetime.utcnow()
+
+        # ✅ PARSER AUTOMATICO DE METRICAS
+        metricas: dict[str, int | float | str | None] = {
+            "ram_total_mb": None,
+            "ram_used_mb": None,
+            "ram_usage_percent": None,
+            "cpu_usage_percent": None,
+            "disk_total_gb": None,
+            "disk_used_gb": None,
+            "disk_usage_percent": None,
+            "load_1min": None,
+            "load_5min": None,
+            "load_15min": None,
+            "process_count": None,
+            "uptime_seconds": None,
+            "ram_total_unit": None,
+            "ram_used_unit": None,
+            "disk_total_unit": None,
+            "disk_used_unit": None,
+        }
+
+        # ✅ CORREGIR TIPADO: Asegurar que campos enteros son realmente int
+        # Eliminamos tipo float de campos que solo admiten int en el constructor
+        campos_enteros = [
+            "ram_total_mb",
+            "ram_used_mb",
+            "process_count",
+            "uptime_seconds",
+        ]
+        for campo in campos_enteros:
+            valor = metricas[campo]
+            if valor is not None:
+                metricas[campo] = int(valor)
+
+        if success and stdout:
+            import re
+
+            # ✅ PRIMERO LIMPIAMOS TODOS LOS CODIGOS ANSI DE COLORES
+            stdout_limpio = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])").sub(
+                "", stdout
+            )
+
+            # ✅ Parsear RAM
+            ram_match = re.search(r"Uso:\s+(\d+)%", stdout_limpio)
+            if ram_match:
+                metricas["ram_usage_percent"] = float(ram_match.group(1))
+                logger.debug(f"✅ RAM Uso detectado: {metricas['ram_usage_percent']}%")
+
+            ram_total_match = re.search(r"Total:\s+([\d.]+)(G|M)", stdout_limpio)
+            if ram_total_match:
+                valor = float(ram_total_match.group(1))
+                unidad = ram_total_match.group(2)
+                metricas["ram_total_mb"] = int(valor * 1024 if unidad == "G" else valor)
+                metricas["ram_total_unit"] = unidad
+
+            ram_usada_match = re.search(r"Usada:\s+([\d.]+)(G|M)", stdout_limpio)
+            if ram_usada_match:
+                valor = float(ram_usada_match.group(1))
+                unidad = ram_usada_match.group(2)
+                metricas["ram_used_mb"] = int(valor * 1024 if unidad == "G" else valor)
+                metricas["ram_used_unit"] = unidad
+
+            # ✅ Parsear CPU
+            cpu_match = re.search(r"Uso actual:\s+([\d.]+)%", stdout_limpio)
+            if cpu_match:
+                metricas["cpu_usage_percent"] = float(cpu_match.group(1))
+
+            # ✅ Parsear Disco principal /
+            disco_match = re.search(
+                r"/:\s+([\d.]+)(G|M) total \| ([\d.]+)(G|M) usado \| [\d.]+(G|M) libre \| (\d+)%",
+                stdout_limpio,
+            )
+            if disco_match:
+                valor_total = float(disco_match.group(1))
+                unidad_total = disco_match.group(2)
+                valor_usado = float(disco_match.group(3))
+                unidad_usado = disco_match.group(4)
+                porcentaje = float(disco_match.group(6))
+
+                # ✅ Guardar valor normalizado siempre en GB
+                metricas["disk_total_gb"] = (
+                    valor_total / 1024 if unidad_total == "M" else valor_total
+                )
+                metricas["disk_used_gb"] = (
+                    valor_usado / 1024 if unidad_usado == "M" else valor_usado
+                )
+                metricas["disk_usage_percent"] = porcentaje
+
+                # ✅ Guardar unidad original detectada
+                metricas["disk_total_unit"] = unidad_total
+                metricas["disk_used_unit"] = unidad_usado
+
+            # ✅ Parsear Carga del sistema
+            carga_match = re.search(
+                r"Carga del sistema:\s+([\d.]+),\s+([\d.]+),\s+([\d.]+)", stdout_limpio
+            )
+            if carga_match:
+                metricas["load_1min"] = float(carga_match.group(1))
+                metricas["load_5min"] = float(carga_match.group(2))
+                metricas["load_15min"] = float(carga_match.group(3))
+
+        # ✅ SOLUCION DEFINITIVA TIPADO PYLANCE
+        # Usamos cast() para garantizar al type checker que estos campos son int | None
+        from typing import cast
+
+        # ✅ Construir Value Objects estructurados
+        ram = RamMetrics(
+            total_mb=cast(Optional[int], metricas["ram_total_mb"]),
+            used_mb=cast(Optional[int], metricas["ram_used_mb"]),
+            usage_percent=cast(Optional[float], metricas["ram_usage_percent"]),
+            total_unit=cast(Optional[str], metricas["ram_total_unit"]),
+            used_unit=cast(Optional[str], metricas["ram_used_unit"]),
+        )
+
+        disk = DiskMetrics(
+            total_gb=cast(Optional[float], metricas["disk_total_gb"]),
+            used_gb=cast(Optional[float], metricas["disk_used_gb"]),
+            usage_percent=cast(Optional[float], metricas["disk_usage_percent"]),
+            total_unit=cast(Optional[str], metricas["disk_total_unit"]),
+            used_unit=cast(Optional[str], metricas["disk_used_unit"]),
+        )
+
+        cpu = CpuMetrics(
+            usage_percent=cast(Optional[float], metricas["cpu_usage_percent"]),
+        )
+
+        system_load = SystemLoadMetrics(
+            load_1min=cast(Optional[float], metricas["load_1min"]),
+            load_5min=cast(Optional[float], metricas["load_5min"]),
+            load_15min=cast(Optional[float], metricas["load_15min"]),
+        )
+
+        return cls(
+            id=uuid4(),
+            hostname=hostname.strip(),
+            success=success,
+            exit_code=exit_code,
+            stdout=stdout,
+            stderr=stderr,
+            execution_time_seconds=round(execution_time_seconds, 3),
+            executed_at=executed_at or now,
+            created_at=now,
+            ram=ram,
+            disk=disk,
+            cpu=cpu,
+            system_load=system_load,
+            process_count=cast(Optional[int], metricas["process_count"]),
+            uptime_seconds=cast(Optional[int], metricas["uptime_seconds"]),
+        )
+
+    def __str__(self) -> str:
+        status = "✅ OK" if self.success else "❌ FALLIDO"
+        return (
+            f"[{self.id}] {self.hostname} | {status} | {self.execution_time_seconds}s"
+        )

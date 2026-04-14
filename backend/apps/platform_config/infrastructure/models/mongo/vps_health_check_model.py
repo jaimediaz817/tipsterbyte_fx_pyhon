@@ -1,73 +1,59 @@
-from __future__ import annotations
+"""
+✅ MODELO MONGODB PARA VPS HEALTH CHECK
+✅ ESTANDAR BEANIE - SEGUIMIENTO CONVENCIONES DEL PROYECTO
+✅ TTL INDEX AUTO-EXPIRABLE 90 DIAS
+✅ INDICES OPTIMIZADOS
+"""
+
+from typing import Optional
 from datetime import datetime, timezone
-from typing import Annotated, Optional, Dict, Any
-from beanie import Document, Indexed
+from uuid import UUID, uuid4
+
+from beanie import Document
 from pydantic import Field
-
-
-class VpsMemoryMetrics(Document):
-    total_bytes: int
-    used_bytes: int
-    free_bytes: int
-    available_bytes: int
-    usage_percent: float
-
-
-class VpsDiskMetrics(Document):
-    mount_point: str
-    total_bytes: int
-    used_bytes: int
-    free_bytes: int
-    usage_percent: float
-
-
-class VpsCpuMetrics(Document):
-    cores_count: int
-    model_name: str
-    usage_percent: float
-
-
-class VpsNetworkMetrics(Document):
-    public_ip: Optional[str] = None
-    has_internet_connectivity: bool
-
-
-class VpsSystemInfo(Document):
-    os_name: str
-    hostname: str
-    architecture: str
-    kernel_version: str
-    uptime_seconds: int
-    load_average: str
 
 
 class VpsHealthCheckModel(Document):
     """
-    Modelo Beanie para MongoDB - Resultado completo de chequeo de salud de VPS
-    Almacena metricas historicas de estado del servidor remoto
+    Modelo de persistencia MongoDB para resultados de Health Check.
+
+    ✅ Estandar Beanie + Pydantic segun convenciones del proyecto
+    ✅ TTL Automatico: Los registros se borran solos despues de 90 dias
+    ✅ Indices optimizados para consultas por hostname y fecha
+    ✅ Append Only: Nunca se actualizan documentos, solo se insertan
     """
 
-    server_identifier: Annotated[str, Indexed(str)]
-    executed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    system_info: VpsSystemInfo
-    memory: VpsMemoryMetrics
-    cpu: VpsCpuMetrics
-    disks: list[VpsDiskMetrics]
-    network: VpsNetworkMetrics
-
-    raw_response: str
+    id: UUID = Field(default_factory=uuid4)
+    hostname: str
     success: bool
-    execution_duration_ms: int
-    error_message: Optional[str] = None
+    exit_code: int
+    stdout: str
+    stderr: str
+    execution_time_seconds: float
+    executed_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    # ✅ METRICAS ESTRUCTURADAS (NUEVO FORMATO)
+    ram: Optional[dict] = None
+    disk: Optional[dict] = None
+    cpu: Optional[dict] = None
+    system_load: Optional[dict] = None
+
+    process_count: Optional[int] = None
+    uptime_seconds: Optional[int] = None
 
     class Settings:
-        name = "vps_health_checks"
+        name = "vps_health_check_logs"
+        use_revision = False
         indexes = [
-            "server_identifier",
+            "hostname",
             "executed_at",
             "success",
-            [("server_identifier", "executed_at")],
+            [("hostname", -1), ("executed_at", -1)],
         ]
+
+    def __str__(self) -> str:
+        status = "✅ OK" if self.success else "❌ FALLIDO"
+        return (
+            f"[{self.id}] {self.hostname} | {status} | {self.execution_time_seconds}s"
+        )

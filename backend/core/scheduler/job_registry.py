@@ -1,0 +1,71 @@
+"""
+✅ REGISTRO GLOBAL DE JOBS PROGRAMADOS
+Implementacion del patron Registry para cumplir con DIP (Dependency Inversion Principle)
+
+✅ Como funciona:
+- El core NUNCA busca jobs hacia afuera
+- Cada job se registra a si mismo usando el decorador @register_job
+- El core solo consulta este registro
+- Cero acoplamiento entre core y aplicaciones
+
+✅ Uso:
+@register_job("nombre_mi_job")
+async def mi_job():
+    pass
+"""
+
+from typing import Callable, Dict, Awaitable
+from loguru import logger
+
+
+class JobRegistry:
+    _instance = None
+    _jobs: Dict[str, Callable[..., Awaitable[None]]] = {}
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    @classmethod
+    def register(cls, name: str, func: Callable) -> None:
+        """Registra una funcion como job programado"""
+        if name in cls._jobs:
+            logger.warning(f"⚠️ Job '{name}' ya estaba registrado, sobrescribiendo.")
+
+        cls._jobs[name] = func
+        logger.trace(f"✅ Job '{name}' registrado exitosamente.")
+
+    @classmethod
+    def get(cls, name: str) -> Callable | None:
+        """Obtiene un job por su nombre"""
+        return cls._jobs.get(name)
+
+    @classmethod
+    def get_all(cls) -> Dict[str, Callable]:
+        """Obtiene todos los jobs registrados"""
+        return cls._jobs.copy()
+
+    @classmethod
+    def clear(cls) -> None:
+        """Limpia el registro (solo para tests)"""
+        cls._jobs.clear()
+
+
+def register_job(name: str):
+    """
+    Decorador para registrar automaticamente una funcion como job programado
+
+    Ejemplo:
+    @register_job("actualizar_noticias")
+    async def actualizar_noticias():
+        pass
+    """
+
+    def decorator(
+        func: Callable[..., Awaitable[None]],
+    ) -> Callable[..., Awaitable[None]]:
+        JobRegistry.register(name, func)
+        return func
+
+    return decorator

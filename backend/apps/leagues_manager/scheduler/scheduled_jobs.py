@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from core.scheduler.job_registry import register_job
 from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task import (
     launch_process_rastreo_data_fuentes_deportivas_task,
 )
@@ -22,13 +23,11 @@ def create_job_function(process_code: str):
     que solo difieren en el process_code.
     """
 
-    def job_function():
+    async def job_function():
         try:
             logger.info(f"🚀 Ejecutando tarea programada: {process_code}")
-            asyncio.run(
-                launch_process_rastreo_data_fuentes_deportivas_task(
-                    process_code=process_code
-                )
+            await launch_process_rastreo_data_fuentes_deportivas_task(
+                process_code=process_code
             )
         except Exception as e:
             logger.exception(f"❌ Error ejecutando {process_code}: {e}")
@@ -43,3 +42,13 @@ PROCESS_MAP = {
     PROCESS_ODDS_WPLAY_EXTRACTION: create_job_function(PROCESS_ODDS_WPLAY_EXTRACTION),
     PROCESS_CALENDAR_EXTRACTION: create_job_function(PROCESS_CALENDAR_EXTRACTION),
 }
+
+# ✅ REGISTRO AUTOMATICO EN EL SCHEDULER CENTRAL
+# Los jobs se registran automaticamente al importar este modulo
+# El core no necesita saber nada de esta aplicacion
+for nombre_job, funcion_job in PROCESS_MAP.items():
+    register_job(nombre_job)(funcion_job)
+
+logger.debug(
+    f"✅ Registrados {len(PROCESS_MAP)} jobs de leagues_manager automaticamente"
+)

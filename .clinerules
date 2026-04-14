@@ -1,5 +1,3 @@
-# Cline Rules - TipsterByte FX
-# Este archivo contiene reglas e instrucciones que Cline debe seguir siempre
 
 ## Información del Proyecto
 - **Nombre**: TipsterByte FX
@@ -34,26 +32,26 @@
 4. **Tests**: Crear tests para nueva funcionalidad
 5. **Migrations**: Usar Alembic para cambios en DB
 
-## Comandos Frecuentes
-- Ejecutar tests: `pytest backend/`
-- Iniciar servidor: `uvicorn backend.main:app --reload`
-- Diagnóstico: `python backend/scripts/diagnose_processes_visual.py`
+## ✅ REGLA OBLIGATORIA PRUEBAS UNITARIAS
+> APLICAR SIEMPRE SIN EXCEPCIONES EN TODOS LOS ARCHIVOS TEST
+> Todas las pruebas unitarias DEBEN ser ejecutables:
+> ✅ Desde Testing Explorer de VS Code
+> ✅ Ejecutando manualmente `python nombre_archivo.py`
+> ✅ Ejecutando pytest desde cualquier ubicacion
 
-## Excepciones y Errores
-- Usar excepciones personalizadas de `backend/core/exceptions/`
-- Logging con Loguru para todos los errores
-- No exponer detalles internos en respuestas API
+### Patron estandar a usar en CABECERA de TODO test:
+```python
+import sys
+from pathlib import Path
 
-## Configuración de Entorno
-- Desarrollo: `backend/.env`
-- Producción: `backend/.env.prod`
-- Variables críticas: DATABASE_URL, MONGO_URI, LOG_LEVEL
+# ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
+ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+if str(ROOT_PROYECTO) not in sys.path:
+    sys.path.insert(0, str(ROOT_PROYECTO))
 
-## Reglas DDD y Tipado
-1. **Conflicto de Nombres**: Cuando exista misma clase en Entidad Dominio y Modelo SQL:
-   - Importar modelo SQL con sufijo `Model` (ej: `FuenteExtraccion as FuenteExtraccionModel`)
-   - Usar `from __future__ import annotations` en la primera línea
-   - Usar imports condicionales `TYPE_CHECKING` para entidades de dominio
+# ✅ Cargar automaticamente variables de entorno
+from dotenv import load_dotenv
+load_dotenv(ROOT_PROYECTO / "backend" / ".env")
 2. **Métodos Create/Update**: Usar `cast()` para indicar que el valor de retorno NO es None
 3. **Repositorios**: Siempre retornar entidades de dominio, NUNCA modelos de SQL
 4. **Forward References**: Usar comillas dobles para tipos en declaraciones de métodos
