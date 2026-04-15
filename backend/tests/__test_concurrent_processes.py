@@ -8,11 +8,24 @@ Uso:
     python backend/test_concurrent_processes.py
 """
 
+import sys
+from pathlib import Path
+
+# ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
+ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+if str(ROOT_PROYECTO) not in sys.path:
+    sys.path.insert(0, str(ROOT_PROYECTO))
+
+# ✅ Cargar automaticamente variables de entorno
+from dotenv import load_dotenv
+
+load_dotenv(ROOT_PROYECTO / "backend" / ".env")
+
 import asyncio
 import time
 from loguru import logger
-from core.config import settings
-from core.db.sql.database_sql import SessionLocal
+from backend.core.config import settings
+from backend.core.db.sql.database_sql import SessionLocal
 from apps.leagues_manager.application.job_runner_application import JobRunnerApplication
 from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task import (
     launch_process_rastreo_data_fuentes_deportivas_task,

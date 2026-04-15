@@ -149,16 +149,14 @@ class TestLogCleanupSchedulerIntegration:
         """
         Verifica que la expresión cron está configurada correctamente.
         """
-        from core.scheduler.jobs_loader import ALL_PROCESS_MAPS
-
         print("\n Verificando configuración de cron...")
 
         # Verificar que el job está registrado
-        assert "PROCESS_LOG_CLEANUP" in ALL_PROCESS_MAPS
-        print(" Job registrado en ALL_PROCESS_MAPS")
+        assert "PROCESS_LOG_CLEANUP" in LOG_CLEANUP_PROCESS_MAP
+        print(" Job registrado correctamente en LOG_CLEANUP_PROCESS_MAP")
 
         # Verificar que es callable
-        job = ALL_PROCESS_MAPS["PROCESS_LOG_CLEANUP"]
+        job = LOG_CLEANUP_PROCESS_MAP["PROCESS_LOG_CLEANUP"]
         assert callable(job)
         print(" Job es callable")
 

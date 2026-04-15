@@ -14,13 +14,13 @@ async def mi_job():
     pass
 """
 
-from typing import Callable, Dict, Awaitable
+from typing import Callable, Dict, Awaitable, Any
 from loguru import logger
 
 
 class JobRegistry:
     _instance = None
-    _jobs: Dict[str, Callable[..., Awaitable[None]]] = {}
+    _jobs: Dict[str, Callable[..., Awaitable[Any]]] = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -63,8 +63,8 @@ def register_job(name: str):
     """
 
     def decorator(
-        func: Callable[..., Awaitable[None]],
-    ) -> Callable[..., Awaitable[None]]:
+        func: Callable[..., Awaitable[Any]],
+    ) -> Callable[..., Awaitable[Any]]:
         JobRegistry.register(name, func)
         return func
 

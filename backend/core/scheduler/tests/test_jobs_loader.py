@@ -41,11 +41,11 @@ class TestGetScheduledJobsFromDB:
 
         # Ejecutar
         with patch(
-            "core.scheduler.jobs_loader.ALL_PROCESS_MAPS",
-            {
+            "core.scheduler.jobs_loader.JobRegistry.get",
+            side_effect=lambda name: {
                 "PROCESS_STANDINGS_EXTRACTION": lambda: None,
                 "PROCESS_CALENDAR_EXTRACTION": lambda: None,
-            },
+            }.get(name),
         ):
             jobs = get_scheduled_jobs_from_db()
 
@@ -81,7 +81,7 @@ class TestGetScheduledJobsFromDB:
         mock_repo.get_all_enabled.return_value = [mock_config]
 
         # Ejecutar con mapa vacío
-        with patch("core.scheduler.jobs_loader.ALL_PROCESS_MAPS", {}):
+        with patch("core.scheduler.jobs_loader.JobRegistry.get", return_value=None):
             jobs = get_scheduled_jobs_from_db()
 
         # Verificar que no se agregó el job no registrado
@@ -113,8 +113,7 @@ class TestGetScheduledJobsFromDB:
 class TestRegisterJobs:
     """Tests para la función register_jobs."""
 
-    @patch("core.scheduler.jobs_loader.ALL_PROCESS_MAPS")
-    def test_register_jobs_with_valid_config(self, mock_process_maps):
+    def test_register_jobs_with_valid_config(self):
         """Test que verifica que los jobs se registran correctamente en el scheduler."""
         from core.scheduler.jobs_loader import register_jobs
 
@@ -138,12 +137,6 @@ class TestRegisterJobs:
             },
         ]
 
-        # Mock del mapa de procesos
-        mock_process_maps.get.side_effect = lambda x: {
-            "PROCESS_STANDINGS_EXTRACTION": mock_func_1,
-            "PROCESS_CALENDAR_EXTRACTION": mock_func_2,
-        }.get(x)
-
         with patch(
             "core.scheduler.jobs_loader.get_scheduled_jobs_from_db",
             return_value=job_configs,
@@ -153,9 +146,8 @@ class TestRegisterJobs:
         # Verificar que se llamó add_job para cada configuración
         assert mock_scheduler.add_job.call_count == 2
 
-    @patch("core.scheduler.jobs_loader.ALL_PROCESS_MAPS")
-    def test_register_jobs_with_missing_function(self, mock_process_maps):
-        """Test que verifica el manejo de jobs sin función mapeada."""
+    def test_register_jobs_with_valid_job_config(self):
+        """Test que verifica que los jobs se registran correctamente."""
         from core.scheduler.jobs_loader import register_jobs
 
         # Mock del scheduler
@@ -170,17 +162,14 @@ class TestRegisterJobs:
             }
         ]
 
-        # Mock del mapa de procesos vacío
-        mock_process_maps.get.return_value = None
-
         with patch(
             "core.scheduler.jobs_loader.get_scheduled_jobs_from_db",
             return_value=job_configs,
         ):
             register_jobs(mock_scheduler)
 
-        # Verificar que NO se llamó add_job
-        mock_scheduler.add_job.assert_not_called()
+        # La validacion se hace en get_scheduled_jobs_from_db, register_jobs registra todo lo que llega
+        assert mock_scheduler.add_job.call_count == 1
 
 
 class TestSchedulerService:
@@ -336,11 +325,10 @@ class TestSchedulerIntegration:
 
         mock_repo.get_all_enabled.return_value = [mock_config]
 
-        # Mock del mapa de procesos
+        # Mock del JobRegistry
         mock_func = MagicMock()
         with patch(
-            "core.scheduler.jobs_loader.ALL_PROCESS_MAPS",
-            {"PROCESS_STANDINGS_EXTRACTION": mock_func},
+            "core.scheduler.jobs_loader.JobRegistry.get", return_value=mock_func
         ):
             # Ejecutar
             start_scheduler()

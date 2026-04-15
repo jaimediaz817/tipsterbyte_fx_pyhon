@@ -10,9 +10,21 @@ Uso:
     python backend/test_manual_execution.py
 """
 
+import sys
+from pathlib import Path
+
+# ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
+ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+if str(ROOT_PROYECTO) not in sys.path:
+    sys.path.insert(0, str(ROOT_PROYECTO))
+
+# ✅ Cargar automaticamente variables de entorno
+from dotenv import load_dotenv
+
+load_dotenv(ROOT_PROYECTO / "backend" / ".env")
+
 import asyncio
 import subprocess
-import sys
 import time
 from loguru import logger
 

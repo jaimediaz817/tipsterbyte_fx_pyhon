@@ -1,94 +1,32 @@
-import logging
 import sys
 from loguru import logger
 from core.config import settings
-from core.paths import BACKEND_ROOT, LOGS_ROOT
-from core.logging import LOG_PROFILES
-import os
-from pathlib import Path
+from core.paths import LOGS_ROOT
 
-
-class InterceptHandler(logging.Handler):
-    """
-    Redirige los logs del sistema de logging estándar de Python a Loguru.
-    Captura logs de librerías que usan 'logging' (uvicorn, SQLAlchemy, APScheduler, etc.).
-    """
-
-    def emit(self, record: logging.LogRecord):
-        try:
-            level = logger.level(record.levelname).name
-        except ValueError:
-            level = record.levelno
-
-        frame, depth = logging.currentframe(), 2
-        while frame and frame.f_code.co_filename == logging.__file__:
-            frame = frame.f_back
-            depth += 1
-
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
-
-
-def _safe_add_sink(sink_path: Path, **kwargs):
-    """
-    Agrega un sink de Loguru de manera segura, deshabilitando rotación si hay errores.
-    """
-    try:
-        # Intentar agregar con rotación
-        logger.add(sink=sink_path, **kwargs)
-    except Exception as e:
-        # Si hay error, intentar sin rotación
-        logger.warning(f"⚠️ Error al configurar rotación para {sink_path.name}: {e}")
-        logger.info(f"🔄 Deshabilitando rotación para {sink_path.name}")
-
-        # Remover parámetros de rotación
-        safe_kwargs = {
-            k: v
-            for k, v in kwargs.items()
-            if k not in ["rotation", "retention", "compression"]
-        }
-
-        try:
-            logger.add(sink=sink_path, **safe_kwargs)
-            logger.info(f"✅ Sink {sink_path.name} configurado sin rotación")
-        except Exception as e2:
-            logger.error(f"❌ Error crítico al configurar sink {sink_path.name}: {e2}")
+# Componentes especializados SRP
+from core.logging.intercept_handler import setup as setup_intercept_handler
+from core.logging.intercept_handler import InterceptHandler
+from core.logging.sink_manager import safe_add_sink
+from core.logging.global_exception_handler import (
+    setup as setup_global_exception_handler,
+)
+from core.logging.format_provider import console_format, file_format
+from core.logging.profile_loader import load_all as load_log_profiles
+from core.logging.dynamic_module_sink_loader import scan_and_load as load_dynamic_sinks
 
 
 def configure_logging():
     """
-    Configura Loguru con:
-    - Redirección de logging estándar de Python.
-    - Sink de consola.
-    - Sinks estáticos para 'core/system' y 'core/scheduler'.
-    - Sink específico para robots de leagues_manager.
-    - Sinks dinámicos por cada módulo en 'backend/apps' (excluyendo robots).
-    - Sink 'general_app.log' que excluye explícitamente 'core', 'scheduler' y TODOS los 'apps.*'
-      para evitar duplicados con los sinks de apps/robots.
-    - Manejo robusto de errores de rotación en Windows.
+    Configura el sistema de logging completo.
+    ✅ UNICA RESPONSABILIDAD: Orquestar los componentes.
+    ✅ CUMPLE SRP 100%
     """
     logger.remove()
     LOGS_ROOT.mkdir(exist_ok=True)
 
-    # Redirigir logging estándar
-    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-
-    # Formatos
-    console_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}:{function}:{line}</cyan> - <level>{message}</level>"
-    file_format = "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
-
-    # Agregar exception handler global para capturar errores de rotación en Windows
-    def _global_exception_handler(message):
-        """Captura errores de logging sin interrumpir la ejecución."""
-        pass  # Silenciar errores de logging para no ensuciar la consola
-
-    logger.add(
-        sink=_global_exception_handler,
-        format="",
-        catch=True,
-        level="ERROR",
-    )
+    # Configurar componentes individuales
+    setup_intercept_handler()
+    setup_global_exception_handler()
 
     # Consola SIEMPRE activa
     logger.add(
@@ -98,65 +36,27 @@ def configure_logging():
         colorize=True,
     )
 
-    # Archivos SOLO si FILE_LOGGING_ENABLED está habilitado
+    # Archivos SOLO si FILE_LOGGING_ENABLED esta habilitado
     if settings.FILE_LOGGING_ENABLED:
-        # Crear directorios necesarios
-        (LOGS_ROOT / "scheduler").mkdir(exist_ok=True)
-
-        # Configurar sinks usando perfiles (Strategy Pattern)
-        for profile in LOG_PROFILES.values():
-            _safe_add_sink(
-                sink_path=profile.sink_path,
-                level=profile.level,
-                format=file_format,
-                filter=profile.filter,
-                rotation=profile.rotation,
-                retention=profile.retention,
-                compression=profile.compression,
-                enqueue=True,
-                backtrace=True,
-                diagnose=True,
-                delay=True,
-                mode="a",
-                catch=True,
-            )
-
-        # Sinks dinámicos por módulo en apps (excluyendo robots)
-        apps_dir = BACKEND_ROOT / "apps"
-        if apps_dir.exists():
-            for module_path in apps_dir.iterdir():
-                if module_path.is_dir() and (module_path / "__init__.py").exists():
-                    module_name = module_path.name
-
-                    def create_module_filter(name: str):
-                        def _f(record):
-                            n = record["name"]
-                            return (
-                                n.startswith(f"apps.{name}")
-                                and ".robots." not in n
-                                and not n.endswith(".robots")
-                            )
-
-                        return _f
-
-                    _safe_add_sink(
-                        sink_path=LOGS_ROOT / f"{module_name}.log",
-                        level="INFO",
-                        format=file_format,
-                        filter=create_module_filter(module_name),
-                        rotation="10 MB",
-                        retention="10 days",
-                        compression="zip",
-                        enqueue=True,
-                        backtrace=True,
-                        diagnose=True,
-                        delay=True,
-                        mode="a",
-                        catch=True,
-                    )
+        load_log_profiles()
+        load_dynamic_sinks()
 
         logger.info(
             "✅ Logging dinámico y segmentado configurado con manejo robusto de errores."
         )
     else:
         logger.info("🔇 Logging en archivos DESHABILITADO. Solo consola activa.")
+
+
+# ✅ RETROCOMPATIBILIDAD 100% - Exportar simbolos antiguos
+# Para que ningun test ni codigo existente se rompa
+_safe_add_sink = safe_add_sink
+
+__all__ = [
+    "configure_logging",
+    "InterceptHandler",
+    "safe_add_sink",
+    "_safe_add_sink",
+    "console_format",
+    "file_format",
+]

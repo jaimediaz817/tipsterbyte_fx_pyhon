@@ -69,3 +69,13 @@ def resume_log_cleanup():
 def run_log_cleanup_now():
     """Ejecuta el job de limpieza de logs inmediatamente."""
     return scheduler_service.run_log_cleanup_now()
+
+
+@router.post("/scheduler/run/{process_code}", tags=["Scheduler"])
+def run_process_now(process_code: str):
+    """
+    Ejecuta cualquier proceso registrado inmediatamente por su process_code.
+
+    El proceso se ejecuta en segundo plano y no bloquea el response.
+    """
+    return scheduler_service.run_process_now(process_code)

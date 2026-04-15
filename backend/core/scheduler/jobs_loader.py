@@ -8,7 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
-from core.scheduler.job_registry import JobRegistry
+from .job_registry import JobRegistry
 from shared.repositories.scheduler_repos.scheduled_process_config_repository import (
     ScheduledProcessConfigRepository,
 )

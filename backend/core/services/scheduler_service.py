@@ -3,6 +3,7 @@ from core.scheduler.jobs_loader import register_jobs
 from core.scheduler import scheduler
 from fastapi.responses import JSONResponse
 import pytz
+from datetime import datetime
 from loguru import logger
 
 
@@ -205,4 +206,58 @@ def run_log_cleanup_now():
         return JSONResponse(
             status_code=500,
             content={"error": f"Error ejecutando limpieza: {str(e)}"},
+        )
+
+
+def run_process_now(process_code: str):
+    """
+    Ejecuta cualquier proceso registrado inmediatamente por su process_code.
+
+    Args:
+        process_code: Codigo unico del proceso registrado en process_codes.py
+
+    Returns:
+        dict con resultado de la ejecución
+    """
+    if not scheduler.running:
+        return JSONResponse(
+            status_code=503, content={"error": "Scheduler no está activo"}
+        )
+
+    try:
+        from core.scheduler.job_registry import JobRegistry
+        from core.exceptions.process_exceptions import ProcessNotFoundException
+
+        # Validar que el proceso existe en el registro
+        registered_jobs = JobRegistry.get_all()
+        if process_code not in registered_jobs:
+            # ✅ PATRON SPRING BOOT: Lanzar excepcion directamente, NO devolver JSONResponse
+            # El GlobalExceptionHandler se encarga automaticamente de serializar la respuesta
+            raise ProcessNotFoundException(process_code)
+
+        # Obtener la función del registro
+        job_function = registered_jobs[process_code]
+
+        # Ejecutar el proceso inmediatamente
+        logger.info(f"🚀 Ejecutando proceso manualmente: {process_code}")
+
+        # Ejecutar en hilo separado para no bloquear el API
+        import threading
+
+        thread = threading.Thread(target=job_function, daemon=True)
+        thread.start()
+
+        return {
+            "message": f"Proceso {process_code} ejecutado correctamente",
+            "process_code": process_code,
+            "status": "executing",
+            "started_at": pytz.timezone("America/Bogota")
+            .localize(datetime.now())
+            .isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Error ejecutando proceso {process_code}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error ejecutando proceso: {str(e)}"},
         )

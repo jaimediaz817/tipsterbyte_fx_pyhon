@@ -12,7 +12,6 @@ from core.scheduler.log_cleanup_jobs import (
     LOG_CLEANUP_PROCESS_MAP,
     create_log_cleanup_job,
 )
-from core.scheduler.jobs_loader import ALL_PROCESS_MAPS
 
 
 class TestLogCleanupScheduler:
@@ -20,17 +19,17 @@ class TestLogCleanupScheduler:
 
     def test_log_cleanup_job_exists_in_process_map(self):
         """Verifica que el job de limpieza está registrado en el mapa de procesos."""
-        assert "PROCESS_LOG_CLEANUP" in ALL_PROCESS_MAPS
-        assert callable(ALL_PROCESS_MAPS["PROCESS_LOG_CLEANUP"])
+        assert "PROCESS_LOG_CLEANUP" in LOG_CLEANUP_PROCESS_MAP
+        assert callable(LOG_CLEANUP_PROCESS_MAP["PROCESS_LOG_CLEANUP"])
 
     def test_log_cleanup_job_is_callable(self):
         """Verifica que el job de limpieza es una función callable."""
-        job = ALL_PROCESS_MAPS["PROCESS_LOG_CLEANUP"]
+        job = LOG_CLEANUP_PROCESS_MAP["PROCESS_LOG_CLEANUP"]
         assert callable(job)
 
     def test_log_cleanup_job_executes_successfully(self):
         """Verifica que el job de limpieza ejecuta sin errores."""
-        job = ALL_PROCESS_MAPS["PROCESS_LOG_CLEANUP"]
+        job = LOG_CLEANUP_PROCESS_MAP["PROCESS_LOG_CLEANUP"]
 
         # Mock del servicio para evitar operaciones reales
         with patch("core.scheduler.log_cleanup_jobs.LogCleanupService") as MockService:
@@ -63,7 +62,7 @@ class TestLogCleanupScheduler:
 
     def test_log_cleanup_job_handles_errors_gracefully(self):
         """Verifica que el job maneja errores sin fallar."""
-        job = ALL_PROCESS_MAPS["PROCESS_LOG_CLEANUP"]
+        job = LOG_CLEANUP_PROCESS_MAP["PROCESS_LOG_CLEANUP"]
 
         # Mock del servicio para que lance una excepción
         with patch("core.scheduler.log_cleanup_jobs.LogCleanupService") as MockService:
@@ -91,33 +90,40 @@ class TestLogCleanupScheduler:
         """Verifica que la expresión cron configurada es correcta (3:00 AM diario)."""
         # La expresión cron debe ser "0 3 * * *" (minuto 0, hora 3, todos los días)
         from core.scheduler.jobs_loader import get_scheduled_jobs_from_db
+        from core.scheduler.job_registry import JobRegistry
 
-        # Este test requiere conexión a BD, así que lo mockeamos
-        with patch("core.scheduler.jobs_loader.SessionLocal") as mock_session:
-            mock_db = MagicMock()
-            mock_session.return_value.__enter__.return_value = mock_db
+        # Mockear JobRegistry para que devuelva el job
+        with patch("core.scheduler.jobs_loader.JobRegistry") as MockJobRegistry:
+            MockJobRegistry.get.return_value = LOG_CLEANUP_PROCESS_MAP[
+                "PROCESS_LOG_CLEANUP"
+            ]
 
-            mock_repo = MagicMock()
-            mock_config = MagicMock()
-            mock_config.process_name = "PROCESS_LOG_CLEANUP"
-            mock_config.cron_expression = "0 3 * * *"
+            # Este test requiere conexión a BD, así que lo mockeamos
+            with patch("core.scheduler.jobs_loader.SessionLocal") as mock_session:
+                mock_db = MagicMock()
+                mock_session.return_value.__enter__.return_value = mock_db
 
-            mock_repo.get_all_enabled.return_value = [mock_config]
+                mock_repo = MagicMock()
+                mock_config = MagicMock()
+                mock_config.process_name = "PROCESS_LOG_CLEANUP"
+                mock_config.cron_expression = "0 3 * * *"
 
-            with patch(
-                "core.scheduler.jobs_loader.ScheduledProcessConfigRepository"
-            ) as MockRepo:
-                MockRepo.return_value = mock_repo
+                mock_repo.get_all_enabled.return_value = [mock_config]
 
-                jobs = get_scheduled_jobs_from_db()
+                with patch(
+                    "core.scheduler.jobs_loader.ScheduledProcessConfigRepository"
+                ) as MockRepo:
+                    MockRepo.return_value = mock_repo
 
-                # Verificar que el job está en la lista
-                assert len(jobs) > 0
-                log_cleanup_job = next(
-                    (j for j in jobs if j["name"] == "PROCESS_LOG_CLEANUP"), None
-                )
-                assert log_cleanup_job is not None
-                assert log_cleanup_job["cron"] == "0 3 * * *"
+                    jobs = get_scheduled_jobs_from_db()
+
+                    # Verificar que el job está en la lista
+                    assert len(jobs) > 0
+                    log_cleanup_job = next(
+                        (j for j in jobs if j["name"] == "PROCESS_LOG_CLEANUP"), None
+                    )
+                    assert log_cleanup_job is not None
+                    assert log_cleanup_job["cron"] == "0 3 * * *"
 
 
 if __name__ == "__main__":

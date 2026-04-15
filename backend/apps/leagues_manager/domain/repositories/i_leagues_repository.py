@@ -14,9 +14,24 @@ from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
 from apps.leagues_manager.domain.repositories.i_repositorio_fuente_extraccion import (
     IRepositorioFuenteExtraccion,
 )
+from apps.leagues_manager.domain.repositories.i_repositorio_continente import (
+    IRepositorioContinente,
+)
+from apps.leagues_manager.domain.repositories.i_repositorio_pais import IRepositorioPais
+from apps.leagues_manager.domain.repositories.i_repositorio_liga import IRepositorioLiga
+from apps.leagues_manager.domain.repositories.i_repositorio_torneo import (
+    IRepositorioTorneo,
+)
 
 
-class ILeaguesRepository(IRepositorioFuenteExtraccion, ABC):
+class ILeaguesRepository(
+    IRepositorioContinente,
+    IRepositorioPais,
+    IRepositorioLiga,
+    IRepositorioTorneo,
+    IRepositorioFuenteExtraccion,
+    ABC,
+):
     # Continente
     @abstractmethod
     def get_all_continentes(self) -> List[Continente]:

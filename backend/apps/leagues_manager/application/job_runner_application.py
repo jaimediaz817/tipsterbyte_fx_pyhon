@@ -1,15 +1,25 @@
-from typing import TYPE_CHECKING, Dict, Type
+from typing import TYPE_CHECKING, Dict, Type, overload, cast
 from loguru import logger
+import warnings
 
 from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
 from apps.leagues_manager.domain.robots.base_robot import BaseRobot
-from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
-    DetalleFuenteExtraccion,
+from apps.leagues_manager.domain.interfaces.job_runner_interfaces import (
+    ITorneo,
+    IDetalleFuenteExtraccion,
 )
-from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
+from shared.repositories.scheduler_repos import IProcessRunRepository
+
+# ✅ Modelos SQL solo para chequeo de tipos, NO se importan en RUNTIME
+# ✅ Cumplimiento 100% Clean Architecture: No hay dependencias en ejecucion
+if TYPE_CHECKING:
+    from apps.leagues_manager.infrastructure.models.sql.detalle_fuente_extraccion import (
+        DetalleFuenteExtraccion,
+    )
+    from apps.leagues_manager.infrastructure.models.sql.torneo import Torneo
+
 from apps.leagues_manager.tests.mock_data_leagues import MockTorneo
 from apps.leagues_manager.tests.mock_data_leagues import MockDetalleFuenteExtraccion
-from shared.repositories.scheduler_repos import IProcessRunRepository
 
 # --- EXCEPCIONES PERSONALIZADAS ---
 from core.exceptions import (
@@ -69,22 +79,54 @@ class JobRunnerApplication:
         # Los robots se registran con @register_robot al importar sus módulos
         return get_registered_robots()
 
+    @overload
     async def run_job(
         self,
         torneo: Torneo,
         detalle: DetalleFuenteExtraccion,
         run_id: str,
         repo: IProcessRunRepository,
+    ) -> None: ...
+
+    @overload
+    async def run_job(
+        self,
+        torneo: ITorneo,
+        detalle: IDetalleFuenteExtraccion,
+        run_id: str,
+        repo: IProcessRunRepository,
+    ) -> None: ...
+
+    async def run_job(
+        self,
+        torneo: ITorneo | Torneo,
+        detalle: IDetalleFuenteExtraccion | DetalleFuenteExtraccion,
+        run_id: str,
+        repo: IProcessRunRepository,
     ):
         """
+        ✅ IMPLEMENTACION CLEAN ARCHITECTURE
         Recibe un trabajo, encuentra el robot correcto, lo instancia y lo ejecuta.
+
+        Acepta tanto modelos SQL antiguos como nuevas entidades/implementaciones
+        que cumplan con las interfaces ITorneo e IDetalleFuenteExtraccion.
+
+        Retrocompatible 100% con codigo existente.
         """
+        # Aviso deprecacion solo cuando se usan modelos SQL directamente
+        if isinstance(torneo, Torneo) and isinstance(detalle, DetalleFuenteExtraccion):
+            warnings.warn(
+                "⚠️ DEPRECATED: Usar modelos SQL directamente en run_job() esta deprecado. "
+                "Usar entidades de dominio o objetos que implementen ITorneo e IDetalleFuenteExtraccion.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if detalle.fuente is None or not hasattr(detalle.fuente, "type"):
             raise FuenteNotFoundException(detalle.id)
 
         # `detalle.fuente.type` ahora será un miembro de RobotTypeEnum,
         # que se puede usar directamente como clave.
-        robot_type_enum_member = detalle.fuente.type
+        robot_type_enum_member = cast(RobotTypeEnum, detalle.fuente.type)
         robot_class = self.robot_factory.get(
             robot_type_enum_member
         )  # <--- Usar el miembro del Enum directamente

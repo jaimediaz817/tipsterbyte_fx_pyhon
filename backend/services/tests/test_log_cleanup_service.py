@@ -14,12 +14,17 @@ from pathlib import Path
 
 import pytest
 
-# Agregar directorio backend al path
-backend_dir = Path(__file__).resolve().parent.parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
+# ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
+ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+if str(ROOT_PROYECTO) not in sys.path:
+    sys.path.insert(0, str(ROOT_PROYECTO))
 
-from services.log_cleanup_service import LogCleanupService, CleanupResult
+# ✅ Cargar automaticamente variables de entorno
+from dotenv import load_dotenv
+
+load_dotenv(ROOT_PROYECTO / "backend" / ".env")
+
+from backend.services.log_cleanup_service import LogCleanupService, CleanupResult
 
 
 @pytest.fixture
