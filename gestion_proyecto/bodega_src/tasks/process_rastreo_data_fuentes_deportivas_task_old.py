@@ -2,11 +2,13 @@ import asyncio
 from dataclasses import dataclass
 from loguru import logger
 
-from bodega_src.tasks.runner_leagues_manager import run_process_client_leagues_manager
+from gestion_proyecto.bodega_src.tasks.runner_leagues_manager import (
+    run_process_client_leagues_manager,
+)
 from core.config import settings
 from core.db.sql.database_sql import SessionLocal
 from shared.constants.process.process_codes import (
-    PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS,
+    PROCESS_EXTRACCION_DATA_FUENTES_DEPORTIVAS,  # type: ignore
 )
 
 

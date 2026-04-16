@@ -2,5 +2,5 @@ projectKey=tipsterbyte_fx
 serverUrl=http://localhost:9000
 serverVersion=26.3.0.120487
 dashboardUrl=http://localhost:9000/dashboard?id=tipsterbyte_fx
-ceTaskId=7d8e2e4e-21c6-4d00-ab11-af90304cea61
-ceTaskUrl=http://localhost:9000/api/ce/task?id=7d8e2e4e-21c6-4d00-ab11-af90304cea61
+ceTaskId=c9bb6f3b-2d35-4106-affe-3166128fb35f
+ceTaskUrl=http://localhost:9000/api/ce/task?id=c9bb6f3b-2d35-4106-affe-3166128fb35f
