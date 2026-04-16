@@ -12,9 +12,9 @@ from core.exceptions import ScrapingException
 from core.robot_logging import (
     log_robot_start,
     log_robot_end,
-    log_step,
     get_robot_emoji,
 )
+from apps.leagues_manager.domain.robots.robot_logger import RobotLogger
 
 if TYPE_CHECKING:
     from apps.leagues_manager.tests.mock_data_leagues import (
@@ -41,6 +41,7 @@ class BaseRobot(ABC):
         detalle: "MockDetalleFuenteExtraccion",
         run_id: str,
         repo: "IProcessRunRepository",  # <-- NUEVO
+        robot_logger: "RobotLogger | None" = None,
     ):
         self.torneo = torneo
         self.detalle = detalle
@@ -60,7 +61,16 @@ class BaseRobot(ABC):
         )
         self.job_context = f"'{self.torneo.nombre}' | Fuente: '{fuente_name}'"
 
-    def _log_step(
+        # ✅ SRP: Logging delegado completamente a RobotLogger
+        # Inyeccion opcional para permitir mockear en tests
+        self._logger = robot_logger or RobotLogger(
+            robot_id=self.robot_id,
+            run_id=self.run_id,
+            detalle_id=self.detalle.id,
+            repo=self.repo,
+        )
+
+    async def _log_step(
         self,
         step: str,
         level: str,
@@ -68,26 +78,16 @@ class BaseRobot(ABC):
         input_data: str | None = None,
         output_data: str | None = None,
     ):
-        """Escribe log en consola Y en BD simultáneamente."""
-        full_message = f"[{self.robot_id}] [run_id={self.run_id}] [detalle_id={self.detalle.id}] [{step}] {message}"
-
-        if level == "info":
-            logger.info(full_message)
-        elif level == "warning":
-            logger.warning(full_message)
-        elif level == "error":
-            logger.error(full_message)
-        else:
-            logger.debug(full_message)
-
-        # Escribe en process_run_logs
-        self.repo.write_log(
-            run_id=self.run_id,
+        """✅ DELEGADO: Escribe log en consola Y en BD simultáneamente.
+        ⚠️ MANTENIDO 100% RETROCOMPATIBLE: Ningun robot existente se rompe.
+        Logica completamente delegada a RobotLogger (SRP)
+        """
+        await self._logger.log_step(
             step=step,
             level=level,
             message=message,
-            input=input_data,
-            output=output_data,
+            input_data=input_data,
+            output_data=output_data,
         )
 
     @abstractmethod
@@ -120,7 +120,7 @@ class BaseRobot(ABC):
         )
 
         # También escribir en BD
-        self.repo.write_log(
+        await self.repo.write_log(
             run_id=self.run_id,
             step="START",
             level="info",
@@ -141,7 +141,7 @@ class BaseRobot(ABC):
             )
 
             # También escribir en BD
-            self.repo.write_log(
+            await self.repo.write_log(
                 run_id=self.run_id,
                 step="END",
                 level="info",
@@ -163,7 +163,7 @@ class BaseRobot(ABC):
             )
 
             # También escribir en BD
-            self.repo.write_log(
+            await self.repo.write_log(
                 run_id=self.run_id,
                 step="ERROR",
                 level="error",

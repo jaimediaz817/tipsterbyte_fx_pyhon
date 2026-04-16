@@ -174,6 +174,160 @@ class JobRunnerApplication:
             f"{'='*60}\n"
         )
 
+    async def run_full_orchestrator(
+        self,
+        process_code: str,
+        platform_repo=None,
+        process_run_repo=None,
+        league_repo=None,
+    ):
+        """
+        ✅ METODO UNICO DE ORQUESTACION
+        ✅ TODA LA LOGICA AQUI. UNA SOLA VEZ.
+        ✅ Esta es la UNICA fuente de verdad de toda la orquestacion
+        ✅ Las Tasks SOLO llaman a este metodo. Nada mas.
+        """
+        from apps.leagues_manager.tasks.utils import generate_run_id
+        from core.db.sql.database_sql import SessionLocal
+        from apps.platform_config.infrastructure.repositories.sql_platform_config_repository import (
+            SQLPlatformConfigRepository,
+        )
+        from apps.leagues_manager.infrastructure.repositories.sql_platform_repository import (
+            SqlPlatformRepository,
+        )
+        from shared.repositories.scheduler_repos import ProcessRunRepositoryFactory
+        from core.config_semaphore import get_semaphore_for_robot_type
+        from core.exceptions import (
+            ProcessNotFoundException,
+            ProcessInactiveException,
+            ProcessRunCreationException,
+            NoActiveJobsException,
+        )
+        import asyncio
+        from datetime import datetime
+
+        run_id = generate_run_id()
+        short_run_id = run_id[:8]
+
+        logger.info(
+            f"\n"
+            f"{'='*70}\n"
+            f"{LogSymbols.START} INICIANDO ORQUESTADOR DE PROCESO\n"
+            f"{'='*70}\n"
+            f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+            f"  📋 Process Code: {process_code}\n"
+            f"  {LogSymbols.TIME} Timestamp: {datetime.now().isoformat()}\n"
+            f"{'='*70}"
+        )
+
+        with SessionLocal() as session:
+            repo = process_run_repo or ProcessRunRepositoryFactory.get_repository(
+                db=session
+            )
+            platform_config_repo = platform_repo or SQLPlatformConfigRepository(session)
+
+            process_entity = platform_config_repo.get_process_by_code(process_code)
+            if not process_entity:
+                raise ProcessNotFoundException(process_code)
+
+            is_active: bool = cast(bool, process_entity.is_active)
+            if not bool(is_active):
+                raise ProcessInactiveException(
+                    process_code, cast(int, process_entity.id)
+                )
+
+            logger.info(f"✅ Proceso '{process_code}' esta ACTIVO. Procediendo...")
+
+            run = repo.create_run(run_id, process_code)
+            if not run:
+                raise ProcessRunCreationException(process_code, run_id)
+
+            target_process_id: int | None = cast(int, process_entity.id)
+            is_general_orchestrator = process_code == "PROCESS_EXTRACT_DATA_FUENTES"
+
+            leagues = league_repo or SqlPlatformRepository(session)
+            leagues = leagues.get_all_leagues_with_full_details()
+
+            logger.info("🔍 Generando lista de trabajos...")
+
+            # ✅ Logica de construccion de jobs aqui (la movemos desde la Task)
+            flat_jobs_for_execution = []
+            torneo_map_for_display = {}
+
+            for league in leagues:
+                if not cast(bool, league.is_active):
+                    continue
+                for torneo in league.torneos:
+                    if not cast(bool, torneo.is_active):
+                        continue
+                    for detalle in torneo.detalles_fuente:
+                        if (
+                            cast(bool, detalle.is_active)
+                            and detalle.fuente
+                            and cast(bool, detalle.fuente.is_active)
+                        ):
+                            if (
+                                not is_general_orchestrator
+                                and target_process_id is not None
+                            ):
+                                if detalle.process_id != target_process_id:
+                                    continue
+                            flat_jobs_for_execution.append((torneo, detalle))
+
+            if not flat_jobs_for_execution:
+                repo.complete_run(run_id)
+                raise NoActiveJobsException(process_code)
+
+            logger.info(
+                f"⚙️  {len(flat_jobs_for_execution)} trabajos listos para proceso '{process_code}'"
+            )
+
+            async def run_job_with_semaphore_wrapper(torneo, detalle):
+                robot_type = detalle.fuente.type
+                try:
+                    robot_enum = RobotTypeEnum(robot_type)
+                    semaphore = get_semaphore_for_robot_type(robot_enum)
+                except ValueError:
+                    semaphore = get_semaphore_for_robot_type(RobotTypeEnum.STANDINGS)
+
+                async with semaphore:
+                    await self.run_job(torneo, detalle, run_id, repo)
+
+            tasks = [
+                run_job_with_semaphore_wrapper(torneo, detalle)
+                for torneo, detalle in flat_jobs_for_execution
+            ]
+
+            try:
+                await asyncio.gather(*tasks)
+                repo.complete_run(run_id)
+
+                logger.success(
+                    f"\n"
+                    f"{'='*70}\n"
+                    f"{LogSymbols.SUCCESS} ORQUESTADOR COMPLETADO EXITOSAMENTE\n"
+                    f"{'='*70}\n"
+                    f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+                    f"  📋 Process Code: {process_code}\n"
+                    f"  ✅ Trabajos ejecutados: {len(flat_jobs_for_execution)}\n"
+                    f"  {LogSymbols.TIME} Finalizado: {datetime.now().isoformat()}\n"
+                    f"{'='*70}\n"
+                )
+            except Exception as e:
+                repo.fail_run(run_id)
+                logger.error(
+                    f"\n"
+                    f"{'='*70}\n"
+                    f"{LogSymbols.ERROR} ORQUESTADOR FALLÓ\n"
+                    f"{'='*70}\n"
+                    f"  {LogSymbols.RUN_ID} Run ID: {short_run_id}...\n"
+                    f"  📋 Process Code: {process_code}\n"
+                    f"  {LogSymbols.ERROR} Error: {e}\n"
+                    f"  {LogSymbols.TIME} Falló: {datetime.now().isoformat()}\n"
+                    f"{'='*70}\n"
+                )
+                raise
+
 
 # --- Punto de entrada para el Task (para mantenerlo simple) ---
 # NOTA: El singleton global se eliminó en Fase 2.

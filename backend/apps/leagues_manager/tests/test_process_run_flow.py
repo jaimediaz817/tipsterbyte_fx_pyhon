@@ -34,7 +34,7 @@ class MockProcessRunRepository:
         }
         return self.runs[run_id]
 
-    def write_log(
+    async def write_log(
         self,
         run_id,
         step,

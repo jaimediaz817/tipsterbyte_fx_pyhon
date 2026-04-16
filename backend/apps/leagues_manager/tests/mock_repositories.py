@@ -1,3 +1,5 @@
+from typing import Optional, Dict, Any
+
 from .mock_data_leagues import (
     MockLiga,
     MockTorneo,
@@ -70,3 +72,58 @@ class MockPlatformRepository:
                     torneo.detalles_fuente.append(detalle)
 
         return self._ligas
+
+
+class MockProcessRunRepository:
+    """
+    Repositorio mock para logs de ejecucion de robots y procesos
+    Implementa la interfaz IProcessRunRepository
+    """
+
+    def __init__(self):
+        self._logs = []
+
+    async def create_run(
+        self, run_id: str, process_name: str, details: Optional[Dict[str, Any]] = None
+    ):
+        pass
+
+    async def update_status(
+        self, run_id: str, status: str, details: Optional[Dict[str, Any]] = None
+    ):
+        pass
+
+    async def add_log_entry(
+        self, run_id: str, step: str, level: str, message: str, **kwargs
+    ):
+        """Agrega entrada de log al repositorio mock"""
+        self._logs.append(
+            {
+                "run_id": run_id,
+                "step": step,
+                "level": level,
+                "message": message,
+                **kwargs,
+            }
+        )
+
+    def get_logs(self, run_id: str):
+        """Obtiene todos los logs registrados para un run_id"""
+        return [log for log in self._logs if log["run_id"] == run_id]
+
+    async def write_log(
+        self,
+        run_id: str,
+        step: str,
+        level: str,
+        message: str,
+        input: Optional[str] = None,
+        **kwargs,
+    ):
+        """
+        ✅ Metodo de compatibilidad con la interfaz real
+        Alias para add_log_entry, usado por BaseRobot
+        """
+        return await self.add_log_entry(
+            run_id, step, level, message, input=input, **kwargs
+        )

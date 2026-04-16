@@ -228,8 +228,45 @@ app = typer.Typer(
 @app.command(
     name="config", help="Muestra el estado actual de la configuración del sistema."
 )
-def project_config():
-    """Muestra diagnóstico completo de todas las variables de configuración."""
+def project_config(
+    show_all: bool = typer.Option(
+        False,
+        "--all",
+        "-a",
+        help="Mostrar TODAS las variables incluyendo valores internos.",
+    ),
+    raw: bool = typer.Option(
+        False,
+        "--raw",
+        "-r",
+        help="Mostrar valores en bruto sin enmascarar credenciales.",
+    ),
+    export: bool = typer.Option(
+        False, "--export", "-e", help="Exportar configuracion actual a archivo JSON."
+    ),
+    category: str = typer.Option(
+        None,
+        "--category",
+        "-c",
+        help="Filtrar solo por categoria especifica (entorno, db, logging, etc).",
+    ),
+):
+    """
+    Muestra diagnóstico completo de todas las variables de configuración del proyecto.
+
+    \b
+    EJEMPLOS DE USO:
+    ----------------
+      python manage.py project config                   # Vista normal (valores sensibles enmascarados)
+      python manage.py project config --all             # Mostrar absolutamente todas las variables
+      python manage.py project config --raw             # Ver contraseñas y claves reales (¡CUIDADO!)
+      python manage.py project config --category db     # Solo ver variables de Base de Datos
+      python manage.py project config --export          # Exportar configuracion a config_actual.json
+
+    \b
+    CATEGORIAS DISPONIBLES:
+      entorno, db, logging, concurrencia, logs, selenium, otros
+    """
     from core.config import settings
 
     typer.echo("\n" + "=" * 70)

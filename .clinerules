@@ -55,3 +55,20 @@ load_dotenv(ROOT_PROYECTO / "backend" / ".env")
 2. **Métodos Create/Update**: Usar `cast()` para indicar que el valor de retorno NO es None
 3. **Repositorios**: Siempre retornar entidades de dominio, NUNCA modelos de SQL
 4. **Forward References**: Usar comillas dobles para tipos en declaraciones de métodos
+
+## ✅ ✅ ✅  REGLA NUEVA ERROR DE AWAIT NONE
+Cuando encuentres el error:
+```
+TypeError: 'NoneType' object can't be awaited
+"None" is not awaitable
+```
+
+✅ SOLUCION OBLIGATORIA STANDARD:
+```python
+from typing import cast, Awaitable
+await cast(Awaitable[None], metodo_async())
+```
+
+❌ NUNCA quitar el await (rompe el codigo real)
+❌ NUNCA ignorar el error
+✅ Siempre usar cast() para solucionar el falso positivo

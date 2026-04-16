@@ -45,7 +45,7 @@ class IProcessRunRepository(ABC):
         pass
 
     @abstractmethod
-    def write_log(
+    async def write_log(
         self,
         run_id: str,
         step: str,

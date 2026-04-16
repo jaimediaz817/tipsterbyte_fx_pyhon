@@ -24,6 +24,9 @@ from apps.leagues_manager.domain.repositories.i_repositorio_torneo import (
 )
 
 
+import warnings
+
+
 class ILeaguesRepository(
     IRepositorioContinente,
     IRepositorioPais,
@@ -32,6 +35,29 @@ class ILeaguesRepository(
     IRepositorioFuenteExtraccion,
     ABC,
 ):
+    """
+    ⚠️ DEPRECADO - PUNTO 2.1 ISP / Clean Architecture
+
+    ✅ Esta interfaz se mantiene UNICAMENTE por retrocompatibilidad
+    ✅ NO usar en nuevos desarrollos
+    ✅ Usar las interfaces individuales:
+       - IRepositorioContinente
+       - IRepositorioPais
+       - IRepositorioLiga
+       - IRepositorioTorneo
+       - IRepositorioFuenteExtraccion
+
+    ✅ Principio de Segregacion de Interfaces (ISP) aplicado correctamente
+    """
+
+    def __init_subclass__(cls, **kwargs):
+        warnings.warn(
+            "ILeaguesRepository is deprecated. Use individual repository interfaces instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init_subclass__(**kwargs)
+
     # Continente
     @abstractmethod
     def get_all_continentes(self) -> List[Continente]:

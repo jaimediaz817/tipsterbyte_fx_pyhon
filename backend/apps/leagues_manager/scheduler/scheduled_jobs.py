@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from typing import cast, Awaitable
 from core.scheduler.job_registry import register_job
 from apps.leagues_manager.tasks.process_rastreo_data_fuentes_deportivas_task import (
     launch_process_rastreo_data_fuentes_deportivas_task,
@@ -26,8 +27,11 @@ def create_job_function(process_code: str):
     async def job_function():
         try:
             logger.info(f"🚀 Ejecutando tarea programada: {process_code}")
-            await launch_process_rastreo_data_fuentes_deportivas_task(
-                process_code=process_code
+            await cast(
+                Awaitable[None],
+                launch_process_rastreo_data_fuentes_deportivas_task(
+                    process_code=process_code
+                ),
             )
         except Exception as e:
             logger.exception(f"❌ Error ejecutando {process_code}: {e}")
