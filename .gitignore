@@ -1,0 +1,87 @@
+# ================================================
+# ✅ GITIGNORE OFICIAL TIPSTERBYTE FX
+# Seguro para Github, NO se sube ninguna clave
+# ================================================
+
+# 🚫 ARCHIVOS DE CONFIGURACION Y SECRETOS
+backend/.env
+backend/.env.dev
+backend/.env.prod
+backend/.env.local
+backend/.fernet.key
+*.key
+*.pem
+*.pub
+id_rsa
+id_rsa.pub
+
+# 🚫 ARCHIVOS CREADOS POR CLINE
+.cline-*
+.clinerules
+.clinecontext
+
+# 🚫 LOGS Y ARCHIVOS TEMPORALES
+*.log
+backend/logs/
+backend/executions/
+backend/data/
+backend/archive/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+.DS_Store
+Thumbs.db
+
+# 🚫 ENTORNO VIRTUAL
+.venv/
+venv/
+env/
+.env/
+
+# 🚫 ARCHIVOS DE TEST Y COBERTURA
+.coverage
+coverage.xml
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage_html/
+htmlcov/
+test-results.xml
+.coveragerc
+
+# 🚫 DOCKER VOLUMENES (NUNCA SUBIR BASE DE DATOS)
+docker_volumes/
+postgres_data/
+mongo_data/
+*.sql.gz
+*.dump
+*.backup
+
+# 🚫 ARCHIVOS DEL IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 🚫 ARCHIVOS DE PYTHON
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+wheels/
+*.egg
+pip-delete-this-directory.txt
+
+# 🚫 ALEMBIC MIGRACIONES AUTOGENERADAS TEMPORALES
+backend/alembic/versions/*.py.tmp
+backend/alembic/versions/tmp_*.py
+
+# 🚫 OTROS
+*.tar.gz
+*.zip
+*.rar
+node_modules/
