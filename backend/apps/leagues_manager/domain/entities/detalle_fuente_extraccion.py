@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 
@@ -15,3 +16,5 @@ class DetalleFuenteExtraccion:
     url: str
     is_active: bool
     process_id: Optional[int]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

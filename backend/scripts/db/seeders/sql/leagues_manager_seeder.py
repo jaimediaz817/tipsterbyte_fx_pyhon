@@ -100,7 +100,14 @@ class LeaguesManagerSeeder(BaseSeeder):
         self.logger.info("🌱 Ejecutando seeder del módulo Leagues Manager...")
         try:
             repo = SQLLeaguesRepository(self.db)
-            service = LeaguesService(repo)
+            service = LeaguesService(
+                repo_continente=repo,
+                repo_pais=repo,
+                repo_liga=repo,
+                repo_torneo=repo,
+                repo_fuente=repo,
+                repo_detalle_fuente=repo,
+            )
 
             # --- NUEVO: Repositorio y Servicio para obtener IDs de Procesos ---
             platform_repo = SQLPlatformConfigRepository(self.db)

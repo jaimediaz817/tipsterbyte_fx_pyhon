@@ -13,7 +13,7 @@ from backend.apps.platform_config.domain.entities.vps_health_check import VpsHea
 from backend.apps.platform_config.domain.repositories.i_vps_health_check_repository import (
     IVpsHealthCheckRepository,
 )
-from backend.apps.platform_config.infrastructure.models.mongo.vps_health_check_model import (
+from backend.apps.platform_config.infrastructure.models.no_sql.vps_health_check_model import (
     VpsHealthCheckModel,
 )
 

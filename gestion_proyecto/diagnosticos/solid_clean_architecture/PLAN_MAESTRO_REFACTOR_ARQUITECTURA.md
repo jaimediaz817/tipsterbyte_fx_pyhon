@@ -18,23 +18,26 @@
 ✅ **Tarea completada:** 1.4 Eliminar duplicacion JobRunner vs Task / Unica fuente de verdad
 ✅ **Tarea completada:** Actualizacion Manual Oficial Scheduler
 ✅ **Tarea completada:** 2.1 Separar repositorio gigante ILeaguesRepository / ISP Aplicado correctamente
+✅ **Tarea completada:** 4.0 Tests unitarios LigasSeeder Progreso / test_ligas_seeder_progreso.py
 ✅ **FASE 1 COMPLETADA 100% ✅**
 ✅ **FASE 2 PUNTO 2.1 COMPLETADO ✅**
+✅ **FASE 4 PUNTO 4.0 COMPLETADO ✅**
 ⏳ **Proxima tarea:** 2.2 Refactor JobRunnerApplication
 
 ---
 
 ## ✅ HISTORIAL DE TAREAS COMPLETADAS
 
-| #   | Tarea                             | Fecha      | Commit | Descripcion                                                                                                               |
-| --- | --------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Corregir import JOB_REGISTRY      | 15/04/2026 | ✅      | Eliminado error Pylance, import correcto JobRegistry                                                                      |
-| 2   | Excepciones estilo Spring Boot    | 15/04/2026 | ✅      | Ahora lanzamos excepciones directamente, GlobalExceptionHandler se encarga                                                |
-| 3   | Unificar sistema de semaforos     | 15/04/2026 | ✅      | Eliminados semaforos locales duplicados. Ahora solo existe la instancia Singleton centralizada, limite se respeta 100%    |
-| 4   | Correccion ScrapingException test | 15/04/2026 | ✅      | Error Pylance solucionado, atributo original_error no existe, se usa context["original_error_message"]                    |
-| 5   | 1.2 Separar Logging de BaseRobot  | 15/04/2026 | ✅      | SRP Aplicado, logica delegada a RobotLogger, 100% retrocompatible, ningun robot se rompe                                  |
-| 6   | 1.3 Arreglar DIP en Tasks         | 15/04/2026 | ✅      | Dependencias inyectables opcionales, ahora testeable unitariamente sin BD real, 100% retrocompatible                      |
-| 7   | Correccion error await None       | 15/04/2026 | ✅      | Solucion estandar cast(Awaitable[None]), regla permanente agregada a .clinerules, cero regresiones, todos los tests pasan |
+| #   | Tarea                                | Fecha      | Commit | Descripcion                                                                                                                                                                                                 |
+| --- | ------------------------------------ | ---------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Corregir import JOB_REGISTRY         | 15/04/2026 | ✅      | Eliminado error Pylance, import correcto JobRegistry                                                                                                                                                        |
+| 2   | Excepciones estilo Spring Boot       | 15/04/2026 | ✅      | Ahora lanzamos excepciones directamente, GlobalExceptionHandler se encarga                                                                                                                                  |
+| 3   | Unificar sistema de semaforos        | 15/04/2026 | ✅      | Eliminados semaforos locales duplicados. Ahora solo existe la instancia Singleton centralizada, limite se respeta 100%                                                                                      |
+| 4   | Correccion ScrapingException test    | 15/04/2026 | ✅      | Error Pylance solucionado, atributo original_error no existe, se usa context["original_error_message"]                                                                                                      |
+| 5   | 1.2 Separar Logging de BaseRobot     | 15/04/2026 | ✅      | SRP Aplicado, logica delegada a RobotLogger, 100% retrocompatible, ningun robot se rompe                                                                                                                    |
+| 6   | 1.3 Arreglar DIP en Tasks            | 15/04/2026 | ✅      | Dependencias inyectables opcionales, ahora testeable unitariamente sin BD real, 100% retrocompatible                                                                                                        |
+| 7   | Correccion error await None          | 15/04/2026 | ✅      | Solucion estandar cast(Awaitable[None]), regla permanente agregada a .clinerules, cero regresiones, todos los tests pasan                                                                                   |
+| 8   | Tests unitarios LigasSeeder Progreso | 16/04/2026 | ✅      | Archivo backend/apps/leagues_manager/tests/test_ligas_seeder_progreso.py, 4 tests completos que validan todo el sistema de progreso del seeder, usa archivos temporales, mocks completos sin BD ni API real |
 
 ---
 
@@ -106,12 +109,13 @@ Este plan se basa en el análisis arquitectónico completo y resuelve TODOS los 
 ### 🟢 FASE 4: CALIDAD Y TESTS
 **Deadline: 10 días**
 
-| Tarea | Descripción                          | Tiempo estimado                                                      | Estado |
-| ----- | ------------------------------------ | -------------------------------------------------------------------- | ------ |
-| 4.1   | Tests unitarios JobRunnerApplication | ✅ 100% cobertura ✅ Todos los edge cases ✅ Sin BD real                | 5h     | ⬜ PENDIENTE |
-| 4.2   | Tests unitarios BaseRobot            | ✅ Mock de todo ✅ Probar solo logica de scraping                      | 4h     | ⬜ PENDIENTE |
-| 4.3   | Tests unitarios Scheduled Jobs       | ✅ Todos los jobs programados ✅ No ejecutan logica real               | 3h     | ⬜ PENDIENTE |
-| 4.4   | Tests de integracion end to end      | ✅ Flujo completo desde scheduler hasta robot ✅ Base de datos de test | 4h     | ⬜ PENDIENTE |
+| Tarea | Descripción                            | Tiempo estimado                                                                        | Estado |
+| ----- | -------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| 4.0   | ✅ Tests unitarios LigasSeeder Progreso | ✅ 4 tests funcionales ✅ 100% cobertura logica progreso ✅ Sin BD real ✅ Sin API externa | 3h     | ✅ COMPLETADO |
+| 4.1   | Tests unitarios JobRunnerApplication   | ✅ 100% cobertura ✅ Todos los edge cases ✅ Sin BD real                                  | 5h     | ⬜ PENDIENTE  |
+| 4.2   | Tests unitarios BaseRobot              | ✅ Mock de todo ✅ Probar solo logica de scraping                                        | 4h     | ⬜ PENDIENTE  |
+| 4.3   | Tests unitarios Scheduled Jobs         | ✅ Todos los jobs programados ✅ No ejecutan logica real                                 | 3h     | ⬜ PENDIENTE  |
+| 4.4   | Tests de integracion end to end        | ✅ Flujo completo desde scheduler hasta robot ✅ Base de datos de test                   | 4h     | ⬜ PENDIENTE  |
 
 ---
 

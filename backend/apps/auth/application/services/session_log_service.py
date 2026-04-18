@@ -7,7 +7,7 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-from apps.auth.infrastructure.models.mongo.session_log_model import SessionLog
+from apps.auth.infrastructure.models.no_sql.session_log_model import SessionLog
 from apps.auth.infrastructure.repositories.session_log_repository import (
     SessionLogRepository,
 )

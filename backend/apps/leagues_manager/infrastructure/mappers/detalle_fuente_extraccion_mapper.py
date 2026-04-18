@@ -23,4 +23,6 @@ def map_detalle_fuente_extraccion_from_model(
         url=getattr(detalle_model, "url", "") or "",
         is_active=getattr(detalle_model, "is_active", False),
         process_id=getattr(detalle_model, "process_id", None),
+        created_at=getattr(detalle_model, "created_at", None),
+        updated_at=getattr(detalle_model, "updated_at", None),
     )

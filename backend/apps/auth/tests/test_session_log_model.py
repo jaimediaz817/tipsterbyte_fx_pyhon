@@ -3,7 +3,7 @@
 import pytest
 from uuid import uuid4, UUID
 from datetime import datetime, timezone
-from apps.auth.infrastructure.models.mongo.session_log_model import SessionLog
+from apps.auth.infrastructure.models.no_sql.session_log_model import SessionLog
 
 
 class TestSessionLogModel:

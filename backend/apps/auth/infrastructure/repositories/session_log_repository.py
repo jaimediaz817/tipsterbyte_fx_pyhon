@@ -8,7 +8,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from apps.auth.infrastructure.models.mongo.session_log_model import SessionLog
+from apps.auth.infrastructure.models.no_sql.session_log_model import SessionLog
 from core.exceptions.database_exceptions import (
     MongoDBWriteException,
     MongoDBReadException,

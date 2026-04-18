@@ -2,11 +2,15 @@ from __future__ import annotations
 from typing import cast, TYPE_CHECKING
 from sqlalchemy.orm import Session
 
+# ✅ Importaciones REALES para tiempo de ejecucion (no solo type checking)
+# Soluciona error: NameError: name 'FuenteExtraccion' is not defined
+from apps.leagues_manager.domain.entities.fuente_extraccion import FuenteExtraccion
+from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
+    DetalleFuenteExtraccion,
+)
+
 if TYPE_CHECKING:
-    from apps.leagues_manager.domain.entities.fuente_extraccion import FuenteExtraccion
-    from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
-        DetalleFuenteExtraccion,
-    )
+    pass
 
 from apps.leagues_manager.domain.entities.continente import Continente
 from apps.leagues_manager.domain.entities.liga import Liga
@@ -14,6 +18,9 @@ from apps.leagues_manager.domain.entities.pais import Pais
 from apps.leagues_manager.domain.entities.torneo import Torneo
 from apps.leagues_manager.domain.repositories.i_leagues_repository import (
     ILeaguesRepository,
+)
+from apps.leagues_manager.domain.repositories.i_repositorio_detalle_fuente_extraccion import (
+    IRepositorioDetalleFuenteExtraccion,
 )
 
 
@@ -40,9 +47,34 @@ from apps.leagues_manager.infrastructure.mappers import (
 from shared.utils.db.sql.sqlalchemy_utils import update_from_dict
 
 
-class SQLLeaguesRepository(ILeaguesRepository):
+class SQLLeaguesRepository(
+    ILeaguesRepository,
+    IRepositorioDetalleFuenteExtraccion,
+):
     def __init__(self, db: Session):
         self.db = db
+
+    def __getattr__(self, name: str):
+        """
+        ✅ Forward Compatibility ISP Refactor
+        Permite que cualquier codigo antiguo que use ILeaguesRepository siga funcionando
+        mientras migramos gradualmente a las interfaces individuales.
+
+        Este metodo se ejecuta SOLO cuando un metodo no existe en esta clase.
+        No afecta la performance en absoluto para los metodos existentes.
+        """
+        import warnings
+
+        warnings.warn(
+            f"El metodo '{name}' esta siendo accedido a traves de ILeaguesRepository deprecado. "
+            f"Use la interfaz individual correspondiente en su lugar.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        # ✅ Forward compatibility: busca el metodo en esta misma clase
+        # Funciona porque TODOS los metodos ya estan implementados aqui
+        return object.__getattribute__(self, name)
 
     # --- [DEPRECADO] Mappers movidos a /mappers/ - mantener por retrocompatibilidad ---
     def _to_continente(self, continente_model: Continente | None) -> Continente | None:

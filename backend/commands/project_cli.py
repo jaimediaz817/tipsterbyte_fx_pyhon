@@ -52,19 +52,23 @@ def execute_manage_command(args: list[str]) -> bool:
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         env["PYTHONUTF8"] = "1"
+
+        # ✅ SOLUCION BUG COLGAJE: NO USAR PIPES PARA STDIN/STDOUT
+        # Permitir que el comando hijo herede la terminal del padre
+        # De esta forma los prompts de confirmacion y la entrada de usuario funcionan correctamente
         process = subprocess.Popen(
             full_command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             text=True,
             encoding="utf-8",
             errors="replace",
             env=env,
         )
-        if process.stdout:
-            for line in iter(process.stdout.readline, ""):
-                print(line.strip())
+
         process.wait()
+
         if process.returncode == 0:
             logger.success("✅ Comando ejecutado exitosamente.")
             return True

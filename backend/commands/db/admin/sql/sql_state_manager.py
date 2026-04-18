@@ -915,12 +915,12 @@ def clear_migrations():
     typer.secho("⚠️  CONFIRMACIÓN REQUERIDA", fg=typer.colors.RED, bold=True)
     typer.echo("=" * 70)
     typer.secho(
-        "Para confirmar esta operación, escribe la frase exacta: 'BORRAR MIGRACIONES'",
+        "Para confirmar esta operación, escribe la frase exacta: 'BORRAR_MIGRACIONES'",
         fg=typer.colors.YELLOW,
     )
     confirmation = input("Escribe aquí: ")
 
-    if confirmation != "BORRAR MIGRACIONES":
+    if confirmation != "BORRAR_MIGRACIONES":
         logger.info("Operación cancelada.")
         raise typer.Exit()
 

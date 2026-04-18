@@ -78,7 +78,14 @@ class GeografiaSeeder(BaseSeeder):
 
             # 3. Procesar con servicio
             repo = SQLLeaguesRepository(self.db)
-            service = LeaguesService(repo)
+            service = LeaguesService(
+                repo_continente=repo,
+                repo_pais=repo,
+                repo_liga=repo,
+                repo_torneo=repo,
+                repo_fuente=repo,
+                repo_detalle_fuente=repo,
+            )
 
             # Cache de continentes para evitar consultas repetidas
             cache_continentes = {}

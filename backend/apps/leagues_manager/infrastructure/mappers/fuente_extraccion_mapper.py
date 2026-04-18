@@ -22,4 +22,6 @@ def map_fuente_extraccion_from_model(
         type=getattr(fuente_model, "type", "") or "",
         descripcion=getattr(fuente_model, "descripcion", None),
         is_active=getattr(fuente_model, "is_active", False),
+        created_at=getattr(fuente_model, "created_at", None),
+        updated_at=getattr(fuente_model, "updated_at", None),
     )

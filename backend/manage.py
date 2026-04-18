@@ -38,9 +38,7 @@ from commands.db.admin.no_sql.mongo_state_manager import app as mongo_state_app
 
 # Scripts para poblar las bases de datos (Seeders)
 # from scripts.db.seeders.sql.seed_database_sql import seed_sql_data_auth_module
-from scripts.db.seeders.no_sql.seed_database_no_sql import (
-    seed_nosql_data_auth_module,
-)  # Asumiendo que el seeder de mongo se llama así para consistencia
+# ✅ NO importar aqui en tiempo de carga! Se importara dinamicamente solo cuando se ejecute el comando
 
 # --- IMPORTA EL NUEVO COMANDO ---
 from commands import project_cli
@@ -48,9 +46,7 @@ from commands import project_cli
 
 # --- Migraciones de datos MongoDB ---
 # 001: Añade el campo process_name a access_logs
-from scripts.db.migrations.nosql.migration_add_process_name_to_access_logs import (
-    run_migration as run_mongo_migration_001,
-)
+# ✅ NO importar aqui en tiempo de carga! Se importara dinamicamente solo cuando se ejecute el comando
 
 # --- NUEVA IMPORTACIÓN: Funciones del módulo de secretos ---
 from core.secrets import (
@@ -596,6 +592,11 @@ def mongo_init_schema():
 @mongo_app.command("seed")
 def mongo_seed():
     """Puebla la base de datos MongoDB con datos de ejemplo (señales, logs, etc.)."""
+    # ✅ Importacion DINAMICA solo cuando se ejecuta el comando: no rompe el resto del CLI
+    from scripts.db.seeders.no_sql.seed_database_no_sql import (
+        seed_nosql_data_auth_module,
+    )
+
     asyncio.run(seed_nosql_data_auth_module())  # type: ignore[arg-type]
 
 
@@ -620,6 +621,11 @@ def run_mongo_migrations():
     configure_logging()
     logger.info("Iniciando proceso de migración de datos de MongoDB...")
     # Aquí podrías tener una lógica para ejecutar varias migraciones en orden
+    # ✅ Importacion DINAMICA solo cuando se ejecuta el comando
+    from scripts.db.migrations.nosql.migration_add_process_name_to_access_logs import (
+        run_migration as run_mongo_migration_001,
+    )
+
     asyncio.run(run_mongo_migration_001())
     logger.info("Proceso de migración de MongoDB finalizado.")
 

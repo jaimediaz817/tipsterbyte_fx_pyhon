@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 
@@ -14,3 +15,5 @@ class FuenteExtraccion:
     type: str
     descripcion: Optional[str]
     is_active: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

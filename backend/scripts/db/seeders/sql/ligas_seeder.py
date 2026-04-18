@@ -14,6 +14,7 @@ NOTA: Este seeder se ejecuta bajo demanda (no es un robot periódico).
 
 import httpx
 import json
+import time
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
@@ -37,6 +38,11 @@ API_KEY = settings.API_FOOTBALL_KEY
 API_HOST = settings.API_FOOTBALL_HOST
 TIMEOUT_SECONDS = 10  # Reducido de 30 a 10 segundos
 
+# Ruta archivo configuracion prioridad
+CONFIG_LIGAS_PRIORIDAD_PATH = (
+    Path(__file__).parents[5] / "backend" / "config" / "ligas_prioridad.json"
+)
+
 # Mapeo de tipo de liga de la API a nuestra categoría
 # "League" -> Primera división (A)
 # "Cup" -> Copas nacionales (B)
@@ -48,6 +54,8 @@ TIPO_LIGA_MAP = {
 
 # Configuración de progreso
 MAX_PAISES_POR_EJECUCION = 20  # Límite de países por ejecución
+MAX_LIGAS_POR_PAIS = 2  # ✅ Solo cargar las N ligas principales de cada pais
+DELAY_ENTRE_REQUESTS_SEGUNDOS = 1.2  # ✅ Delay anti rate limit
 
 
 class LigasSeeder(BaseSeeder):
@@ -131,7 +139,14 @@ class LigasSeeder(BaseSeeder):
 
             # 2. Obtener países de la BD (ya cargados por GeografiaSeeder)
             repo = SQLLeaguesRepository(self.db)
-            service = LeaguesService(repo)
+            service = LeaguesService(
+                repo_continente=repo,
+                repo_pais=repo,
+                repo_liga=repo,
+                repo_torneo=repo,
+                repo_fuente=repo,
+                repo_detalle_fuente=repo,
+            )
 
             paises_bd = service.obtener_todos_los_paises()
             self.logger.info(f"🌍 Países en BD: {len(paises_bd)}")
@@ -153,6 +168,8 @@ class LigasSeeder(BaseSeeder):
                 )
 
             # 5. Procesar cada país
+            rate_limit_alcanzado = False
+
             for idx, pais in enumerate(paises_limitados, 1):
                 try:
                     self.logger.info(
@@ -172,6 +189,9 @@ class LigasSeeder(BaseSeeder):
                     # Obtener ligas de la API para este país
                     ligas_api = self._obtener_ligas_por_pais(pais.nombre)
 
+                    # ✅ Delay anti Rate Limit entre paises
+                    time.sleep(DELAY_ENTRE_REQUESTS_SEGUNDOS)
+
                     if not ligas_api:
                         self.logger.debug(f"📭 Sin ligas en API para: {pais.nombre}")
                         metricas["paises_saltados"] += 1
@@ -181,8 +201,14 @@ class LigasSeeder(BaseSeeder):
 
                     metricas["paises_con_ligas"] += 1
 
+                    # ✅ Limitar a las MAX_LIGAS_POR_PAIS primeras ligas (mas importantes)
+                    ligas_limitadas = ligas_api[:MAX_LIGAS_POR_PAIS]
+                    self.logger.debug(
+                        f"🔹 Limitando a {len(ligas_limitadas)}/{len(ligas_api)} ligas principales para {pais.nombre}"
+                    )
+
                     # Procesar cada liga
-                    for liga_data in ligas_api:
+                    for liga_data in ligas_limitadas:
                         try:
                             resultado = self._procesar_liga(
                                 liga_data, pais.id, service, update
@@ -206,6 +232,18 @@ class LigasSeeder(BaseSeeder):
                         f"✅ [{idx}/{len(paises_limitados)}] {pais.nombre} completado "
                         f"(Ligas: {metricas['ligas_creadas']} creadas, {metricas['ligas_actualizadas']} actualizadas)"
                     )
+
+                except RuntimeError as e:
+                    if str(e) == "RATE_LIMIT_REACHED":
+                        self.logger.warning(
+                            "🛑 Deteniendo ejecucion por Rate Limit alcanzado"
+                        )
+                        rate_limit_alcanzado = True
+                        break
+                    else:
+                        error_msg = f"Error procesando país {pais.nombre}: {e}"
+                        self.logger.error(f"❌ {error_msg}")
+                        metricas["errores"].append(error_msg)
 
                 except Exception as e:
                     error_msg = f"Error procesando país {pais.nombre}: {e}"
@@ -239,11 +277,35 @@ class LigasSeeder(BaseSeeder):
                     f"Se reanudará desde el país ID {metricas['ultimo_pais_id'] + 1}"
                 )
 
+            # ✅ Mensaje especial si se alcanzo Rate Limit
+            if rate_limit_alcanzado:
+                self.logger.info("")
+                self.logger.info("=" * 80)
+                self.logger.info("✅ 🚨 RATE LIMIT ALCANZADO CORRECTAMENTE")
+                self.logger.info("=" * 80)
+                self.logger.info("📌 El progreso ha sido GUARDADO correctamente")
+                self.logger.info("📌 Limite diario se restablece en 24 horas")
+                self.logger.info("")
+                self.logger.info("👉 COMANDO PARA CONTINUAR MAÑANA:")
+                self.logger.info(
+                    "   cd backend && python -m scripts.db.seeders.sql.ligas_seeder"
+                )
+                self.logger.info("")
+                self.logger.info(
+                    "💡 Al ejecutarlo mañana, continuara EXACTAMENTE donde se quedo"
+                )
+                self.logger.info("=" * 80)
+                self.logger.info("")
+
         except Exception as e:
             self.logger.error(f"❌ Error inesperado: {e}")
             metricas["errores"].append(f"Error: {str(e)}")
             self.db.rollback()
-            raise
+
+            # ✅ Manejo GRACEFUL: No lanzar excepcion, no romper cadena de seeders
+            self.logger.info(
+                "⚠️ Terminando ejecucion limpiamente sin romper seeders posteriores"
+            )
 
         return metricas
 
@@ -276,6 +338,19 @@ class LigasSeeder(BaseSeeder):
                 self.logger.debug(f"📡 Obtenidas {len(ligas)} ligas para {nombre_pais}")
                 return ligas
 
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                self.logger.critical(
+                    "🚨 RATE LIMIT ALCANZADO API-Football. Deteniendo ejecucion."
+                )
+                self.logger.info(
+                    "💡 Limite diario se restablece automaticamente en 24h."
+                )
+                # Detener toda la ejecucion inmediatamente
+                raise RuntimeError("RATE_LIMIT_REACHED")
+
+            self.logger.error(f"❌ Error HTTP obteniendo ligas para {nombre_pais}: {e}")
+            return []
         except httpx.HTTPError as e:
             self.logger.error(f"❌ Error HTTP obteniendo ligas para {nombre_pais}: {e}")
             return []

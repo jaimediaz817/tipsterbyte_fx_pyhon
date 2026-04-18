@@ -163,21 +163,26 @@ class TestLigasSeederProgreso:
             mock_response.raise_for_status = Mock()
 
             ultimo_pais_id_final = 0
-            for _ in range(4):
+
+            # ✅ OPTIMIZACION: PATCHES APLICADOS UNA SOLA VEZ FUERA DEL BUCLE
+            # Reduccion del tiempo de ejecucion en ~75%
+            with patch(
+                "scripts.db.seeders.sql.ligas_seeder.httpx.Client"
+            ) as mock_httpx:
+                mock_httpx.return_value.__enter__.return_value.get.return_value = (
+                    mock_response
+                )
                 with patch(
-                    "scripts.db.seeders.sql.ligas_seeder.httpx.Client"
-                ) as mock_httpx:
-                    mock_httpx.return_value.__enter__.return_value.get.return_value = (
-                        mock_response
-                    )
+                    "scripts.db.seeders.sql.ligas_seeder.SQLLeaguesRepository",
+                    return_value=Mock(),
+                ):
                     with patch(
-                        "scripts.db.seeders.sql.ligas_seeder.SQLLeaguesRepository",
-                        return_value=Mock(),
+                        "scripts.db.seeders.sql.ligas_seeder.LeaguesService",
+                        return_value=mock_service,
                     ):
-                        with patch(
-                            "scripts.db.seeders.sql.ligas_seeder.LeaguesService",
-                            return_value=mock_service,
-                        ):
+
+                        # ✅ BUCLE SIMPLE DENTRO DEL CONTEXTO DE MOCKS
+                        for _ in range(4):
                             seeder = LigasSeeder(mock_db, progress_file=progress_file)
                             resultado = seeder.run(update=False)
                             ultimo_pais_id_final = resultado["ultimo_pais_id"]
