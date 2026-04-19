@@ -72,3 +72,31 @@ await cast(Awaitable[None], metodo_async())
 ❌ NUNCA quitar el await (rompe el codigo real)
 ❌ NUNCA ignorar el error
 ✅ Siempre usar cast() para solucionar el falso positivo
+
+---
+
+## ✅ ✅ ✅  REGLA NUCLEAR INQUEBRANTABLE VELOCIDAD TESTS
+> 👉 ESTA ES LA REGLA MAS IMPORTANTE DE TODO EL PROYECTO
+
+### ❌ EL ERROR QUE NUNCA MAS SE DEBE REPETIR:
+Nunca, jamas, bajo ningun concepto poner la proteccion contra BD en tests DESPUES de importar dependencias.
+
+### ✅ PATRON OBLIGATORIO PARA TODOS LOS ARCHIVOS DE INFRAESTRUCTURA:
+```python
+# ✅ PRIMERO: PROTECCION ANTES DE TODO LO DEMAS
+import os
+if os.environ.get("PYTEST_VERSION") is not None:
+    raise RuntimeError("⛔ NO USAR INFRAESTRUCTURA REAL EN TESTS UNITARIOS")
+
+# ✅ SEGUNDO: AHORA SI, IMPORTAR EL RESTO
+from sqlalchemy import create_engine
+...
+```
+
+✅ ESTA ES LA UNICA FORMA DE QUE LOS TESTS SEAN RAPIDOS.
+✅ Cualquier otra posicion de la proteccion es INUTIL.
+✅ Esto asegura que NUNCA se carga SQLAlchemy, modelos, conexiones ni nada de infraestructura durante el discovery de pytest.
+
+❌ NO PONGAS LA PROTECCION EN MEDIO DEL ARCHIVO
+❌ NO PONGAS LA PROTECCION DESPUES DE IMPORTAR COSAS
+❌ NO HAGAS NADA ANTES DE LA PROTECCION

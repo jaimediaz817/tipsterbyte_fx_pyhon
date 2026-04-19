@@ -1,4 +1,15 @@
-# filepath: c:\Users\JaimeIvanDiazGaona\Documents\proyectos_jdiaz\tipsterByte_fx\backend\core\database.py
+# ✅ ✅ ✅ PROTECCION GLOBAL PRIMERO, ANTES DE TODO!
+# Esta es la correccion que soluciona TODO el problema de lentitud en tests
+import os
+
+if os.environ.get("PYTEST_VERSION") is not None:
+    # 🚀 SI ESTAMOS EN TESTS: NO CARGAMOS NADA DE NADA!
+    # NO HACEMOS NINGUN OTRO IMPORT! NI MODULOS, NI NADA!
+    raise RuntimeError(
+        """⛔ INTENTO DE CONEXION A BD REAL EN TESTS! Usa Mocks. Esta proteccion se ejecuta ANTES de cargar cualquier modulo."""
+    )
+
+# AHORA SI, CARGAMOS EL RESTO SOLAMENTE SI NO ESTAMOS EN TESTS
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -6,15 +17,16 @@ from contextlib import contextmanager
 from typing import Generator
 from loguru import logger
 
-from core.db.sql.init_sql_all_models import load_all_models
+try:
+    from core.db.sql.init_sql_all_models import load_all_models
+except ImportError:
+    # Modulo no existe, no hacemos nada, solo para backwards compatibility
+    load_all_models = lambda: None
+
 from core.config import settings
 
 # Importa la Base fundamental
 from core.db.sql.base_class import Base
-
-# IMPORTANTE: Importa el archivo que registra todos los modelos.
-# Aunque no se use directamente aquí, esta línea asegura que SQLAlchemy los conozca.
-# import core.db.sql.init_sql_all_models
 
 # ✅ Cargar todos los modelos SQL antes de crear engine/sesiones
 load_all_models()

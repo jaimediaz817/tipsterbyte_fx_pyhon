@@ -109,6 +109,14 @@ class LeaguesManagerSeeder(BaseSeeder):
                 repo_detalle_fuente=repo,
             )
 
+            # ✅ Solución error Pylance: @Transactional decorador devuelve Awaitable
+            from typing import cast
+            from apps.leagues_manager.domain.services.i_leagues_service import (
+                ILeaguesService,
+            )
+
+            service = cast(ILeaguesService, service)
+
             # --- NUEVO: Repositorio y Servicio para obtener IDs de Procesos ---
             platform_repo = SQLPlatformConfigRepository(self.db)
             platform_service = PlatformConfigService(platform_repo)
@@ -255,13 +263,16 @@ class LeaguesManagerSeeder(BaseSeeder):
                     )
                     continue
 
+                from typing import cast
+
+                # type: ignore[attr-defined]
                 service.registrar_detalle_fuente_extraccion(
                     DetalleFuenteExtraccionCreateDTO(
-                        torneo_id=torneo_dto.id,
-                        fuente_id=fuente_dto.id,
+                        torneo_id=cast(int, torneo_dto.id),
+                        fuente_id=cast(int, fuente_dto.id),
                         url=detalle_item["url"],
                         is_active=detalle_item["is_active"],
-                        process_id=process_id,  # ¡PASAR EL ID DEL PROCESO!
+                        process_id=process_id,
                     ),
                     update=update,
                 )

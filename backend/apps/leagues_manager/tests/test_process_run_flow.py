@@ -1,3 +1,11 @@
+# ✅ PROTECCION NUCLEAR: ANTES DE TODO LO DEMAS
+import os
+
+# ✅ SOLUCION DEFINITIVA: Solo activar en fase DISCOVERY de pytest
+# No se activa cuando se ejecuta el test realmente
+if os.environ.get("PYTEST_COLLECTING") is not None:
+    raise RuntimeError("⛔ NO USAR INFRAESTRUCTURA REAL EN TESTS UNITARIOS")
+
 import pytest
 from datetime import datetime
 

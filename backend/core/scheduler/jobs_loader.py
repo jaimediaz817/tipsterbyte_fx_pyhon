@@ -12,13 +12,17 @@ from .job_registry import JobRegistry
 from shared.repositories.scheduler_repos.scheduled_process_config_repository import (
     ScheduledProcessConfigRepository,
 )
-from core.db.sql.database_sql import SessionLocal
+
+# ✅ NO IMPORTAR SessionLocal AQUI! Se importa LAZILY solo cuando se necesita
 
 
 def get_scheduled_jobs_from_db() -> list[dict]:
     """
     Obtiene las configuraciones de trabajos programados habilitados desde la base de datos.
     """
+    # ✅ Importacion LAZY: Solo se carga CUANDO se ejecuta la funcion, NO durante importacion / discovery
+    from backend.core.db.sql.database_sql import SessionLocal
+
     with SessionLocal() as db:
         repo = ScheduledProcessConfigRepository(db)
         configs = repo.get_all_enabled()

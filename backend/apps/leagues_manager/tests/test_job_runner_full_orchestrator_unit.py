@@ -4,10 +4,26 @@
 # ✅ FUNCIONA CON pytest
 
 import sys
+import io
 from pathlib import Path
+from typing import cast, Awaitable, Coroutine
+from unittest.mock import MagicMock
+
+# ✅ ✅ ✅ SOLUCION DEFINITIVA ANTES DE TODO ✅ ✅ ✅
+# NO USAR PATCH NUNCA: patch intenta importar el modulo primero y se dispara la proteccion
+# DIRECTAMENTE MATAMOS EL MODULO EN sys.modules ANTES DE QUE NADIE LO TOQUE
+sys.modules["core.db.sql.database_sql"] = MagicMock()
+sys.modules["core.db.sql"] = MagicMock()
+sys.modules["core.db"] = MagicMock()
+
+# ✅ SOLUCION CODIFICACION WINDOWS (UnicodeEncodeError ✅)
+# ✅ SOLAMENTE CUANDO SE EJECUTA DIRECTAMENTE: NO ROMPER PYTEST CAPTURE
+if __name__ == "__main__":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # ✅ SOLUCION PERMANENTE PATH: Funciona en TODOS los entornos
-ROOT_PROYECTO = Path(__file__).resolve().parents[4]
+ROOT_PROYECTO = Path(__file__).resolve().parents[3]
 if str(ROOT_PROYECTO) not in sys.path:
     sys.path.insert(0, str(ROOT_PROYECTO))
 
@@ -16,11 +32,15 @@ from dotenv import load_dotenv
 
 load_dotenv(ROOT_PROYECTO / "backend" / ".env")
 
+# AHORA SI IMPORTAMOS TODO LO DEMAS
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from apps.leagues_manager.application.job_runner_application import JobRunnerApplication
 from apps.leagues_manager.domain.enums.robot_type_enum import RobotTypeEnum
-from shared.repositories.scheduler_repos import NoOpProcessRunRepository
+from shared.repositories.scheduler_repos.noop_process_run_repository import (
+    NoOpProcessRunRepository,
+)
+from core.exceptions import ProcessInactiveException, NoActiveJobsException
 
 
 class TestJobRunnerFullOrchestratorUnit:
@@ -50,12 +70,10 @@ class TestJobRunnerFullOrchestratorUnit:
         detalle.id = 123
         detalle.process_id = 999
         detalle.is_active = True
-
         detalle.fuente = Mock()
         detalle.fuente.type = RobotTypeEnum.STANDINGS
         detalle.fuente.name = "Test Fuente"
         detalle.fuente.is_active = True
-
         return detalle
 
     @pytest.fixture
@@ -144,14 +162,15 @@ class TestJobRunnerFullOrchestratorUnit:
         """
         mock_process.is_active = False
 
-        from core.exceptions import ProcessInactiveException
-
         # ✅ Debe lanzar la excepcion correcta
         with pytest.raises(ProcessInactiveException):
-            await job_runner.run_full_orchestrator(
-                "TEST_PROCESS",
-                platform_repo=mock_platform_repo,
-                process_run_repo=mock_repo,
+            await cast(
+                Awaitable[None],
+                job_runner.run_full_orchestrator(
+                    "TEST_PROCESS",
+                    platform_repo=mock_platform_repo,
+                    process_run_repo=mock_repo,
+                ),
             )
 
     @pytest.mark.asyncio
@@ -164,15 +183,16 @@ class TestJobRunnerFullOrchestratorUnit:
         mock_league_repo = Mock()
         mock_league_repo.get_all_leagues_with_full_details.return_value = []
 
-        from core.exceptions import NoActiveJobsException
-
         # ✅ Debe lanzar la excepcion correcta cuando no hay trabajos
         with pytest.raises(NoActiveJobsException):
-            await job_runner.run_full_orchestrator(
-                "TEST_PROCESS",
-                platform_repo=mock_platform_repo,
-                process_run_repo=mock_repo,
-                league_repo=mock_league_repo,
+            await cast(
+                Awaitable[None],
+                job_runner.run_full_orchestrator(
+                    "TEST_PROCESS",
+                    platform_repo=mock_platform_repo,
+                    process_run_repo=mock_repo,
+                    league_repo=mock_league_repo,
+                ),
             )
 
 
@@ -180,29 +200,59 @@ if __name__ == "__main__":
     # ✅ Permite ejecutar este test directamente desde consola
     import asyncio
 
-    test = TestJobRunnerFullOrchestratorUnit()
-
     print("\n✅ Ejecutando test unitario JobRunner Full Orchestrator ...")
 
-    runner = test.job_runner()
-    mock_process = test.mock_process()
-    mock_detalle_fuente = test.mock_detalle_fuente()
-    mock_torneo = test.mock_torneo(mock_detalle_fuente)
-    mock_league = test.mock_league(mock_torneo)
-    mock_platform_repo = test.mock_platform_repo(mock_process)
-    mock_league_repo = test.mock_league_repo(mock_league)
-    mock_repo = test.mock_repo()
+    # ✅ NO LLAMAR FIXTURES DIRECTAMENTE: Creamos objetos manualmente
+    runner = JobRunnerApplication(robot_factory={})
+
+    # Crear mocks manualmente (sin fixtures)
+    process = Mock()
+    process.id = 999
+    process.code = "TEST_PROCESS"
+    process.is_active = True
+
+    detalle = Mock()
+    detalle.id = 123
+    detalle.process_id = 999
+    detalle.is_active = True
+    detalle.fuente = Mock()
+    detalle.fuente.type = RobotTypeEnum.STANDINGS
+    detalle.fuente.name = "Test Fuente"
+    detalle.fuente.is_active = True
+
+    torneo = Mock()
+    torneo.id = 456
+    torneo.nombre = "Torneo Test"
+    torneo.is_active = True
+    torneo.detalles_fuente = [detalle]
+
+    league = Mock()
+    league.id = 789
+    league.nombre = "Liga Test"
+    league.is_active = True
+    league.torneos = [torneo]
+
+    platform_repo = Mock()
+    platform_repo.get_process_by_code.return_value = process
+
+    league_repo = Mock()
+    league_repo.get_all_leagues_with_full_details.return_value = [league]
+
+    repo = NoOpProcessRunRepository()
 
     asyncio.run(
-        test.test_run_full_orchestrator_ok(
-            runner,
-            mock_platform_repo,
-            mock_league_repo,
-            mock_repo,
-            mock_process,
-            mock_league,
-            mock_torneo,
-            mock_detalle_fuente,
+        cast(
+            "Coroutine[None, None, None]",
+            TestJobRunnerFullOrchestratorUnit().test_run_full_orchestrator_ok(
+                runner,
+                platform_repo,
+                league_repo,
+                repo,
+                process,
+                league,
+                torneo,
+                detalle,
+            ),
         )
     )
 

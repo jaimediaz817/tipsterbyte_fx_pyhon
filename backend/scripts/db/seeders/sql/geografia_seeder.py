@@ -87,6 +87,13 @@ class GeografiaSeeder(BaseSeeder):
                 repo_detalle_fuente=repo,
             )
 
+            # ✅ SOLUCION DEFINITIVA ERROR PYLANCE: Decorador @Transactional retorna Awaitable falso positivo
+            # El decorador @Transactional devuelve Union[LeaguesService, Awaitable[LeaguesService]]
+            # Esta es la solución estándar aprobada para todo el proyecto
+            from typing import cast, Any
+
+            service = cast(Any, service)
+
             # Cache de continentes para evitar consultas repetidas
             cache_continentes = {}
 
@@ -123,10 +130,12 @@ class GeografiaSeeder(BaseSeeder):
                             metricas["errores"].append(f"País sin datos: {pais_data}")
                             continue
 
+                        from typing import cast
+
                         dto_pais = PaisCreateDTO(
                             nombre=nombre_pais,
                             codigo_iso=codigo_iso,
-                            continente_id=continente_dto.id,
+                            continente_id=cast(int, continente_dto.id),
                         )
                         pais_resultado = service.registrar_pais(dto_pais, update=update)
 

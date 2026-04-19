@@ -34,9 +34,10 @@ from core.exceptions import ScrapingException
 
 
 # ------------------------------------------------------------------------------
-# ✅ ROBOT DE PRUEBA CONCRETO (PARA PROBAR CLASE ABSTRACTA)
+# ✅ ROBOT DE PRUEBA CONCRETO (PARA PROBAR CLASE ABSTRACTA BaseRobot)
+# ✅ NO USAR PREFIJO Test: Pytest NO intentara coleccionarlos como tests
 # ------------------------------------------------------------------------------
-class TestRobot(BaseRobot):
+class MockRobot(BaseRobot):
     """Robot concreto para pruebas de la clase abstracta BaseRobot"""
 
     async def _execute_scraping(self):
@@ -44,14 +45,14 @@ class TestRobot(BaseRobot):
         pass
 
 
-class TestRobotFalla(BaseRobot):
+class MockRobotFalla(BaseRobot):
     """Robot que falla intencionalmente para probar manejo de errores"""
 
     async def _execute_scraping(self):
         raise ValueError("Error simulado en scraping")
 
 
-class TestRobotScrapingException(BaseRobot):
+class MockRobotScrapingException(BaseRobot):
     """Robot que lanza ScrapingException para probar re-lanzamiento"""
 
     async def _execute_scraping(self):
@@ -88,7 +89,7 @@ class TestBaseRobot:
     def test_inicializacion_correcta(self, test_data):
         """✅ Verifica que el robot se inicialice correctamente con todos los parametros"""
 
-        robot = TestRobot(
+        robot = MockRobot(
             torneo=test_data["torneo"],
             detalle=test_data["detalle"],
             run_id=test_data["run_id"],
@@ -120,7 +121,7 @@ class TestBaseRobot:
             repo=test_data["repo"],
         )
 
-        robot = TestRobot(
+        robot = MockRobot(
             torneo=test_data["torneo"],
             detalle=test_data["detalle"],
             run_id=test_data["run_id"],
@@ -169,7 +170,7 @@ class TestBaseRobot:
             repo=test_data["repo"],
         )
 
-        robot = TestRobotFalla(
+        robot = MockRobotFalla(
             torneo=test_data["torneo"],
             detalle=test_data["detalle"],
             run_id=test_data["run_id"],
@@ -218,7 +219,7 @@ class TestBaseRobot:
             repo=test_data["repo"],
         )
 
-        robot = TestRobotScrapingException(
+        robot = MockRobotScrapingException(
             torneo=test_data["torneo"],
             detalle=test_data["detalle"],
             run_id=test_data["run_id"],
@@ -253,7 +254,7 @@ class TestBaseRobot:
             repo=test_data["repo"],
         )
 
-        robot = TestRobot(
+        robot = MockRobot(
             torneo=test_data["torneo"],
             detalle=test_data["detalle"],
             run_id=test_data["run_id"],

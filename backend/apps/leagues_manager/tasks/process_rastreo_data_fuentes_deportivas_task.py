@@ -32,7 +32,8 @@ from apps.platform_config.infrastructure.repositories.sql_platform_config_reposi
     SQLPlatformConfigRepository,
 )
 from core.config import settings
-from core.db.sql.database_sql import SessionLocal
+
+# ✅ NO IMPORTAR SessionLocal AQUI! Se importa LAZILY solo cuando se necesita
 from shared.constants.process.process_codes import (
     PROCESS_EXTRACT_DATA_FUENTES,
 )

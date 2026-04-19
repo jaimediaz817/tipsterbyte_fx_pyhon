@@ -19,8 +19,6 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from backend.core.db.sql.database_sql import SessionLocal
-
 
 class IsolationLevel(str, Enum):
     """Niveles de aislamiento transaccional estandar ANSI SQL"""
@@ -169,6 +167,10 @@ class Transactional:
         token = None
 
         try:
+            # ✅ IMPORTACION LAZY: Solo importamos SessionLocal CUANDO realmente lo necesitamos
+            #    De esta forma no se importa durante la deteccion de tests ni pytest discovery
+            from backend.core.db.sql.database_sql import SessionLocal
+
             # Abrimos nueva sesion y transaccion
             session = SessionLocal()
 
