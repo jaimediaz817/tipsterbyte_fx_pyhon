@@ -46,9 +46,24 @@ class AuthService:
 
     def __init__(
         self,
-        user_repository: UserRepository,
-        session_log_service: SessionLogService,
+        user_repository: UserRepository | None = None,
+        session_log_service: SessionLogService | None = None,
     ):
+        """
+        ✅ Patron Refactor Repositorios
+        ✅ Retrocompatibilidad 100%: `AuthService()` sigue funcionando exactamente igual
+        ✅ En tests: `AuthService(user_repository=Mock(), session_log_service=Mock())`
+        ✅ Si se pasan dependencias: NO SE CARGA NADA DE INFRAESTRUCTURA
+        """
+
+        if user_repository is None:
+            # Solo cargamos repositorio real si no nos pasaron ninguno
+            user_repository = UserRepository()
+
+        if session_log_service is None:
+            # Solo cargamos servicio real si no nos pasaron ninguno
+            session_log_service = SessionLogService()
+
         # Inicializar servicios individuales
         self._registration_service = UserRegistrationService(
             user_repository, session_log_service
@@ -89,4 +104,6 @@ class AuthService:
 
         ⚠️ DELEGADO A: TokenValidationService
         """
-        return await self._token_service.get_current_user(token)
+        from typing import cast
+
+        return cast(User, await self._token_service.get_current_user(token))

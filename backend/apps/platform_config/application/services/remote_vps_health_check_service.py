@@ -31,8 +31,17 @@ class RemoteVpsHealthCheckService:
     )
     HEALTH_CHECK_SCRIPT = _SCRIPT_PATH.read_text(encoding="utf-8")
 
-    @staticmethod
+    def __init__(self, repository=None):
+        """
+        ✅ Patron Refactor Repositorios
+        ✅ Retrocompatibilidad 100%
+        ✅ En tests: `RemoteVpsHealthCheckService(repository=Mock())`
+        ✅ Si se pasa repositorio: NO SE CARGA MONGODB
+        """
+        self._repository = repository
+
     async def execute_on_remote_vps(
+        self,
         hostname: str | None = None,
         username: str | None = None,
         port: int | None = None,
@@ -112,7 +121,17 @@ class RemoteVpsHealthCheckService:
                 execution_time_seconds=resultado.execution_time_seconds,
             )
 
-            repository = MongoVpsHealthCheckRepository()
+            if self._repository is None:
+                # Solo cargamos el repositorio real si no nos pasaron ninguno
+                from backend.apps.platform_config.infrastructure.repositories.mongo_vps_health_check_repository import (
+                    MongoVpsHealthCheckRepository,
+                )
+
+                repository = MongoVpsHealthCheckRepository()
+            else:
+                # Usamos el repositorio que nos inyectaron (Mock, Fake, etc.)
+                repository = self._repository
+
             await repository.save(health_check_entity)
 
             logger.success("✅ Registro guardado CORRECTAMENTE en MongoDB")

@@ -1,14 +1,28 @@
 """
 Servicio de Validación de Tokens.
 ✅ SRP: Única responsabilidad: Validar token JWT y obtener usuario.
+✅ DIP: Depende de abstracciones, no de implementaciones concretas
 """
 
-from typing import cast
+from typing import cast, Protocol, Awaitable
 from loguru import logger
 
-from apps.auth.infrastructure.models.sql.user import User
-from apps.auth.infrastructure.repositories.user_repository import UserRepository
 from apps.auth.infrastructure.security.jwt_handler import JWTHandler
+
+
+class IUserEntity(Protocol):
+    """Interfaz para entidad Usuario (solo atributos que usamos aqui)"""
+
+    @property
+    def is_active(self) -> bool: ...
+    @property
+    def username(self) -> str: ...
+
+
+class IUserRepository(Protocol):
+    """Interfaz para repositorio de usuarios"""
+
+    async def get_by_id(self, user_id: int) -> IUserEntity | None: ...
 
 
 class TokenValidationService:
@@ -16,13 +30,14 @@ class TokenValidationService:
     Servicio exclusivo para la validación de tokens JWT.
 
     ✅ Single Responsibility Principle
+    ✅ Dependency Inversion Principle
     ✅ Única razón para cambiar: Cuando cambie la logica de validacion de tokens
     """
 
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: IUserRepository):
         self.user_repository = user_repository
 
-    async def get_current_user(self, token: str) -> User:
+    async def get_current_user(self, token: str) -> IUserEntity:
         """
         Obtiene el usuario actual a partir de un token JWT.
 
@@ -53,10 +68,8 @@ class TokenValidationService:
             logger.warning(f"⚠️ Usuario no encontrado para token: {user_id}")
             raise ValueError("Usuario no encontrado")
 
-        user = cast(User, user)
-
         # Verificar si está activo
-        if not user.is_active:  # type: ignore[truthy-bool]
+        if not user.is_active:
             logger.warning(f"⚠️ Usuario inactivo: {user.username}")
             raise ValueError("Usuario inactivo")
 

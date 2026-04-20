@@ -25,9 +25,22 @@ class UserRegistrationService:
 
     def __init__(
         self,
-        user_repository: UserRepository,
-        session_log_service: SessionLogService,
+        user_repository: UserRepository | None = None,
+        session_log_service: SessionLogService | None = None,
     ):
+        """
+        ✅ Patron Refactor Repositorios
+        ✅ Retrocompatibilidad 100%
+        ✅ En tests: `UserRegistrationService(user_repository=Mock(), session_log_service=Mock())`
+        ✅ Si se pasan dependencias: NO SE CARGA NADA DE INFRAESTRUCTURA
+        """
+
+        if user_repository is None:
+            user_repository = UserRepository()
+
+        if session_log_service is None:
+            session_log_service = SessionLogService()
+
         self.user_repository = user_repository
         self.session_log_service = session_log_service
 

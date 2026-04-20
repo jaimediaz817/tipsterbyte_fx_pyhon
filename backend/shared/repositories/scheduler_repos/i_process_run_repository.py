@@ -3,9 +3,12 @@ Interface abstracta para el repositorio de ProcessRun.
 Permite implementaciones alternativas (ej: NoOp para tests).
 """
 
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional
-from apps.platform_config.infrastructure.models.sql.process_run import ProcessRun
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from apps.platform_config.infrastructure.models.sql.process_run import ProcessRun
 
 
 class IProcessRunRepository(ABC):
@@ -15,7 +18,7 @@ class IProcessRunRepository(ABC):
     """
 
     @abstractmethod
-    def create_run(self, run_id: str, process_code: str) -> Optional[ProcessRun]:
+    def create_run(self, run_id: str, process_code: str) -> Optional["ProcessRun"]:
         """
         Crea un registro ProcessRun al inicio de una ejecución del scheduler.
 

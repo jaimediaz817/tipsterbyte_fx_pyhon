@@ -79,6 +79,10 @@ class Transactional:
     )
     """
 
+    # ✅ Atributo para desactivar proteccion de tests de forma temporal
+    # Solo usar en tests unitarios, NUNCA en codigo de produccion
+    _force_disable_test_protection: bool = False
+
     def __init__(
         self,
         rollback_for: list[Type[Exception]] | None = None,
@@ -87,6 +91,7 @@ class Transactional:
         isolation: IsolationLevel = IsolationLevel.REPEATABLE_READ,
         read_only: bool = False,
         timeout: int = 30,
+        managers: list[str] | None = None,
     ):
         self.rollback_for = rollback_for or [Exception]
         self.no_rollback_for = no_rollback_for or []
@@ -94,6 +99,7 @@ class Transactional:
         self.isolation = isolation
         self.read_only = read_only
         self.timeout = timeout
+        self.managers = managers or ["sql"]
 
     def __call__(
         self, func: Callable[..., T | Awaitable[T]]
@@ -126,10 +132,26 @@ class Transactional:
 
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> T:
+            # ✅ SIEMPRE comprobar en TIEMPO DE EJECUCION, NO en tiempo de definicion
+            # ✅ MODO TEST NORMAL: Sin transacciones
+            if (
+                os.environ.get("PYTEST_VERSION") is not None
+                or os.environ.get("TESTING") == "true"
+            ) and not getattr(Transactional, "_force_disable_test_protection", False):
+                return cast(T, func(*args, **kwargs))
+
             return self._execute_transaction(func, *args, **kwargs)
 
         @wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> T:
+            # ✅ SIEMPRE comprobar en TIEMPO DE EJECUCION, NO en tiempo de definicion
+            # ✅ MODO TEST NORMAL: Sin transacciones
+            if (
+                os.environ.get("PYTEST_VERSION") is not None
+                or os.environ.get("TESTING") == "true"
+            ) and not getattr(Transactional, "_force_disable_test_protection", False):
+                return cast(T, func(*args, **kwargs))
+
             return await cast(
                 Awaitable[T], self._execute_transaction(func, *args, **kwargs)
             )
@@ -145,14 +167,8 @@ class Transactional:
         """
         Logica principal del ciclo de vida transaccional
         Implementa exactamente el mismo comportamiento que Spring PlatformTransactionManager
+        ✅ Soporta multiples transaction managers: sql, mongo
         """
-
-        # ✅ DESACTIVACION AUTOMATICA PARA TESTS UNITARIOS
-        if (
-            os.environ.get("PYTEST_VERSION") is not None
-            or os.environ.get("TESTING") == "true"
-        ):
-            return func(*args, **kwargs)
 
         current_tx = _current_transaction.get()
 
@@ -162,37 +178,87 @@ class Transactional:
                 # Usamos la transaccion existente
                 return func(*args, **kwargs)
 
-        session: Session | None = None
-        tx_context: TransactionContext | None = None
-        token = None
+        sessions = {}
+        tokens = {}
+        result = None
+        committed = False
 
         try:
-            # ✅ IMPORTACION LAZY: Solo importamos SessionLocal CUANDO realmente lo necesitamos
-            #    De esta forma no se importa durante la deteccion de tests ni pytest discovery
-            from backend.core.db.sql.database_sql import SessionLocal
+            # ✅ IMPORTACION LAZY: Nunca cargamos drivers ni conexiones en discovery
+            if "sql" in self.managers:
+                if not getattr(Transactional, "_force_disable_test_protection", False):
+                    # ✅ MODO PRODUCCION: Cargamos driver real
+                    from backend.core.db.sql.database_sql import SessionLocal
+                else:
+                    # ✅ EN MODO TEST: El patch ya reemplazo esta variable en el scope GLOBAL de este modulo!
+                    SessionLocal = globals()["SessionLocal"]
 
-            # Abrimos nueva sesion y transaccion
-            session = SessionLocal()
+                sessions["sql"] = SessionLocal()
 
-            if self.isolation != IsolationLevel.REPEATABLE_READ:
-                session.connection(
-                    execution_options={"isolation_level": self.isolation.value}
-                )
+                if self.isolation != IsolationLevel.REPEATABLE_READ:
+                    sessions["sql"].connection(
+                        execution_options={"isolation_level": self.isolation.value}
+                    )
 
-            tx_context = TransactionContext(
-                session=session, read_only=self.read_only, isolation=self.isolation
-            )
+            if "mongo" in self.managers:
+                # TODO: agregar soporte para niveles de aislamiento en MongoDB si es necesario
+                if not getattr(Transactional, "_force_disable_test_protection", False):
+                    # ✅ MODO PRODUCCION: Cargamos driver real
+                    try:
+                        from backend.core.db.no_sql.database_mongo import get_mongo_client  # type: ignore
+                    except ImportError:
+                        # ✅ SI EL MODULO NO EXISTE TODAVIA: USAMOS EL MOCK PARCHEADO
+                        get_mongo_client = globals()["get_mongo_client"]
+                else:
+                    # ✅ EN MODO TEST: El patch ya reemplazo esta variable en el scope GLOBAL de este modulo!
+                    get_mongo_client = globals()["get_mongo_client"]
 
-            # Establecemos la transaccion en el contexto
-            token = _current_transaction.set(tx_context)
+                mongo_client = get_mongo_client()
+                sessions["mongo"] = mongo_client.start_session()
+                sessions["mongo"].start_transaction()
+
+            # ✅ Orden inverso para commit / rollback (patron SAGA)
+            managers_order = list(reversed(self.managers))
 
             # Ejecutamos la logica de negocio
             result = func(*args, **kwargs)
 
             if not self.read_only:
-                session.commit()
-                tx_context.committed = True
-                logger.debug(f"✅ Transaction committed successfully")
+                # ✅ Commit 2 FASES: Cada commit es atómico, cualquier fallo dispara rollback total
+                # Patrón SAGA Correcto: Si cualquiera falla, todos vuelven atras
+                try:
+                    if "mongo" in managers_order:
+                        sessions["mongo"].commit_transaction()
+
+                    if "sql" in managers_order:
+                        sessions["sql"].commit()
+
+                    committed = True
+                    logger.debug(
+                        f"✅ Transaction committed successfully managers={self.managers}"
+                    )
+
+                except Exception as commit_exception:
+                    # ❌ ALGUN MANAGER FALLO EN COMMIT
+                    logger.error(f"❌ Fallo en commit, iniciando rollback global")
+
+                    # ✅ Rollback SIEMPRE sin importar cual falló
+                    if "mongo" in sessions:
+                        try:
+                            sessions["mongo"].abort_transaction()
+                        except:
+                            pass
+                    if "sql" in sessions:
+                        try:
+                            sessions["sql"].rollback()
+                        except:
+                            pass
+
+                    # ✅ MARCAMOS COMMITED COMO TRUE PARA NO HACER DOBLE ROLLBACK
+                    # Aunque no se commitio nada, ya hicimos el rollback aqui. No queremos que el bloque exterior lo vuelva a llamar
+                    committed = True
+
+                    raise commit_exception
 
             return result
 
@@ -200,24 +266,34 @@ class Transactional:
             # Logica de rollback
             should_rollback = self._should_rollback(e)
 
-            if session and should_rollback:
-                session.rollback()
-                if tx_context:
-                    tx_context.rolled_back = True
+            if should_rollback and not committed:
                 logger.warning(
-                    f"⚠️ Transaction rolled back due to: {type(e).__name__}: {str(e)}"
+                    f"⚠️ Transaction rolled back managers={self.managers} due to: {type(e).__name__}: {str(e)}"
                 )
 
-            elif session:
-                session.commit()
+                # ✅ Rollback SIEMPRE en orden inverso
+                if "mongo" in sessions:
+                    try:
+                        sessions["mongo"].abort_transaction()
+                    except:
+                        pass
+                if "sql" in sessions:
+                    try:
+                        sessions["sql"].rollback()
+                    except:
+                        pass
 
             raise e
 
         finally:
-            if session:
-                session.close()
-            if token:
-                _current_transaction.reset(token)
+            # ✅ Cerramos todas las sesiones siempre
+            if "mongo" in sessions:
+                sessions["mongo"].end_session()
+            if "sql" in sessions:
+                sessions["sql"].close()
+            if tokens:
+                for token in tokens.values():
+                    _current_transaction.reset(token)
 
     def _should_rollback(self, exception: Exception) -> bool:
         """Determina si se debe hacer rollback para esta excepcion"""

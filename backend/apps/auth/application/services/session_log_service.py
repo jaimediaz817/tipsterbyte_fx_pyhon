@@ -18,8 +18,19 @@ class SessionLogService:
     Servicio para gestionar la bitácora de sesión.
     """
 
-    def __init__(self, repository: SessionLogRepository):
-        self.repository = repository
+    def __init__(self, repository: SessionLogRepository | None = None):
+        """
+        ✅ Patron Refactor Repositorios
+        ✅ Retrocompatibilidad 100%: `SessionLogService()` sigue funcionando igual
+        ✅ En tests: `SessionLogService(repository=Mock())` funciona directamente
+        ✅ Si se pasa repositorio: NO SE CARGA NADA DE INFRAESTRUCTURA
+        """
+        if repository is None:
+            # Solo cargamos la implementacion real si no nos pasaron nada
+            self.repository = SessionLogRepository()
+        else:
+            # Usamos el repositorio que nos inyectan (Mock, Fake, etc.)
+            self.repository = repository
 
     async def log_action(
         self,
