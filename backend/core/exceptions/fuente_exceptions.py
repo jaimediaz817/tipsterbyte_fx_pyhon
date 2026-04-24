@@ -5,6 +5,7 @@ Estas excepciones se lanzan cuando hay errores relacionados
 con fuentes de extracción y sus detalles asociados.
 """
 
+from typing import Optional
 from core.exceptions.base import TipsterByteException
 
 
@@ -44,6 +45,36 @@ class FuenteInactiveException(FuenteException):
         )
 
 
+class AdapterClassNotFoundException(FuenteException):
+    """Clase de adaptador no encontrada en el sistema."""
+
+    def __init__(self, adapter_class: str, detalle_id: int):
+        super().__init__(
+            message=f"Adaptador '{adapter_class}' no existe o no se puede cargar",
+            error_code="ADAPTER_CLASS_NOT_FOUND",
+            status_code=500,
+            context={"adapter_class": adapter_class, "detalle_id": detalle_id},
+            suggestion="Verifica que la clase este declarada y sea importable correctamente",
+        )
+
+
+class AdapterInvalidContractException(FuenteException):
+    """El adaptador no implementa la interfaz IFuenteExtraccionAdapter."""
+
+    def __init__(self, adapter_class: str, detalle_id: int):
+        super().__init__(
+            message=f"Adaptador '{adapter_class}' no implementa el contrato IFuenteExtraccionAdapter",
+            error_code="ADAPTER_INVALID_CONTRACT",
+            status_code=500,
+            context={
+                "adapter_class": adapter_class,
+                "detalle_id": detalle_id,
+                "required_interface": "IFuenteExtraccionAdapter",
+            },
+            suggestion="Implementa todos los metodos abstractos de la interfaz",
+        )
+
+
 class DetalleInactiveException(FuenteException):
     """Detalle está inactivo."""
 
@@ -59,4 +90,25 @@ class DetalleInactiveException(FuenteException):
                 "is_active": False,
             },
             suggestion=f"Activa el detalle usando el endpoint /api/v1/leagues/detalles/{detalle_id}/resume",
+        )
+
+
+class DetalleFuenteInvalidoException(FuenteException):
+    """Detalle de fuente tiene datos invalidos o incompletos."""
+
+    def __init__(self, detalle_id: int, campo: str, valor: Optional[str] = None):
+        context = {
+            "detalle_id": detalle_id,
+            "campo_invalido": campo,
+        }
+
+        if valor:
+            context["valor_recibido"] = str(valor)
+
+        super().__init__(
+            message=f"Detalle ID={detalle_id} tiene valor invalido en campo '{campo}'",
+            error_code="DETALLE_FUENTE_INVALIDO",
+            status_code=400,
+            context=context,
+            suggestion="Verifica que todos los campos obligatorios del detalle esten correctamente configurados",
         )

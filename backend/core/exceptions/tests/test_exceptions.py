@@ -27,9 +27,15 @@ from core.exceptions import (
     ScrapingException,
     ScrapingTimeoutException,
     ScrapingParsingException,
+    ApiRateLimitException,
     ConcurrencyException,
     SemaphoreTimeoutException,
     MaxRetriesExceededException,
+    SchedulerSemaphoreFullException,
+    RobotAlreadyRunningException,
+    AdapterClassNotFoundException,
+    AdapterInvalidContractException,
+    DetalleFuenteInvalidoException,
 )
 
 

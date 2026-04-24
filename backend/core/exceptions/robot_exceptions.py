@@ -86,3 +86,24 @@ class ScrapingParsingException(RobotException):
             },
             suggestion=f"El selector '{selector}' no encontró elementos. Verifica que el HTML tenga la estructura esperada",
         )
+
+
+class ApiRateLimitException(RobotException):
+    """API ha alcanzado el limite de peticiones."""
+
+    def __init__(self, robot_id: str, url: str, reset_time: Optional[int] = None):
+        context = {
+            "robot_id": robot_id,
+            "url": url,
+        }
+
+        if reset_time:
+            context["reset_time_seconds"] = str(reset_time)
+
+        super().__init__(
+            message=f"Limite de peticiones excedido en API para robot '{robot_id}'",
+            error_code="API_RATE_LIMIT",
+            status_code=429,
+            context=context,
+            suggestion="Espera el tiempo indicado en reset_time o aumenta el intervalo entre peticiones",
+        )

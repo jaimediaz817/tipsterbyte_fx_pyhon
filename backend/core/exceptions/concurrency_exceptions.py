@@ -43,3 +43,32 @@ class MaxRetriesExceededException(ConcurrencyException):
             },
             suggestion="Revisa los logs para entender por qué falló después de múltiples intentos",
         )
+
+
+class SchedulerSemaphoreFullException(ConcurrencyException):
+    """El semaforo del scheduler esta lleno, no se pueden ejecutar mas jobs."""
+
+    def __init__(self, job_name: str, max_concurrent: int):
+        super().__init__(
+            message=f"Scheduler semaforo lleno. No se puede ejecutar job '{job_name}'",
+            error_code="SCHEDULER_SEMAPHORE_FULL",
+            status_code=503,
+            context={
+                "job_name": job_name,
+                "max_concurrent_jobs": max_concurrent,
+            },
+            suggestion="El job se reprogramara automaticamente para ejecutarse mas tarde",
+        )
+
+
+class RobotAlreadyRunningException(ConcurrencyException):
+    """El robot ya se esta ejecutando en este momento."""
+
+    def __init__(self, robot_id: str):
+        super().__init__(
+            message=f"Robot '{robot_id}' ya se encuentra en ejecucion",
+            error_code="ROBOT_ALREADY_RUNNING",
+            status_code=409,
+            context={"robot_id": robot_id},
+            suggestion="Espera a que termine la ejecucion actual o cancela el proceso",
+        )
