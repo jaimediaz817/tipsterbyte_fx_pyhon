@@ -67,7 +67,15 @@ class CleanupHistory:
         Args:
             history_file: Archivo donde persistir el historial (JSON)
         """
-        self.history_file = history_file or Path("backend/logs/cleanup_history.json")
+        if history_file is None:
+            # ✅ Solucion definitiva ruta absoluta: funciona desde CUALQUIER ubicacion
+            from pathlib import Path
+
+            ROOT = Path(__file__).resolve().parents[3]
+            self.history_file = ROOT / "backend" / "logs" / "cleanup_history.json"
+        else:
+            self.history_file = history_file
+
         self.entries: list[CleanupHistoryEntry] = []
         self._load_history()
 
