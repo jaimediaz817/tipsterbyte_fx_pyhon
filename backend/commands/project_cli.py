@@ -416,6 +416,34 @@ def _print_setting(key: str, value: Any, status: str = "info", mask: bool = Fals
         typer.echo()
 
 
+@app.command(
+    name="clean-logs", help="Limpia y archiva todos los logs antiguos del proyecto."
+)
+def project_clean_logs():
+    """
+    Ejecuta la limpieza completa de logs según la configuración del proyecto.
+    Archiva logs mayores a N días y elimina logs archivados muy antiguos.
+    """
+    from services.log_cleanup_service import run_manual_cleanup
+
+    print_header("🧹 LIMPIEZA DE LOGS")
+
+    result = run_manual_cleanup()
+
+    typer.echo("\n" + "═" * 60)
+    typer.echo(f"✅ Éxito: {result.success}")
+    typer.echo(f"📦 Archivos archivados: {result.archived_files}")
+    typer.echo(f"🗑️ Archivos eliminados: {result.deleted_files}")
+    typer.echo(f"💾 Espacio liberado: {result.freed_space_mb:.2f} MB")
+
+    if result.errors:
+        typer.echo(f"\n❌ Errores encontrados: {len(result.errors)}")
+        for error in result.errors:
+            typer.echo(f"  - {error}")
+
+    typer.echo("═" * 60)
+
+
 @app.command(name="status", help="Menú principal del Project Manager.")
 def project_status():
 
