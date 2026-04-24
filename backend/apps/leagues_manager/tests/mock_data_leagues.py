@@ -26,6 +26,9 @@ class MockDetalleFuenteExtraccion:
     fuente_id: int
     url: str
     is_active: bool = True
+    adapter_class: Optional[str] = None
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
     # Opcional: Podríamos tener el objeto 'Fuente' directamente aquí para facilitar el acceso
     fuente: Optional[MockFuenteExtraccion] = None
 
