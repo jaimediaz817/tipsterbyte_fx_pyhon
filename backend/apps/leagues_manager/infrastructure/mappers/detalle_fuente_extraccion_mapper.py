@@ -23,6 +23,13 @@ def map_detalle_fuente_extraccion_from_model(
         url=getattr(detalle_model, "url", "") or "",
         is_active=getattr(detalle_model, "is_active", False),
         process_id=getattr(detalle_model, "process_id", None),
+        # ✅ NUEVOS CAMPOS: Aislamiento Fuente de Extraccion
+        provider_code=getattr(detalle_model, "provider_code", None),
+        base_url=getattr(detalle_model, "base_url", None),
+        api_key=getattr(detalle_model, "api_key", None),
+        rate_limit_per_minute=getattr(detalle_model, "rate_limit_per_minute", 60),
+        priority=getattr(detalle_model, "priority", 1),
+        adapter_class=getattr(detalle_model, "adapter_class", None),
         created_at=getattr(detalle_model, "created_at", None),
         updated_at=getattr(detalle_model, "updated_at", None),
     )

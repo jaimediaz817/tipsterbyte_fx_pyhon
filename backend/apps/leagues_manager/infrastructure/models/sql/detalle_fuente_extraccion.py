@@ -30,6 +30,14 @@ class DetalleFuenteExtraccion(Base):
         Integer, ForeignKey("process.id", ondelete="RESTRICT"), nullable=False
     )
 
+    # ✅ NUEVOS CAMPOS: Aislamiento Fuente de Extraccion
+    provider_code = Column(String(100), nullable=True)
+    base_url = Column(String(500), nullable=True)
+    api_key = Column(String(255), nullable=True)
+    rate_limit_per_minute = Column(Integer, nullable=True, default=60)
+    priority = Column(Integer, nullable=True, default=1)
+    adapter_class = Column(String(255), nullable=True)
+
     torneo = relationship("Torneo", back_populates="detalles_fuente")
     fuente = relationship("FuenteExtraccion", back_populates="detalles")
     process = relationship(
