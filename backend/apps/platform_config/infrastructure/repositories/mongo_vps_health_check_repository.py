@@ -4,7 +4,8 @@
 ✅ FIRE AND FORGET: NO FALLA NUNCA
 """
 
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, cast, Awaitable
 from uuid import UUID
 from datetime import datetime, timedelta
 from loguru import logger
@@ -126,6 +127,42 @@ class MongoVpsHealthCheckRepository(IVpsHealthCheckRepository):
         except Exception as e:
             logger.error(f"❌ Error contando fallos: {str(e)}")
             return 0
+
+    async def contar_total(self) -> int:
+        try:
+            return await VpsHealthCheckModel.find().count()
+        except Exception as e:
+            logger.error(f"❌ Error contando total registros: {str(e)}")
+            return 0
+
+    async def obtener_tamano_mb(self) -> float:
+        try:
+            # ✅ Solucion oficial Pylance segun regla CLINE:
+            # El metodo existe en runtime, es un falso positivo de type checker
+            collection = getattr(VpsHealthCheckModel, "_get_collection")()
+            stats = await cast(Awaitable[dict], collection.stats())
+            return stats.get("size", 0) / (1024 * 1024)
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo tamaño coleccion: {str(e)}")
+            return 0.0
+
+    async def exportar_backup(self, ruta_destino: Path) -> bool:
+        try:
+            import json
+            import gzip
+
+            registros = await VpsHealthCheckModel.find().to_list()
+            datos = [json.loads(model.to_json()) for model in registros]
+
+            with gzip.open(ruta_destino, "wt", encoding="utf-8") as f:
+                json.dump(datos, f, default=str, indent=2)
+
+            logger.success(f"✅ Backup exportado correctamente: {ruta_destino}")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Error exportando backup: {str(e)}")
+            return False
 
     @staticmethod
     def _map_to_entity(model: VpsHealthCheckModel) -> VpsHealthCheck:
