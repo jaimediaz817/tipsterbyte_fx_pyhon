@@ -1,0 +1,1 @@
+# TODO: ¿? este archivo se puede eliminar? No tiene nada especifico de sync, y el scheduler ya importa directamente los jobs programados. Revisar si es necesario o si se puede eliminar para simplificar la estructura de carpetas.
