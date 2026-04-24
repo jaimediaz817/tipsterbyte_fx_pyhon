@@ -197,7 +197,6 @@ class LigasSeeder(BaseSeeder):
                             f"⚠️ País sin código ISO, saltando: {pais.nombre}"
                         )
                         metricas["paises_saltados"] += 1
-                        metricas["paises_procesados"] += 1
                         # Actualizar progreso incluso si se salta
                         metricas["ultimo_pais_id"] = pais.id
                         continue

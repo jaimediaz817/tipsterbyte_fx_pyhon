@@ -1,7 +1,30 @@
 import importlib
 import inspect
+import sys
 from pathlib import Path
 from loguru import logger
+
+
+# ✅ USAR MECANISMO OFICIAL CENTRALIZADO DEL PROYECTO
+# Este es el MISMO patron que usa core/config.py, core/logger.py y TODO el sistema
+# No usar parents[n] nunca mas, usar la busqueda inteligente por ancla
+def _find_project_root(anchor_file: str = "pyproject.toml") -> Path:
+    current_path = Path(__file__).resolve()
+    while not (current_path / anchor_file).exists():
+        if current_path.parent == current_path:
+            raise FileNotFoundError(
+                f"No se pudo encontrar la raíz del proyecto (buscando '{anchor_file}')."
+            )
+        current_path = current_path.parent
+    return current_path
+
+
+PROJECT_ROOT = _find_project_root()
+
+# ✅ DEBEMOS AGREGAR LA RAIZ DEL PROYECTO, NO LA CARPETA BACKEND
+# Esta es la razon 100% del error. Todas las importaciones son relativas a la raiz, no a backend.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.db.seeders.base_seeder import BaseSeeder
 from core.db.sql.database_sql import get_db_context
@@ -32,12 +55,19 @@ def run_seeders(specific_seeder: str | None = None, update_existing: bool = Fals
 
         print(f"🔍 Descubriendo seeder en módulo: {module_name}")
         try:
+            # ✅ GARANTIZAR que la ruta existe ANTES de cada import dinamico
+            if str(PROJECT_ROOT) not in sys.path:
+                sys.path.insert(0, str(PROJECT_ROOT))
+
             module = importlib.import_module(module_name)
             for name, obj in inspect.getmembers(module, inspect.isclass):
                 if issubclass(obj, BaseSeeder) and obj is not BaseSeeder:
                     all_seeder_classes.append(obj)
         except ImportError as e:
             logger.error(f"No se pudo importar el módulo de seeder {module_name}: {e}")
+            logger.error(f"   sys.path actual: {sys.path[:3]}")
+            logger.error(f"   PROJECT_ROOT: {PROJECT_ROOT}")
+            logger.error(f"   Existe en sys.path: {str(PROJECT_ROOT) in sys.path}")
 
     # Ordenar seeders para asegurar dependencias correctas
     # platform_config_seeder debe ejecutarse primero porque leagues_manager depende de él

@@ -43,6 +43,12 @@ PROCESSES = [
         "description": "Proceso principal que orquesta la extracción de datos de diversas fuentes deportivas. Usado como proceso por defecto para detalles de fuentes.",
     },
     {
+        "code": PROCESS_LOG_CLEANUP,
+        "name": "Limpieza Automatica de Logs",
+        "is_active": True,
+        "description": "Proceso automatico que archiva logs antiguos y limpia el sistema de logging.",
+    },
+    {
         "code": PROCESS_STANDINGS_EXTRACTION,
         "name": "Extracción de Tablas de Posiciones",
         "is_active": True,
@@ -68,6 +74,22 @@ class PlatformConfigSeeder(BaseSeeder):
 
     def run(self, update: bool = False):
         self.logger.info("🌱 Ejecutando seeder del módulo Platform Config...")
+
+        # ✅ VALIDACION AUTOMATICA DE CONSISTENCIA ANTES DE INSERTAR NADA
+        for sp in SCHEDULED_PROCESSES:
+            assert any(
+                p["code"] == sp["process_name"] for p in PROCESSES
+            ), f"❌ INCONSISTENCIA: Proceso {sp['process_name']} no existe en PROCESSES"
+
+        import sys
+        from shared.constants.process import process_codes
+
+        for p in PROCESSES:
+            constante_nombre = f"PROCESS_{p['code'].upper()}"
+            assert hasattr(
+                process_codes, constante_nombre
+            ), f"❌ INCONSISTENCIA: Proceso {p['code']} no existe en process_codes.py (constante esperada: {constante_nombre})"
+
         try:
             repo = SQLPlatformConfigRepository(self.db)
             service = PlatformConfigService(repo)
