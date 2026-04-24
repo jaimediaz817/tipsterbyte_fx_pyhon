@@ -43,7 +43,7 @@ async def ejecutar_completo():
     print("=" * 80)
 
     # ✅ MAGIA: NO NECESITAS PASAR NINGUN PARAMETRO
-    return await RemoteVpsHealthCheckService.execute_on_remote_vps()
+    return await RemoteVpsHealthCheckService().execute_on_remote_vps()
 
 
 # ✅ SOLUCION PERMANENTE Event Loop Closed en Windows

@@ -12,6 +12,7 @@ from shared.constants.process.process_codes import (
 )
 from core.logger import configure_logging
 
+
 # Procesos disponibles que usan la misma función de tarea
 AVAILABLE_PROCESSES = {
     PROCESS_EXTRACT_DATA_FUENTES: launch_process_rastreo_data_fuentes_deportivas_task,

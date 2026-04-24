@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 line-length = 88
 
 [tool.coverage.run]
-source = ["apps", "core", "shared"]
+source = ["backend/apps", "backend/core", "backend/shared"]
 omit = [
     "*/__init__.py",
     "*/tests/*",

@@ -32,6 +32,32 @@
 4. **Tests**: Crear tests para nueva funcionalidad
 5. **Migrations**: Usar Alembic para cambios en DB
 
+## ✅ ✅ ✅ REGLA NUCLEAR NUMERO 1 PYTEST DISCOVERY
+> ❌ MATA TODO EL PROYECTO SI NO SE CUMPLE
+> ❌ NUNCA, JAMAS, BAJO NINGUN CONCEPTO PONER ESTO EN LA CABECERA DEL ARCHIVO:
+```python
+# ❌ ❌ ❌ NUNCA HAGAS ESTO NUNCA:
+if os.environ.get("PYTEST_VERSION") is not None:
+    sys.exit(0)  # ❌ MATA TODO EL PROCESO DE DISCOVERY
+    raise RuntimeError()  # ❌ MATA TODO EL PROCESO DE DISCOVERY
+```
+
+> ✅ SOLUCION DEFINTIVA OBLIGATORIA:
+> LA PROTECCION CONTRA PYTEST SOLAMENTE PUEDE IR DENTRO DEL BLOQUE `if __name__ == "__main__"`
+> NUNCA EN EL NIVEL SUPERIOR DEL ARCHIVO.
+
+```python
+# ✅ ✅ ✅ UNICA FORMA CORRECTA:
+if __name__ == "__main__":
+    if os.environ.get("PYTEST_VERSION") is not None:
+        raise RuntimeError("⛔ NO USAR INFRAESTRUCTURA REAL EN TESTS UNITARIOS")
+```
+
+✅ Cualquier otra posicion rompe el discovery de pytest completamente.
+✅ Esta regla esta por encima de TODAS las demas reglas.
+✅ Esta regla NO SE NEGOCIA.
+
+
 ## ✅ REGLA OBLIGATORIA PRUEBAS UNITARIAS
 > APLICAR SIEMPRE SIN EXCEPCIONES EN TODOS LOS ARCHIVOS TEST
 > Todas las pruebas unitarias DEBEN ser ejecutables:
@@ -100,3 +126,42 @@ from sqlalchemy import create_engine
 ❌ NO PONGAS LA PROTECCION EN MEDIO DEL ARCHIVO
 ❌ NO PONGAS LA PROTECCION DESPUES DE IMPORTAR COSAS
 ❌ NO HAGAS NADA ANTES DE LA PROTECCION
+
+---
+
+## ✅ ✅ ✅  METODOLOGIA OFICIAL PLANES DE IMPLEMENTACION
+> 🚀 APLICAR SIEMPRE PARA CUALQUIER NUEVA FUNCIONALIDAD
+
+### 🎯 ESTRUCTURA OBLIGATORIA PARA CADA HISTORIA DE USUARIO:
+```
+1. ✅ Identificador unico HU-XXX
+2. ✅ Descripcion como usuario final
+3. ✅ Criterios de aceptacion NUMERADOS y MEDIBLES
+4. ✅ Plan de implementacion por fases
+5. ✅ Definicion de Listo (DOD)
+6. ✅ Cronograma estimado
+7. ✅ Estado actual del sistema
+8. ✅ Bloqueos y dependencias
+```
+
+### 📋 TABLA DE ESTADOS OBLIGATORIA:
+| Estado      | Icono | Descripcion                      |
+| ----------- | ----- | -------------------------------- |
+| ACORDADO    | ✅     | Requisitos definidos y aprobados |
+| PENDIENTE   | ⬜     | No iniciado aun                  |
+| EN PROGRESO | 🚧     | Implementacion en curso          |
+| EN PRUEBA   | 🧪     | En fase de pruebas               |
+| COMPLETADO  | ✅     | Terminado y verificado           |
+
+### 📌 REGLAS INQUEBRANTABLES:
+1. Nunca empieces a codificar sin tener el plan creado y aprobado
+2. Cada implementacion DEBE tener su correspondiente archivo `.md` en `gestion_proyecto/planes_correctivos/`
+3. Actualiza el estado en el plan DESPUES de cada paso
+4. No cierres la historia hasta que todos los puntos del DOD se cumplan
+5. Siempre indica que esta completado, que esta en proceso y que queda pendiente
+
+### ✅ Ventajas:
+- ✅ 90% mas probabilidad de exito en la implementacion
+- ✅ Todo el equipo tiene contexto en todo momento
+- ✅ No se olvida ningun requisito
+- ✅ Se mantiene trazabilidad completa de cada cambio
