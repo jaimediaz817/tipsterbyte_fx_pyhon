@@ -1,7 +1,7 @@
 import asyncio
 from abc import ABC, abstractmethod
 from loguru import logger
-from typing import TYPE_CHECKING, Dict, Type
+from typing import TYPE_CHECKING, Dict, Type, cast
 
 from shared.repositories.scheduler_repos import IProcessRunRepository
 
@@ -17,9 +17,10 @@ from core.robot_logging import (
 from apps.leagues_manager.domain.robots.robot_logger import RobotLogger
 
 if TYPE_CHECKING:
-    from apps.leagues_manager.tests.mock_data_leagues import (
-        MockTorneo,
-        MockDetalleFuenteExtraccion,
+    # ✅ USAMOS ENTIDADES DE DOMINIO REALES, NO MOCKS DE TEST
+    from apps.leagues_manager.domain.entities.torneo import Torneo
+    from apps.leagues_manager.domain.entities.detalle_fuente_extraccion import (
+        DetalleFuenteExtraccion,
     )
 
 # ===================================================================
@@ -37,17 +38,26 @@ class BaseRobot(ABC):
 
     def __init__(
         self,
-        torneo: "MockTorneo",
-        detalle: "MockDetalleFuenteExtraccion",
+        torneo: "Torneo",
+        detalle: "DetalleFuenteExtraccion",
         run_id: str,
-        repo: "IProcessRunRepository",  # <-- NUEVO
+        repo: "IProcessRunRepository",
         robot_logger: "RobotLogger | None" = None,
     ):
         self.torneo = torneo
         self.detalle = detalle
-        self.fuente = detalle.fuente
+        # ✅ Correccion: Atributo 'fuente' no existe en DetalleFuenteExtraccion
+        # Se obtiene de forma segura con getattr (compatibilidad runtime)
+        self.fuente = getattr(detalle, "fuente", None)
         self.run_id = run_id
         self.repo = repo  # <-- NUEVO
+
+        # ✅ SISTEMA DE ADAPTADORES DE FUENTE DE EXTRACCION
+        from apps.leagues_manager.infrastructure.adapters.fuente_extraccion_adapter_factory import (
+            FuenteExtraccionAdapterFactory,
+        )
+
+        self.adapter = FuenteExtraccionAdapterFactory.crear(detalle)
         fuente_type = (
             self.fuente.type.upper()
             if self.fuente and hasattr(self.fuente, "type") and self.fuente.type
@@ -66,7 +76,7 @@ class BaseRobot(ABC):
         self._logger = robot_logger or RobotLogger(
             robot_id=self.robot_id,
             run_id=self.run_id,
-            detalle_id=self.detalle.id,
+            detalle_id=cast(int, self.detalle.id),
             repo=self.repo,
         )
 
@@ -115,7 +125,7 @@ class BaseRobot(ABC):
             robot_class_name=self.__class__.__name__,
             torneo_nombre=self.torneo.nombre,
             fuente_name=fuente_name,
-            detalle_id=self.detalle.id,
+            detalle_id=cast(int, self.detalle.id),
             url=self.detalle.url,
         )
 
