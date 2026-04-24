@@ -6,6 +6,10 @@ def safe_add_sink(sink_path: Path, **kwargs):
     """
     Agrega un sink de Loguru de manera segura, deshabilitando rotación si hay errores.
     """
+    # ✅ SOLUCION BUG LOGURU: Crear directorio padre ANTES de agregar el sink
+    # Loguru NO crea directorios anidados automaticamente
+    sink_path.parent.mkdir(parents=True, exist_ok=True)
+
     try:
         # Intentar agregar con rotación
         logger.add(sink=sink_path, **kwargs)

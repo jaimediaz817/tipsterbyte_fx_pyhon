@@ -22,7 +22,7 @@ def load_all():
             enqueue=True,
             backtrace=True,
             diagnose=True,
-            delay=True,
+            delay=False,
             mode="a",
             catch=True,
         )
