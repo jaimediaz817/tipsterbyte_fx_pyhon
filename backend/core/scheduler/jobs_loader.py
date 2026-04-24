@@ -17,9 +17,7 @@ from shared.repositories.scheduler_repos.scheduled_process_config_repository imp
 
 
 def get_scheduled_jobs_from_db() -> list[dict]:
-    """
-    Obtiene las configuraciones de trabajos programados habilitados desde la base de datos.
-    """
+    """Obtiene configuraciones de jobs habilitados desde BD con importacion LAZY."""
     # ✅ Importacion LAZY: Solo se carga CUANDO se ejecuta la funcion, NO durante importacion / discovery
     from backend.core.db.sql.database_sql import SessionLocal
 
@@ -51,10 +49,12 @@ def get_scheduled_jobs_from_db() -> list[dict]:
 
 def register_jobs(scheduler: AsyncIOScheduler):
     """
-    Registra todos los jobs programados en el scheduler
-    ✅ 100% compatible hacia atras
-    ✅ No rompe ningun job existente
-    ✅ Cero acoplamiento con aplicaciones
+    Registra jobs programados en el scheduler.
+    ✅ Compatible hacia atras
+    ✅ Sin acoplamiento con aplicaciones
+
+    Args:
+        scheduler: Instancia AsyncIOScheduler
     """
     logger.info("⚙️  Cargando trabajos programados...")
 

@@ -19,17 +19,28 @@ from loguru import logger
 
 
 class JobRegistry:
+    """Singleton que actua como registro global de jobs programados.
+    Las aplicaciones registran sus jobs aqui, y el scheduler los consulta para programarlos.
+    """
+
     _instance = None
     _jobs: Dict[str, Callable[..., Awaitable[Any]]] = {}
 
     def __new__(cls):
+        """
+        Implementacion del patron Singleton para asegurar que solo exista una instancia del registro
+        en toda la aplicacion, y que sea accesible globalmente.
+        """
+
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     @classmethod
     def register(cls, name: str, func: Callable) -> None:
-        """Registra una funcion como job programado"""
+        """Registra una funcion como job programado
+        Si ya existe un job con el mismo nombre, se sobrescribe y se registra una advertencia en los logs.
+        """
         if name in cls._jobs:
             logger.warning(f"⚠️ Job '{name}' ya estaba registrado, sobrescribiendo.")
 
